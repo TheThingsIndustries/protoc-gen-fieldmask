@@ -1,0 +1,16 @@
+[[constraint]]
+  name = "github.com/gogo/protobuf"
+  version = "1.1.1"
+
+[[constraint]]
+  name = "github.com/golang/protobuf"
+  version = "1.2.0"
+
+[[constraint]]
+  name = "github.com/pseudomuto/protokit"
+  source = "github.com/htdvisser/protokit"
+  branch = "feature/extensions"
+
+[prune]
+  go-tests = true
+  unused-packages = true
