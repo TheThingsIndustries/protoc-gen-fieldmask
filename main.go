@@ -46,12 +46,7 @@ func (p *plugin) WriteMessage(w io.Writer, md *protokit.Descriptor, messages map
 	var allPaths []string
 
 	fmt.Fprintln(w)
-	fmt.Fprintf(w, "func (m *%s) ApplyFieldMask(mask *types.FieldMask) *%s {", md.GetName(), md.GetName())
-	fmt.Fprintln(w)
-	fmt.Fprintln(w, "	if m == nil {")
-	fmt.Fprintln(w, "		return nil")
-	fmt.Fprintln(w, "	}")
-	fmt.Fprintf(w, "	var applied %s", md.GetName())
+	fmt.Fprintf(w, "func (m *%s) SetFields(src *%s, mask *types.FieldMask) {", md.GetName(), md.GetName())
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "	for _, path := range mask.Paths {")
 	fmt.Fprintln(w, "		switch path {")
@@ -75,26 +70,33 @@ func (p *plugin) WriteMessage(w io.Writer, md *protokit.Descriptor, messages map
 			}
 			switch {
 			case strings.HasPrefix(mfd.GetTypeName(), ".google.protobuf."):
-				fmt.Fprintf(w, "			applied.%s = m.%s", name, name)
+				fmt.Fprintf(w, "			m.%s = src.%s", name, name)
 			case mfd.GetLabel() == descriptor.FieldDescriptorProto_LABEL_REPEATED:
-				fmt.Fprintf(w, "			applied.%s = m.%s", name, name) // TODO: Check this.
+				fmt.Fprintf(w, "			m.%s = src.%s", name, name)
 			default:
-				if nullable, ok := mfd.OptionExtensions["gogoproto.nullable"].(*bool); ok && !*nullable {
-					fmt.Fprintf(w, `			f := m.%s.ApplyFieldMask(transformFieldMask(mask, "%s"))`, name, mfd.GetName())
+				if nullable, ok := mfd.OptionExtensions["gogoproto.nullable"].(*bool); !ok || *nullable {
+					fmt.Fprintf(w, `			if src.%s == nil {`, name)
 					fmt.Fprintln(w)
-					fmt.Fprintf(w, `			applied.%s = *f`, name)
+					fmt.Fprintf(w, `				m.%s = nil`, name)
+					fmt.Fprintln(w)
+					fmt.Fprintln(w, `			} else {`)
+					typeName := messages[strings.TrimPrefix(mfd.GetTypeName(), ".")].GetName()
+					fmt.Fprintf(w, `				m.%s = new(%s)`, name, typeName)
+					fmt.Fprintln(w)
+					fmt.Fprintf(w, `				m.%s.SetFields(src.%s, transformFieldMask(mask, "%s"))`, name, name, mfd.GetName())
+					fmt.Fprintln(w)
+					fmt.Fprint(w, `			}`)
 				} else {
-					fmt.Fprintf(w, `			applied.%s = m.%s.ApplyFieldMask(transformFieldMask(mask, "%s"))`, name, name, mfd.GetName())
+					fmt.Fprintf(w, `			m.%s.SetFields(&src.%s, transformFieldMask(mask, "%s"))`, name, name, mfd.GetName())
 				}
 			}
 		default:
-			fmt.Fprintf(w, "			applied.%s = m.%s", name, name)
+			fmt.Fprintf(w, "			m.%s = src.%s", name, name)
 		}
 		fmt.Fprintln(w)
 	}
 	fmt.Fprintln(w, "		}")
 	fmt.Fprintln(w, "	}")
-	fmt.Fprintln(w, "	return &applied")
 	fmt.Fprintln(w, "}")
 	fmt.Fprintln(w)
 
