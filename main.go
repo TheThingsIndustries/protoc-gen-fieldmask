@@ -63,7 +63,12 @@ func (p *plugin) WriteMessage(w io.Writer, md *protokit.Descriptor, messages map
 			name = *customName
 		}
 		if mfd.OneofIndex != nil {
-			fmt.Fprintln(w, "			// TODO: Oneof")
+			oneofName := generator.CamelCase(md.GetOneofDecl()[*mfd.OneofIndex].GetName())
+			oneofContainerName := fmt.Sprintf("%s_%s", md.GetName(), name)
+			if md.GetMessage(oneofContainerName) != nil {
+				oneofContainerName += "_"
+			}
+			fmt.Fprintf(w, "			m.%s = &%s{%s: src.Get%s()}\n", oneofName, oneofContainerName, name, name)
 			continue
 		}
 		switch mfd.GetType() {
