@@ -2,9 +2,13 @@
 
 
 [[projects]]
-  digest = "1:bbadccf3d3317ea03c0dac0b45b673b4b397c8f91a1d2eff550a3c51c4ad770e"
+  digest = "1:629282d904f7ce7d9977f82740061e5c6120be5f006e7a9aebca948958a784f9"
   name = "github.com/gogo/protobuf"
-  packages = ["proto"]
+  packages = [
+    "proto",
+    "sortkeys",
+    "types",
+  ]
   pruneopts = "UT"
   revision = "636bf0302bc95575d69441b25a2603156ffdddf1"
   version = "v1.1.1"
@@ -33,12 +37,13 @@
   source = "github.com/htdvisser/protokit"
 
 [[projects]]
-  digest = "1:cc1c574c9cb5e99b123888c12b828e2d19224ab6c2244bda34647f230bf33243"
+  digest = "1:66d823e62d742a32d47465c09872a464fe4602ce3c03ad74eb318001a4ab2b08"
   name = "github.com/smartystreets/assertions"
   packages = [
     ".",
     "internal/go-render/render",
     "internal/oglematchers",
+    "should",
   ]
   pruneopts = "UT"
   revision = "7678a5452ebea5b7090a6b163f844c133f523da2"
@@ -49,12 +54,14 @@
   analyzer-version = 1
   input-imports = [
     "github.com/gogo/protobuf/proto",
+    "github.com/gogo/protobuf/types",
     "github.com/golang/protobuf/proto",
     "github.com/golang/protobuf/protoc-gen-go/descriptor",
     "github.com/golang/protobuf/protoc-gen-go/generator",
     "github.com/golang/protobuf/protoc-gen-go/plugin",
     "github.com/pseudomuto/protokit",
     "github.com/smartystreets/assertions",
+    "github.com/smartystreets/assertions/should",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
