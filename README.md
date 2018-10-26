@@ -5,7 +5,7 @@ Generate Field Mask Utilities for GoGo protos.
 ## Installation:
 
 ```sh
-dep ensure
+dep ensure # If not using Go 1.11 modules
 go install .
 ```
 
