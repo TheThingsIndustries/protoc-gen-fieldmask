@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	_ "github.com/TheThingsIndustries/protoc-gen-fieldmask/gogoproto"
-	"github.com/TheThingsIndustries/protoc-gen-fieldmask/utils"
+	"github.com/TheThingsIndustries/protoc-gen-fieldmask/util"
 	"github.com/gogo/protobuf/proto"
 	"github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"github.com/golang/protobuf/protoc-gen-go/generator"
@@ -187,7 +187,7 @@ func (p *plugin) Generate(in *plugin_go.CodeGeneratorRequest) (*plugin_go.CodeGe
 		buf := new(bytes.Buffer)
 		utils.Generate(buf, filepath.Base(dir))
 		resp.File = append(resp.File, &plugin_go.CodeGeneratorResponse_File{
-			Name:    proto.String(filepath.Join(dir, "field_mask_utils.pb.fm.go")),
+			Name:    proto.String(filepath.Join(dir, "field_mask_util.pb.fm.go")),
 			Content: proto.String(buf.String()),
 		})
 	}
