@@ -21,25 +21,19 @@ func init() {
 	log.SetFlags(0)
 }
 
-func main() {
-	if err := protokit.RunPlugin(&plugin{}); err != nil {
-		log.Fatalf("Failed to run plugin: %s", err)
-	}
-}
-
 type plugin struct{}
 
-func (p *plugin) WriteMessage(w io.Writer, md *protokit.Descriptor, messages map[string]*protokit.Descriptor) {
+func (p *plugin) WriteMessage(w io.Writer, md *protokit.Descriptor, mds map[string]*protokit.Descriptor) {
 	var allPaths []string
 
 	fmt.Fprintf(w,
 		`func (m *%s) SetFields(src *%s, mask *types.FieldMask) {
-\tif len(mask.GetPaths()) == 0 {
-\t\tmask = &types.FieldMask{Paths: m.FieldMaskPaths()}
-\t}
+	if len(mask.GetPaths()) == 0 {
+		mask = &types.FieldMask{Paths: m.FieldMaskPaths()}
+	}
 
-\tfor _, path := range mask.Paths {
-\t\tswitch path {`,
+	for _, path := range mask.Paths {
+		switch path {`,
 		md.GetName(),
 		md.GetName())
 
@@ -47,7 +41,7 @@ func (p *plugin) WriteMessage(w io.Writer, md *protokit.Descriptor, messages map
 		allPaths = append(allPaths, mfd.GetName())
 
 		fmt.Fprintf(w, `
-\t\t\tcase "%s":`, mfd.GetName())
+		case "%s":`, mfd.GetName())
 
 		name := generator.CamelCase(mfd.GetName())
 		if customName, ok := mfd.OptionExtensions["gogoproto.customname"].(*string); ok {
@@ -61,31 +55,31 @@ func (p *plugin) WriteMessage(w io.Writer, md *protokit.Descriptor, messages map
 				oneofContainerName += "_"
 			}
 			fmt.Fprintf(w, `
-\t\t\t\tm.%s = &%s{%s: src.Get%s()}`, oneofName, oneofContainerName, name, name)
+			m.%s = &%s{%s: src.Get%s()}`, oneofName, oneofContainerName, name, name)
 			continue
 		}
 
 		switch mfd.GetType() {
 		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
 			if embed, ok := mfd.OptionExtensions["gogoproto.embed"].(*bool); ok && *embed {
-				name = messages[strings.TrimPrefix(mfd.GetTypeName(), ".")].GetName()
+				name = mds[strings.TrimPrefix(mfd.GetTypeName(), ".")].GetName()
 			}
 			switch {
 			case strings.HasPrefix(mfd.GetTypeName(), ".google.protobuf."), mfd.GetLabel() == descriptor.FieldDescriptorProto_LABEL_REPEATED:
 				fmt.Fprintf(w, `
-\t\t\t\tm.%s = src.%s`, name, name)
+			m.%s = src.%s`, name, name)
 
 			default:
 				if nullable, ok := mfd.OptionExtensions["gogoproto.nullable"].(*bool); !ok || *nullable {
-					typeName := messages[strings.TrimPrefix(mfd.GetTypeName(), ".")].GetName()
+					typeName := mds[strings.TrimPrefix(mfd.GetTypeName(), ".")].GetName()
 
 					fmt.Fprintf(w, `
-\t\t\t\tif src.%s == nil {
-\t\t\t\t\tm.%s = nil
-\t\t\t\t} else {
-\t\t\t\t\tm.%s = &%s{}
-\t\t\t\t\tm.%s.SetFields(src.%s, FieldMaskWithoutPrefix(mask, "%s"))
-\t\t\t\t}`,
+			if src.%s == nil {
+				m.%s = nil
+			} else {
+				m.%s = &%s{}
+				m.%s.SetFields(src.%s, FieldMaskWithoutPrefix(mask, "%s"))
+			}`,
 						name,
 						name,
 						name, typeName,
@@ -93,45 +87,44 @@ func (p *plugin) WriteMessage(w io.Writer, md *protokit.Descriptor, messages map
 					)
 				} else {
 					fmt.Fprintf(w, `
-\t\t\t\tm.%s.SetFields(&src.%s, FieldMaskWithoutPrefix(mask, "%s"))`, name, name, mfd.GetName())
+			m.%s.SetFields(&src.%s, FieldMaskWithoutPrefix(mask, "%s"))`, name, name, mfd.GetName())
 				}
 			}
 
 		default:
 			fmt.Fprintf(w, `
-\t\t\t\tm.%s = src.%s`, name, name)
+			m.%s = src.%s`, name, name)
 		}
 	}
 
 	fmt.Fprintf(w, `
-\t\t\t}
-\t\t}
-\t}
+		}
+	}
 }
 
 func (m *%s) FieldMaskPaths() []string {`,
 		md.GetName())
 
-	wrappedPaths := make([]string, len(allPaths))
-	for i, path := range allPaths {
-		wrappedPaths[i] = `"` + path + `"`
+	if len(allPaths) == 0 {
+		fmt.Fprintf(w, `
+	return nil`)
+	} else {
+		fmt.Fprintf(w, `
+	return []string{"%s"}`, strings.Join(allPaths, "\", \""))
 	}
-
 	fmt.Fprintf(w, `
-\treturn []string{%s}
-}`,
-		strings.Join(wrappedPaths, ", "))
+}`)
 }
 
-func (p *plugin) registerMessage(messages map[string]*protokit.Descriptor, md *protokit.Descriptor) {
+func (p *plugin) registerMessage(mds map[string]*protokit.Descriptor, md *protokit.Descriptor) {
 	for _, sub := range md.GetMessages() {
 		if strings.HasSuffix(sub.GetName(), "Entry") {
 			continue
 		}
 		sub.Name = proto.String(fmt.Sprintf("%s_%s", md.GetName(), sub.GetName()))
-		p.registerMessage(messages, sub)
+		p.registerMessage(mds, sub)
 	}
-	messages[md.FullName] = md
+	mds[md.FullName] = md
 }
 
 func (p *plugin) appendDescriptor(s []*protokit.Descriptor, md *protokit.Descriptor) []*protokit.Descriptor {
@@ -151,45 +144,42 @@ func (p *plugin) appendDescriptor(s []*protokit.Descriptor, md *protokit.Descrip
 }
 
 func (p *plugin) Generate(in *plugin_go.CodeGeneratorRequest) (*plugin_go.CodeGeneratorResponse, error) {
-	descriptors := protokit.ParseCodeGenRequest(in)
+	fds := protokit.ParseCodeGenRequest(in)
 
-	messages := make(map[string]*protokit.Descriptor)
-	for _, fd := range descriptors {
+	files := make(map[string][]*protokit.Descriptor)
+	for _, fd := range fds {
+		dirName := filepath.Dir(fd.GetName())
+		fileName := strings.TrimSuffix(filepath.Base(fd.GetName()), filepath.Ext(fd.GetName())) + ".pb.fm.go"
+		if goPackage := fd.Options.GetGoPackage(); goPackage != "" {
+			dirName = fd.Options.GetGoPackage()
+		}
+		fullName := filepath.Join(dirName, fileName)
 		for _, md := range fd.GetMessages() {
-			p.registerMessage(messages, md)
+			files[fullName] = p.appendDescriptor(files[fullName], md)
 		}
 	}
 
-	files := make(map[string][]*protokit.Descriptor)
-
-	for _, fd := range descriptors {
-		dirname := filepath.Dir(fd.GetName())
-		filename := strings.TrimSuffix(filepath.Base(fd.GetName()), filepath.Ext(fd.GetName())) + ".pb.fm.go"
-		if goPackage := fd.Options.GetGoPackage(); goPackage != "" {
-			dirname = fd.Options.GetGoPackage()
-		}
-		fullName := filepath.Join(dirname, filename)
+	mdMap := make(map[string]*protokit.Descriptor)
+	for _, fd := range fds {
 		for _, md := range fd.GetMessages() {
-			files[fullName] = p.appendDescriptor(files[fullName], md)
+			p.registerMessage(mdMap, md)
 		}
 	}
 
 	resp := &plugin_go.CodeGeneratorResponse{}
 
 	dirs := make(map[string]struct{})
-	for filename, mds := range files {
+	for fileName, mds := range files {
 		if len(mds) == 0 {
 			continue
 		}
-		dirname := filepath.Dir(filename)
-		dirs[dirname] = struct{}{}
+		dirName := filepath.Dir(fileName)
+		dirs[dirName] = struct{}{}
 
-		packageName := filepath.Base(dirname)
+		packageName := filepath.Base(dirName)
 
 		buf := &bytes.Buffer{}
-
-		fmt.Fprintf(buf,
-			`%s
+		fmt.Fprintf(buf, `%s
 
 package %s
 
@@ -198,18 +188,26 @@ import "github.com/gogo/protobuf/types"`,
 			packageName)
 
 		for _, md := range mds {
-			p.WriteMessage(buf, md, messages)
+			fmt.Fprintln(buf)
+			fmt.Fprintln(buf)
+			p.WriteMessage(buf, md, mdMap)
 		}
+		fmt.Fprintln(buf)
 
 		resp.File = append(resp.File, &plugin_go.CodeGeneratorResponse_File{
-			Name:    proto.String(filename),
+			Name:    proto.String(fileName),
 			Content: proto.String(buf.String()),
 		})
 	}
 
 	for dir := range dirs {
 		buf := &bytes.Buffer{}
-		util.Generate(buf, filepath.Base(dir))
+		_, err := util.Write(buf, filepath.Base(dir))
+		if err != nil {
+			log.Fatalf("Failed to write utilities to buffer: `%s`", err)
+		}
+		fmt.Fprintln(buf)
+
 		resp.File = append(resp.File, &plugin_go.CodeGeneratorResponse_File{
 			Name:    proto.String(filepath.Join(dir, "field_mask_util.pb.fm.go")),
 			Content: proto.String(buf.String()),
@@ -217,4 +215,10 @@ import "github.com/gogo/protobuf/types"`,
 	}
 
 	return resp, nil
+}
+
+func main() {
+	if err := protokit.RunPlugin(&plugin{}); err != nil {
+		log.Fatalf("Failed to run plugin: %s", err)
+	}
 }

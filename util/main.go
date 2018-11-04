@@ -4,6 +4,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"log"
 
@@ -20,10 +21,11 @@ func main() {
 	buf := &bytes.Buffer{}
 	_, err := util.Write(buf, "util")
 	if err != nil {
-		log.Fatalf("Failed to write to buffer: %s", err)
+		log.Fatalf("Failed to write to buffer: `%s`", err)
 	}
+	fmt.Fprintln(buf)
 
 	if err = ioutil.WriteFile(fileName, buf.Bytes(), 0644); err != nil {
-		log.Fatalf("Failed to write buffer to %s: %s", fileName, err)
+		log.Fatalf("Failed to write buffer to %s: `%s`", fileName, err)
 	}
 }
