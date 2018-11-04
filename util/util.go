@@ -81,11 +81,14 @@ func FieldMaskWithoutPrefix(mask *types.FieldMask, prefix string) *types.FieldMa
 	return &types.FieldMask{Paths: PathsWithoutPrefix(prefix, mask.Paths...)}
 }`
 
-func Generate(w io.Writer, pkg string) {
-	fmt.Fprintln(w, FileHeader)
-	fmt.Fprintln(w)
-	fmt.Fprintf(w, "package %s", pkg)
-	fmt.Fprintln(w)
-	fmt.Fprintln(w)
-	fmt.Fprintln(w, util)
+func Write(w io.Writer, pkg string) (int, error) {
+	return fmt.Fprintf(w, `%s
+
+package %s
+
+%s`,
+		FileHeader,
+		pkg,
+		util,
+	)
 }
