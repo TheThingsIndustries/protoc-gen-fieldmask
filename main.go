@@ -202,14 +202,16 @@ import "github.com/gogo/protobuf/types"`,
 
 	for dir := range dirs {
 		buf := &bytes.Buffer{}
-		_, err := util.Write(buf, filepath.Base(dir))
+		pkgName := filepath.Base(dir)
+
+		_, err := util.Write(buf, pkgName)
 		if err != nil {
 			log.Fatalf("Failed to write utilities to buffer: `%s`", err)
 		}
 		fmt.Fprintln(buf)
 
 		resp.File = append(resp.File, &plugin_go.CodeGeneratorResponse_File{
-			Name:    proto.String(filepath.Join(dir, "field_mask_util.pb.fm.go")),
+			Name:    proto.String(filepath.Join(dir, fmt.Sprintf("%s.pb.util.fm.go", pkgName))),
 			Content: proto.String(buf.String()),
 		})
 	}
