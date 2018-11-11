@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"path/filepath"
@@ -291,17 +292,17 @@ func (dst *%s) SetFields(src *%s, mask *types.FieldMask) {
 
 	for _, p := range paths {
 		fmt.Fprintf(buf, `
-		case "%s":`,
+		case "%s":
+			var isZero bool`,
 			p)
 
 		sp := strings.Split(p, ".")
 		goPath := ""
 		fm := md
-		// TODO: Check that last field is not zero and skip initialization if it is.(Handle as delete)
 		for i := 0; i < len(sp)-1; i++ {
 			fd := fm.GetMessageField(sp[i])
 			if fd.GetLabel() == descriptor.FieldDescriptorProto_LABEL_REPEATED {
-				panic("Fieldmask for repeated field generated")
+				panic(errors.New("Fieldmask for repeated field generated"))
 			}
 
 			goType := fieldTypeName(fd)
@@ -331,12 +332,13 @@ func (dst *%s) SetFields(src *%s, mask *types.FieldMask) {
 				// TODO: Implement merging
 				fmt.Fprintf(buf, `
 			switch {
+			case isZero:
 			case %s == nil && %s == nil:
 				continue
 			case %s == nil && %s != nil:
 				%s = &%s{} // TODO: Only initialize if final field is non-empty
 			case %s != nil && %s == nil:
-				panic("Needs merge")
+				isZero = true
 			}
 `,
 					dstPath, srcPath,
@@ -366,12 +368,13 @@ func (dst *%s) SetFields(src *%s, mask *types.FieldMask) {
 			// TODO: Implement merging
 			fmt.Fprintf(buf, `
 			switch {
+			case isZero:
 			case %s == nil && %s == nil:
 				continue
 			case %s == nil && %s != nil:
 				%s = &%s{} // TODO: Only initialize if final field is non-empty
 			case %s != nil && %s == nil:
-				panic("Needs merge")
+				isZero = true
 			}
 `,
 				dstPath, srcPath,
@@ -539,12 +542,13 @@ copy(%s.Paths, %s.Paths)`,
 			// TODO: Implement merging
 			fmt.Fprintf(buf, `
 			switch {
+			case isZero:
 			case %s == nil && %s == nil:
 				continue
 			case %s == nil && %s != nil:
 				%s = &%s{} // TODO: Only initialize if final field is non-empty
 			case %s != nil && %s == nil:
-				panic("Needs merge")
+				isZero = true
 			}
 `,
 				dstPath, srcPath,
@@ -564,11 +568,21 @@ copy(%s.Paths, %s.Paths)`,
 		isRepeated := fd.GetLabel() == descriptor.FieldDescriptorProto_LABEL_REPEATED
 		if isNullable || isRepeated {
 			fmt.Fprintf(buf, `
-			if %s == nil {
+			if isZero || %s == nil {
 				%s = nil
 				continue
 			}`,
 				srcPath,
+				dstPath,
+			)
+		} else {
+			fmt.Fprintf(buf, `
+			if isZero {
+				var v %s
+				%s = v
+				continue
+			}`,
+				goType,
 				dstPath,
 			)
 		}
