@@ -2,10 +2,12 @@
 
 
 [[projects]]
-  digest = "1:629282d904f7ce7d9977f82740061e5c6120be5f006e7a9aebca948958a784f9"
+  digest = "1:3f7c586d2fd571c4f2e3d313c0638b33b999055de507d5f11fafe27e5adc30db"
   name = "github.com/gogo/protobuf"
   packages = [
+    "gogoproto",
     "proto",
+    "protoc-gen-gogo/descriptor",
     "sortkeys",
     "types",
   ]
@@ -14,7 +16,7 @@
   version = "v1.1.1"
 
 [[projects]]
-  digest = "1:f9dc1d4bc658079ca70650bcba0e4c0687015eac1685edbe0ca8018b200df603"
+  digest = "1:09f717ac42036a8351ec9f9a19d1eb2bc7fc37608e1a5e53bd5d7fef091b4f35"
   name = "github.com/golang/protobuf"
   packages = [
     "proto",
@@ -22,22 +24,39 @@
     "protoc-gen-go/generator",
     "protoc-gen-go/generator/internal/remap",
     "protoc-gen-go/plugin",
+    "ptypes/duration",
+    "ptypes/timestamp",
   ]
-  pruneopts = "UT"
+  pruneopts = "NUT"
   revision = "aa810b61a9c79d51363740d207bb46cf8e620ed5"
   version = "v1.2.0"
 
 [[projects]]
-  branch = "feature/extensions"
-  digest = "1:28d67b39da9c9f0f384830fe7b1aa25a081cc476ed6e7e0f46811d6303edd992"
-  name = "github.com/pseudomuto/protokit"
+  digest = "1:7b21c7fc5551b46d1308b4ffa9e9e49b66c7a8b0ba88c0130474b0e7a20d859f"
+  name = "github.com/kr/pretty"
   packages = ["."]
-  pruneopts = "UT"
-  revision = "a93184a991241cac9657c1cf07a27214da8be0fc"
-  source = "github.com/htdvisser/protokit"
+  pruneopts = "NUT"
+  revision = "73f6ac0b30a98e433b289500d779f50c1a6f0712"
+  version = "v0.1.0"
 
 [[projects]]
-  digest = "1:66d823e62d742a32d47465c09872a464fe4602ce3c03ad74eb318001a4ab2b08"
+  digest = "1:c3a7836b5904db0f8b609595b619916a6831cb35b8b714aec39f96d00c6155d8"
+  name = "github.com/kr/text"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "e2ffdb16a802fe2bb95e2e35ff34f0e53aeef34f"
+  version = "v0.1.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:86a35ca6aa16b9451d8a1e549e9eb215a62c5d055d4e3d3b0d7806325c259b3d"
+  name = "github.com/pseudomuto/protokit"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "3705a628937f38de863e0e5dd93de658caaae319"
+
+[[projects]]
+  digest = "1:cd4573ffca6449b2fd16d0f2ec990de4d408b1ca1eefb085c5c46e202d05eee7"
   name = "github.com/smartystreets/assertions"
   packages = [
     ".",
@@ -45,7 +64,7 @@
     "internal/oglematchers",
     "should",
   ]
-  pruneopts = "UT"
+  pruneopts = "NUT"
   revision = "7678a5452ebea5b7090a6b163f844c133f523da2"
   version = "1.8.3"
 
@@ -53,12 +72,16 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/gogo/protobuf/gogoproto",
     "github.com/gogo/protobuf/proto",
     "github.com/gogo/protobuf/types",
     "github.com/golang/protobuf/proto",
     "github.com/golang/protobuf/protoc-gen-go/descriptor",
     "github.com/golang/protobuf/protoc-gen-go/generator",
     "github.com/golang/protobuf/protoc-gen-go/plugin",
+    "github.com/golang/protobuf/ptypes/duration",
+    "github.com/golang/protobuf/ptypes/timestamp",
+    "github.com/kr/pretty",
     "github.com/pseudomuto/protokit",
     "github.com/smartystreets/assertions",
     "github.com/smartystreets/assertions/should",
