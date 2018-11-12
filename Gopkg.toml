@@ -1,20 +1,18 @@
-[[constraint]]
-  name = "github.com/gogo/protobuf"
-  version = "1.1.1"
+required = ["github.com/gogo/protobuf/gogoproto"]
+
+[prune]
+  non-go = true
+  go-tests = true
+  unused-packages = true
+
+  [[prune.project]]
+    name = "github.com/gogo/protobuf"
+    non-go = false
 
 [[constraint]]
   name = "github.com/golang/protobuf"
   version = "1.2.0"
 
 [[constraint]]
-  branch = "feature/extensions"
+  branch = "master"
   name = "github.com/pseudomuto/protokit"
-  source = "github.com/htdvisser/protokit"
-
-[[constraint]]
-  name = "github.com/smartystreets/assertions"
-  version = "1.8.3"
-
-[prune]
-  go-tests = true
-  unused-packages = true
