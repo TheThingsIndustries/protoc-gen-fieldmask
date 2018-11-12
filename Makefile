@@ -1,14 +1,9 @@
-.default: build
-
-.PHONY: test
-
-test:
-	go test -coverprofile=coverage.out ./...
+.DEFAULT_GOAL=build
 
 .PHONY: build
 
 build: internal/extensions/gogoproto/gogo.pb.go
-	CGO_ENABLED=0 go build -ldflags "-s -w" -o dist/protoc-gen-fieldmask-$(shell go env GOOS)-$(shell go env GOARCH)$(shell go env GOEXE) .
+	CGO_ENABLED=0 go build -ldflags "-w -s" -o dist/protoc-gen-fieldmask-$(shell go env GOOS)-$(shell go env GOARCH)$(shell go env GOEXE) .
 
 WORKDIR:=$(shell mkdir -p $(PWD)/.work && mktemp -d -p $(PWD)/.work)
 
@@ -27,6 +22,7 @@ internal/extensions/gogoproto/gogo.pb.go: vendor/github.com/gogo/protobuf/gogopr
 		$< > $(WORKDIR)/gogo.proto
 	$(PROTOC) -I$(WORKDIR) -I$(PWD)/vendor --go_out=$(WORKDIR) $(WORKDIR)/gogo.proto
 	mv $(WORKDIR)/github.com/TheThingsIndustries/protoc-gen-fieldmask/internal/extensions/gogoproto/gogo.pb.go $@
+	rm -rf $(WORKDIR)
 
 .PHONY: extensions
 
@@ -36,3 +32,8 @@ extensions: internal/extensions/gogoproto/gogo.pb.go
 
 clean:
 	rm -rf .work
+
+.PHONY: test
+
+test:
+	go test -coverprofile=coverage.out ./...
