@@ -234,18 +234,44 @@ func appendPaths(paths []string, prefix string, md *protokit.Descriptor, mds map
 
 func fieldTypeName(fd *protokit.FieldDescriptor) (goType string) {
 	goType = fd.GetTypeName()
+	if i := strings.LastIndex(goType, "."); i > 0 {
+		goType = goType[i+1:]
+	}
 
-outer:
+	protoType := fd.GetTypeName()[1:]
+
 	for parent := fd.GetMessage(); parent != nil; parent = parent.GetParent() {
 		for _, smd := range parent.GetMessages() {
-			if fd.GetTypeName()[1:] == smd.GetFullName() {
-				goType = fmt.Sprintf("%s_%s", parent.GetName(), smd.GetName())
-				break outer
+			if protoType == smd.GetFullName() {
+				goType = fmt.Sprintf("%s_%s", parent.GetName(), goType)
+				if i := strings.LastIndex(goType, "."); i > 0 {
+					goType = goType[i+1:]
+				}
+				protoType = parent.GetFullName()
 			}
 		}
 	}
+	return goType
+}
+
+func enumTypeName(fd *protokit.FieldDescriptor) (goType string) {
+	goType = fd.GetTypeName()
 	if i := strings.LastIndex(goType, "."); i > 0 {
 		goType = goType[i+1:]
+	}
+
+	protoType := fd.GetTypeName()[1:]
+
+	for parent := fd.GetMessage(); parent != nil; parent = parent.GetParent() {
+		for _, sed := range parent.GetEnums() {
+			if protoType == sed.GetFullName() {
+				goType = fmt.Sprintf("%s_%s", parent.GetName(), goType)
+				if i := strings.LastIndex(goType, "."); i > 0 {
+					goType = goType[i+1:]
+				}
+				protoType = parent.GetFullName()
+			}
+		}
 	}
 	return goType
 }
@@ -447,15 +473,7 @@ func (dst *%s) SetFields(src *%s, mask *types.FieldMask) {
 			goType = "float64"
 
 		case descriptor.FieldDescriptorProto_TYPE_ENUM:
-			goType = fd.GetTypeName()
-			for _, sed := range fm.GetEnums() {
-				if fd.GetTypeName()[1:] == sed.GetFullName() {
-					goType = fmt.Sprintf("%s_%s", fm.GetName(), sed.GetName())
-				}
-			}
-			if i := strings.LastIndex(goType, "."); i > 0 {
-				goType = goType[i+1:]
-			}
+			goType = enumTypeName(fd)
 
 		case descriptor.FieldDescriptorProto_TYPE_FIXED32:
 			return nil, unsupportedTypeError(fd.GetType().String())
