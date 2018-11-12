@@ -250,12 +250,22 @@ outer:
 	return goType
 }
 
-func buildMethods(buf *strings.Builder, md *protokit.Descriptor, mds map[string]*protokit.Descriptor) error {
+var importPathReplacer = strings.NewReplacer(
+	".", "_",
+	"/", "_",
+	"-", "_",
+)
+
+func buildMethods(buf *strings.Builder, md *protokit.Descriptor, mds map[string]*protokit.Descriptor) (map[string]string, error) {
+	imports := map[string]string{
+		"types": "github.com/gogo/protobuf/types",
+	}
+
 	paths, err := appendPaths(make([]string, 0, len(md.GetMessageFields())), "", md, mds, nil)
 	if err != nil {
 		// TODO: Return error here
 		log.Printf("Failed to traverse `%s`: %s, skipping...", md.GetFullName(), err)
-		return nil
+		return nil, nil
 	}
 
 	fmt.Fprintf(buf, `
@@ -336,7 +346,7 @@ func (dst *%s) SetFields(src *%s, mask *types.FieldMask) {
 			var ok bool
 			fm, ok = mds[fd.GetTypeName()]
 			if !ok {
-				return unknownTypeError(fd.GetTypeName())
+				return nil, unknownTypeError(fd.GetTypeName())
 			}
 
 			if v, ok := fd.OptionExtensions["gogoproto.nullable"].(*bool); ok && !*v {
@@ -348,6 +358,8 @@ func (dst *%s) SetFields(src *%s, mask *types.FieldMask) {
 				srcPath,
 			)
 		}
+
+		fmt.Fprintln(buf)
 
 		dstPath := "dst"
 		fm = md
@@ -388,7 +400,7 @@ func (dst *%s) SetFields(src *%s, mask *types.FieldMask) {
 					dstPath,
 					dstPath,
 					dstPath,
-					dstPath, goType,
+					dstPath, oneOfType,
 				)
 
 				dstPath = fmt.Sprintf("%s.(*%s).%s", dstPath, oneOfType, goName)
@@ -400,7 +412,7 @@ func (dst *%s) SetFields(src *%s, mask *types.FieldMask) {
 			var ok bool
 			fm, ok = mds[fd.GetTypeName()]
 			if !ok {
-				return unknownTypeError(fd.GetTypeName())
+				return nil, unknownTypeError(fd.GetTypeName())
 			}
 
 			if v, ok := fd.OptionExtensions["gogoproto.nullable"].(*bool); ok && !*v {
@@ -432,7 +444,7 @@ func (dst *%s) SetFields(src *%s, mask *types.FieldMask) {
 			goType = "bool"
 
 		case descriptor.FieldDescriptorProto_TYPE_DOUBLE:
-			goType = "float32"
+			goType = "float64"
 
 		case descriptor.FieldDescriptorProto_TYPE_ENUM:
 			goType = fd.GetTypeName()
@@ -446,13 +458,13 @@ func (dst *%s) SetFields(src *%s, mask *types.FieldMask) {
 			}
 
 		case descriptor.FieldDescriptorProto_TYPE_FIXED32:
-			return unsupportedTypeError(fd.GetType().String())
+			return nil, unsupportedTypeError(fd.GetType().String())
 
 		case descriptor.FieldDescriptorProto_TYPE_FIXED64:
-			return unsupportedTypeError(fd.GetType().String())
+			return nil, unsupportedTypeError(fd.GetType().String())
 
 		case descriptor.FieldDescriptorProto_TYPE_FLOAT:
-			goType = "float64"
+			goType = "float32"
 
 		case descriptor.FieldDescriptorProto_TYPE_INT32:
 			goType = "int32"
@@ -461,16 +473,16 @@ func (dst *%s) SetFields(src *%s, mask *types.FieldMask) {
 			goType = "int64"
 
 		case descriptor.FieldDescriptorProto_TYPE_SFIXED32:
-			return unsupportedTypeError(fd.GetType().String())
+			return nil, unsupportedTypeError(fd.GetType().String())
 
 		case descriptor.FieldDescriptorProto_TYPE_SFIXED64:
-			return unsupportedTypeError(fd.GetType().String())
+			return nil, unsupportedTypeError(fd.GetType().String())
 
 		case descriptor.FieldDescriptorProto_TYPE_SINT32:
-			return unsupportedTypeError(fd.GetType().String())
+			return nil, unsupportedTypeError(fd.GetType().String())
 
 		case descriptor.FieldDescriptorProto_TYPE_SINT64:
-			return unsupportedTypeError(fd.GetType().String())
+			return nil, unsupportedTypeError(fd.GetType().String())
 
 		case descriptor.FieldDescriptorProto_TYPE_STRING:
 			goType = "string"
@@ -483,11 +495,6 @@ func (dst *%s) SetFields(src *%s, mask *types.FieldMask) {
 
 		case descriptor.FieldDescriptorProto_TYPE_BYTES:
 			goType = "[]byte"
-			if v, ok := fd.OptionExtensions["gogoproto.customtype"].(*string); ok && *v != "[]byte" {
-				// TODO: Implement non-reflective copying
-				copyOp = deepCopyOp
-				break
-			}
 			copyOp = func(dst, src string) string {
 				return fmt.Sprintf(`%s = make([]byte, len(%s))
 copy(%s, %s)`,
@@ -497,27 +504,29 @@ copy(%s, %s)`,
 			}
 
 		case descriptor.FieldDescriptorProto_TYPE_GROUP:
-			return unsupportedTypeError(fd.GetType().String())
+			return nil, unsupportedTypeError(fd.GetType().String())
 
 		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
 			goType = fd.GetTypeName()
 			switch goType {
 			case protoTimestampType:
 				if v, ok := fd.OptionExtensions["gogoproto.stdtime"].(*bool); ok && *v {
+					imports["time"] = "time"
 					goType = "time.Time"
 					copyOp = func(dst, src string) string {
 						return fmt.Sprintf("%s = time.Unix(0, %s.UnixNano()).UTC()", dst, src)
 					}
 					break
 				}
-				return unsupportedTypeError(fd.GetType().String())
+				return nil, unsupportedTypeError(fd.GetType().String())
 
 			case protoDurationType:
 				if v, ok := fd.OptionExtensions["gogoproto.stdduration"].(*bool); ok && *v {
+					imports["time"] = "time"
 					goType = "time.Duration"
 					break
 				}
-				return unsupportedTypeError(fd.GetType().String())
+				return nil, unsupportedTypeError(fd.GetType().String())
 
 			case protoAnyType:
 				goType = "types.Any"
@@ -545,13 +554,28 @@ copy(%s.Paths, %s.Paths)`,
 			}
 
 		default:
-			return unknownTypeError(fd.GetType().String())
+			return nil, unsupportedTypeError(fd.GetType().String())
 		}
+		var isNullable bool
 		if v, ok := fd.OptionExtensions["gogoproto.customtype"].(*string); ok {
-			goType = *v
+			isNullable = true
+			copyOp = deepCopyOp
+			if i := strings.LastIndex(*v, "."); i >= 0 {
+				pkgPath := (*v)[:i]
+				typeName := (*v)[i+1:]
+				pkgAlias := importPathReplacer.Replace((*v)[:i])
+
+				goType = fmt.Sprintf("%s.%s", pkgAlias, typeName)
+				if imported, ok := imports[pkgAlias]; ok && imported != pkgPath {
+					panic(fmt.Errorf("Import name clash at `%s`. Imported `%s` and `%s`", pkgAlias, pkgPath, imported))
+				}
+				imports[pkgAlias] = pkgPath
+			} else {
+				goType = *v
+			}
 		}
 
-		isNullable := fd.GetType() == descriptor.FieldDescriptorProto_TYPE_MESSAGE || fd.GetType() == descriptor.FieldDescriptorProto_TYPE_GROUP
+		isNullable = isNullable || fd.GetType() == descriptor.FieldDescriptorProto_TYPE_MESSAGE || fd.GetType() == descriptor.FieldDescriptorProto_TYPE_GROUP
 		if v, ok := fd.OptionExtensions["gogoproto.nullable"].(*bool); ok {
 			isNullable = *v
 		}
@@ -586,7 +610,7 @@ copy(%s.Paths, %s.Paths)`,
 				dstPath,
 				dstPath,
 				dstPath,
-				dstPath, goType,
+				dstPath, oneOfType,
 			)
 
 			dstPath = fmt.Sprintf("%s.(*%s).%s", dstPath, oneOfType, goName)
@@ -677,7 +701,7 @@ copy(%s.Paths, %s.Paths)`,
 	}
 }`,
 	)
-	return nil
+	return imports, nil
 }
 
 type plugin struct{}
@@ -693,7 +717,7 @@ func (p plugin) Generate(in *plugin_go.CodeGeneratorRequest) (*plugin_go.CodeGen
 			for _, smd := range append(md.GetMessages(), md) {
 				k := fmt.Sprintf(".%s", smd.GetFullName())
 				if _, ok := mds[k]; ok {
-					return nil, fmt.Errorf("Name clash at `%s`", k)
+					return nil, fmt.Errorf("Message name clash at `%s`", k)
 				}
 				mds[k] = smd
 			}
@@ -714,6 +738,7 @@ func (p plugin) Generate(in *plugin_go.CodeGeneratorRequest) (*plugin_go.CodeGen
 
 		fileName := filepath.Join(dirName, fmt.Sprintf("%s.pb.fm.go", strings.TrimSuffix(filepath.Base(fd.GetName()), filepath.Ext(fd.GetName()))))
 
+		imports := map[string]string{}
 		buf := &strings.Builder{}
 		for _, md := range fd.GetMessages() {
 			if v, ok := md.OptionExtensions["fieldmask.enable"].(*bool); ok && !*v {
@@ -721,33 +746,50 @@ func (p plugin) Generate(in *plugin_go.CodeGeneratorRequest) (*plugin_go.CodeGen
 			}
 
 			fmt.Fprintln(buf)
-			if err := buildMethods(buf, md, mds); err != nil {
+			mImports, err := buildMethods(buf, md, mds)
+
+			if err != nil {
 				return nil, err
 			}
+			for name, pkg := range mImports {
+				if v, ok := imports[name]; ok && v != pkg {
+					return nil, fmt.Errorf("Import name clash at `%s`. Imported `%s` and `%s`", name, pkg, v)
+				}
+				imports[name] = pkg
+			}
 		}
-		fmt.Fprintln(buf)
+
+		var importString string
+		switch len(imports) {
+		case 0:
+		case 1:
+			for name, pkg := range imports {
+				importString = fmt.Sprintf(`import %s "%s"`, name, pkg)
+			}
+		default:
+			importLines := make([]string, 0, len(imports))
+			for name, pkg := range imports {
+				importLines = append(importLines, fmt.Sprintf(`	%s "%s"`, name, pkg))
+			}
+			importString = fmt.Sprintf(`
+import (
+%s
+)
+`,
+				strings.Join(importLines, "\n"))
+		}
 
 		resp.File = append(resp.File, &plugin_go.CodeGeneratorResponse_File{
 			Name: proto.String(fileName),
 			Content: proto.String(fmt.Sprintf(`%s
 
 package %s
-
-import (
-	"time"
-
-	"github.com/gogo/protobuf/types"
-)
-
-var (
-	_ = types.Is
-	_ = time.Now
-)
-
+%s
 %s
 `,
 				FileHeader,
 				filepath.Base(dirName),
+				importString,
 				buf.String(),
 			)),
 		})
