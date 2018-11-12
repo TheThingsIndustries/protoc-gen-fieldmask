@@ -168,7 +168,7 @@ func eqCopyOp(dst, src string) string {
 }
 
 func deepCopyOp(dst, src string) string {
-	return fmt.Sprintf("deepCopy(%s, %s)", dst, src)
+	return fmt.Sprintf("deepCopy(&%s, &%s)", dst, src)
 }
 
 func init() {
@@ -763,18 +763,29 @@ func (p plugin) Generate(in *plugin_go.CodeGeneratorRequest) (*plugin_go.CodeGen
 				continue
 			}
 
-			fmt.Fprintln(buf)
-			mImports, err := buildMethods(buf, md, mds)
-
+			mBuf := &strings.Builder{}
+			mImports, err := buildMethods(mBuf, md, mds)
 			if err != nil {
 				return nil, err
 			}
+
 			for name, pkg := range mImports {
 				if v, ok := imports[name]; ok && v != pkg {
 					return nil, fmt.Errorf("Import name clash at `%s`. Imported `%s` and `%s`", name, pkg, v)
 				}
 				imports[name] = pkg
 			}
+
+			if mBuf.Len() == 0 {
+				continue
+			}
+			fmt.Fprintf(buf, `
+%s`,
+				mBuf.String())
+		}
+
+		if buf.Len() == 0 {
+			continue
 		}
 
 		var importString string
@@ -782,18 +793,21 @@ func (p plugin) Generate(in *plugin_go.CodeGeneratorRequest) (*plugin_go.CodeGen
 		case 0:
 		case 1:
 			for name, pkg := range imports {
-				importString = fmt.Sprintf(`import %s "%s"`, name, pkg)
+				importString = fmt.Sprintf(`
+import %s "%s"`, name, pkg)
 			}
 		default:
 			importLines := make([]string, 0, len(imports))
 			for name, pkg := range imports {
 				importLines = append(importLines, fmt.Sprintf(`	%s "%s"`, name, pkg))
 			}
+			sort.Slice(importLines, func(i, j int) bool {
+				return strings.Fields(importLines[i])[1] < strings.Fields(importLines[j])[1]
+			})
 			importString = fmt.Sprintf(`
 import (
 %s
-)
-`,
+)`,
 				strings.Join(importLines, "\n"))
 		}
 
@@ -802,8 +816,7 @@ import (
 			Content: proto.String(fmt.Sprintf(`%s
 
 package %s
-%s
-%s
+%s%s
 `,
 				FileHeader,
 				filepath.Base(dirName),
