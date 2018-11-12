@@ -293,11 +293,12 @@ func (dst *%s) SetFields(src *%s, mask *types.FieldMask) {
 	for _, p := range paths {
 		fmt.Fprintf(buf, `
 		case "%s":
-			var isZero bool`,
+			var nilPath bool`,
 			p)
 
 		sp := strings.Split(p, ".")
-		goPath := ""
+
+		srcPath := "src"
 		fm := md
 		for i := 0; i < len(sp)-1; i++ {
 			fd := fm.GetMessageField(sp[i])
@@ -315,44 +316,21 @@ func (dst *%s) SetFields(src *%s, mask *types.FieldMask) {
 				goName = goType
 			}
 
-			srcPath := fmt.Sprintf("src%s", goPath)
-			dstPath := fmt.Sprintf("dst%s", goPath)
-
 			if fd.OneofIndex != nil {
 				oneOfType := fmt.Sprintf("%s_%s", fm.GetName(), goName)
 				if fm.GetMessage(goName) != nil {
 					oneOfType = fmt.Sprintf("%s_", oneOfType)
 				}
-				oneOfName := generator.CamelCase(fm.GetOneofDecl()[fd.GetOneofIndex()].GetName())
 
 				srcPath = fmt.Sprintf("%s.Get%s()", srcPath, goName)
-				dstPath = fmt.Sprintf("%s.%s", dstPath, oneOfName)
-				goPath = fmt.Sprintf("%s.Get%s()", goPath, goName)
 
-				// TODO: Implement merging
 				fmt.Fprintf(buf, `
-			switch {
-			case isZero:
-			case %s == nil && %s == nil:
-				continue
-			case %s == nil && %s != nil:
-				%s = &%s{} // TODO: Only initialize if final field is non-empty
-			case %s != nil && %s == nil:
-				isZero = true
-			}
-`,
-					dstPath, srcPath,
-					dstPath, srcPath,
-					dstPath, oneOfType,
-					dstPath, srcPath,
+			nilPath = nilPath || %s == nil`,
+					srcPath,
 				)
-
-				dstPath = fmt.Sprintf("%s.(*%s).%s", dstPath, oneOfType, goName)
 
 			} else {
 				srcPath = fmt.Sprintf("%s.%s", srcPath, goName)
-				dstPath = fmt.Sprintf("%s.%s", dstPath, goName)
-				goPath = fmt.Sprintf("%s.%s", goPath, goName)
 			}
 
 			var ok bool
@@ -365,22 +343,83 @@ func (dst *%s) SetFields(src *%s, mask *types.FieldMask) {
 				continue
 			}
 
-			// TODO: Implement merging
 			fmt.Fprintf(buf, `
+			nilPath = nilPath || %s == nil`,
+				srcPath,
+			)
+		}
+
+		dstPath := "dst"
+		fm = md
+		for i := 0; i < len(sp)-1; i++ {
+			fd := fm.GetMessageField(sp[i])
+			if fd.GetLabel() == descriptor.FieldDescriptorProto_LABEL_REPEATED {
+				panic(errors.New("Fieldmask for repeated field generated"))
+			}
+
+			goType := fieldTypeName(fd)
+
+			goName := generator.CamelCase(fd.GetName())
+			if v, ok := fd.OptionExtensions["gogoproto.customname"].(*string); ok {
+				goName = *v
+			}
+			if v, ok := fd.OptionExtensions["gogoproto.embed"].(*bool); ok && *v {
+				goName = goType
+			}
+
+			if fd.OneofIndex != nil {
+				oneOfType := fmt.Sprintf("%s_%s", fm.GetName(), goName)
+				if fm.GetMessage(goName) != nil {
+					oneOfType = fmt.Sprintf("%s_", oneOfType)
+				}
+				oneOfName := generator.CamelCase(fm.GetOneofDecl()[fd.GetOneofIndex()].GetName())
+
+				dstPath = fmt.Sprintf("%s.%s", dstPath, oneOfName)
+
+				fmt.Fprintf(buf, `
 			switch {
-			case isZero:
-			case %s == nil && %s == nil:
+			case %s != nil && nilPath:
+			case %s == nil && nilPath:
 				continue
-			case %s == nil && %s != nil:
-				%s = &%s{} // TODO: Only initialize if final field is non-empty
-			case %s != nil && %s == nil:
-				isZero = true
+			case %s == nil:
+				%s = &%s{}
 			}
 `,
-				dstPath, srcPath,
-				dstPath, srcPath,
+					dstPath,
+					dstPath,
+					dstPath,
+					dstPath, goType,
+				)
+
+				dstPath = fmt.Sprintf("%s.(*%s).%s", dstPath, oneOfType, goName)
+
+			} else {
+				dstPath = fmt.Sprintf("%s.%s", dstPath, goName)
+			}
+
+			var ok bool
+			fm, ok = mds[fd.GetTypeName()]
+			if !ok {
+				return unknownTypeError(fd.GetTypeName())
+			}
+
+			if v, ok := fd.OptionExtensions["gogoproto.nullable"].(*bool); ok && !*v {
+				continue
+			}
+
+			fmt.Fprintf(buf, `
+			switch {
+			case %s != nil && nilPath:
+			case %s == nil && nilPath:
+				continue
+			case %s == nil:
+				%s = &%s{}
+			}
+`,
+				dstPath,
+				dstPath,
+				dstPath,
 				dstPath, goType,
-				dstPath, srcPath,
 			)
 		}
 
@@ -525,9 +564,6 @@ copy(%s.Paths, %s.Paths)`,
 			goName = goType
 		}
 
-		srcPath := fmt.Sprintf("src%s", goPath)
-		dstPath := fmt.Sprintf("dst%s", goPath)
-
 		if fd.OneofIndex != nil {
 			oneOfType := fmt.Sprintf("%s_%s", fm.GetName(), goName)
 			if fm.GetMessage(goName) != nil {
@@ -537,24 +573,20 @@ copy(%s.Paths, %s.Paths)`,
 
 			srcPath = fmt.Sprintf("%s.Get%s()", srcPath, goName)
 			dstPath = fmt.Sprintf("%s.%s", dstPath, oneOfName)
-			goPath = fmt.Sprintf("%s.Get%s()", goPath, goName)
 
-			// TODO: Implement merging
 			fmt.Fprintf(buf, `
 			switch {
-			case isZero:
-			case %s == nil && %s == nil:
+			case %s != nil && nilPath:
+			case %s == nil && nilPath:
 				continue
-			case %s == nil && %s != nil:
-				%s = &%s{} // TODO: Only initialize if final field is non-empty
-			case %s != nil && %s == nil:
-				isZero = true
+			case %s == nil:
+				%s = &%s{}
 			}
 `,
-				dstPath, srcPath,
-				dstPath, srcPath,
-				dstPath, oneOfType,
-				dstPath, srcPath,
+				dstPath,
+				dstPath,
+				dstPath,
+				dstPath, goType,
 			)
 
 			dstPath = fmt.Sprintf("%s.(*%s).%s", dstPath, oneOfType, goName)
@@ -562,13 +594,12 @@ copy(%s.Paths, %s.Paths)`,
 		} else {
 			srcPath = fmt.Sprintf("%s.%s", srcPath, goName)
 			dstPath = fmt.Sprintf("%s.%s", dstPath, goName)
-			goPath = fmt.Sprintf("%s.%s", goPath, goName)
 		}
 
 		isRepeated := fd.GetLabel() == descriptor.FieldDescriptorProto_LABEL_REPEATED
 		if isNullable || isRepeated {
 			fmt.Fprintf(buf, `
-			if isZero || %s == nil {
+			if nilPath || %s == nil {
 				%s = nil
 				continue
 			}`,
@@ -577,7 +608,7 @@ copy(%s.Paths, %s.Paths)`,
 			)
 		} else {
 			fmt.Fprintf(buf, `
-			if isZero {
+			if nilPath {
 				var v %s
 				%s = v
 				continue
