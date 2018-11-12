@@ -468,44 +468,23 @@ func (dst *%s) SetFields(src *%s, mask *types.FieldMask) {
 		case descriptor.FieldDescriptorProto_TYPE_DOUBLE:
 			goType = "float64"
 
-		case descriptor.FieldDescriptorProto_TYPE_ENUM:
-			goType = enumTypeName(fd)
-
-		case descriptor.FieldDescriptorProto_TYPE_FIXED32:
-			return nil, unsupportedTypeError(fd.GetType().String())
-
-		case descriptor.FieldDescriptorProto_TYPE_FIXED64:
-			return nil, unsupportedTypeError(fd.GetType().String())
-
 		case descriptor.FieldDescriptorProto_TYPE_FLOAT:
 			goType = "float32"
 
-		case descriptor.FieldDescriptorProto_TYPE_INT32:
+		case descriptor.FieldDescriptorProto_TYPE_INT32, descriptor.FieldDescriptorProto_TYPE_SINT32, descriptor.FieldDescriptorProto_TYPE_SFIXED32:
 			goType = "int32"
 
-		case descriptor.FieldDescriptorProto_TYPE_INT64:
+		case descriptor.FieldDescriptorProto_TYPE_INT64, descriptor.FieldDescriptorProto_TYPE_SINT64, descriptor.FieldDescriptorProto_TYPE_SFIXED64:
 			goType = "int64"
 
-		case descriptor.FieldDescriptorProto_TYPE_SFIXED32:
-			return nil, unsupportedTypeError(fd.GetType().String())
+		case descriptor.FieldDescriptorProto_TYPE_UINT32, descriptor.FieldDescriptorProto_TYPE_FIXED32:
+			goType = "uint32"
 
-		case descriptor.FieldDescriptorProto_TYPE_SFIXED64:
-			return nil, unsupportedTypeError(fd.GetType().String())
-
-		case descriptor.FieldDescriptorProto_TYPE_SINT32:
-			return nil, unsupportedTypeError(fd.GetType().String())
-
-		case descriptor.FieldDescriptorProto_TYPE_SINT64:
-			return nil, unsupportedTypeError(fd.GetType().String())
+		case descriptor.FieldDescriptorProto_TYPE_UINT64, descriptor.FieldDescriptorProto_TYPE_FIXED64:
+			goType = "uint64"
 
 		case descriptor.FieldDescriptorProto_TYPE_STRING:
 			goType = "string"
-
-		case descriptor.FieldDescriptorProto_TYPE_UINT32:
-			goType = "uint32"
-
-		case descriptor.FieldDescriptorProto_TYPE_UINT64:
-			goType = "uint64"
 
 		case descriptor.FieldDescriptorProto_TYPE_BYTES:
 			goType = "[]byte"
@@ -519,6 +498,9 @@ copy(%s, %s)`,
 
 		case descriptor.FieldDescriptorProto_TYPE_GROUP:
 			return nil, unsupportedTypeError(fd.GetType().String())
+
+		case descriptor.FieldDescriptorProto_TYPE_ENUM:
+			goType = enumTypeName(fd)
 
 		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
 			goType = fd.GetTypeName()
