@@ -46,17 +46,17 @@ const copyUtil = `func deepCopy(dst, src interface{}) {
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// Interface for delegating copy process to type
-type Interface interface {
+// deepCopier for delegating copy process to type
+type deepCopier interface {
 	DeepCopy() interface{}
 }
 
 // copyRecursive does the actual copying of the interface. It currently has
 // limited support for what it can handle. Add as needed.
 func copyRecursive(cpy, original reflect.Value) {
-	// check for implement deepcopy.Interface
+	// check for implement deepcopy.deepCopier
 	if original.CanInterface() {
-		if copier, ok := original.Interface().(Interface); ok {
+		if copier, ok := original.Interface().(deepCopier); ok {
 			cpy.Set(reflect.ValueOf(copier.DeepCopy()))
 			return
 		}
