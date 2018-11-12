@@ -16,6 +16,9 @@ PROTOC_DOCKER_ARGS := run --user `id -u` --rm \
 										 -w $(PWD)
 PROTOC ?= $(DOCKER) $(PROTOC_DOCKER_ARGS) $(PROTOC_DOCKER_IMAGE)
 
+vendor/github.com/gogo/protobuf/gogoproto/gogo.proto:
+	dep ensure
+
 internal/extensions/gogoproto/gogo.pb.go: vendor/github.com/gogo/protobuf/gogoproto/gogo.proto
 	perl \
 		-pe 's!(.*option[[:space:]]+.*go_package.*=.*"github.com/)gogo/protobuf(/gogoproto".*)!\1TheThingsIndustries/protoc-gen-fieldmask/internal/extensions\2!' \
