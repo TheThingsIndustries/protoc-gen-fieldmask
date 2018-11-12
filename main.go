@@ -171,10 +171,6 @@ func deepCopyOp(dst, src string) string {
 	return fmt.Sprintf("deepCopy(&%s, &%s)", dst, src)
 }
 
-func init() {
-	log.SetFlags(0)
-}
-
 func appendPaths(paths []string, prefix string, md *protokit.Descriptor, mds map[string]*protokit.Descriptor, seen map[string]struct{}) ([]string, error) {
 	if seen == nil {
 		seen = map[string]struct{}{}
@@ -849,6 +845,10 @@ import (
 	}
 
 	return resp, nil
+}
+
+func init() {
+	log.SetFlags(0)
 }
 
 func main() {
