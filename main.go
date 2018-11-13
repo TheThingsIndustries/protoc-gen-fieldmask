@@ -590,7 +590,10 @@ copy(%s.Paths, %s.Paths)`,
 		}
 		fmt.Fprint(buf, copyStr)
 	}
-	fmt.Fprint(buf, `
+	imports["fmt"] = "fmt"
+	fmt.Fprintf(buf, `
+		default:
+			panic(fmt.Errorf("Invaild fieldpath: '%%s'", path))
 		}
 	}
 }`,
