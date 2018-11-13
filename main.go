@@ -55,7 +55,7 @@ func deepCopyOp(dst, src string) string {
 	return fmt.Sprintf("deepCopy(&%s, &%s)", dst, src)
 }
 
-func appendPaths(paths []string, prefix string, md *protokit.Descriptor, mds map[string]*protokit.Descriptor, seen map[string]struct{}) ([]string, error) {
+func appendPaths(paths []string, prefix string, md *protokit.Descriptor, mdMap map[string]*protokit.Descriptor, seen map[string]struct{}) ([]string, error) {
 	if seen == nil {
 		seen = map[string]struct{}{}
 	}
@@ -85,7 +85,7 @@ func appendPaths(paths []string, prefix string, md *protokit.Descriptor, mds map
 			continue
 		}
 
-		fmd, ok := mds[fd.GetTypeName()]
+		fmd, ok := mdMap[fd.GetTypeName()]
 		if !ok {
 			switch fd.GetTypeName() {
 			case protoTimestampType, protoFieldMaskType, protoDurationType, protoStructType, protoAnyType:
@@ -103,7 +103,7 @@ func appendPaths(paths []string, prefix string, md *protokit.Descriptor, mds map
 		}
 
 		var err error
-		paths, err = appendPaths(paths, fp, fmd, mds, seen)
+		paths, err = appendPaths(paths, fp, fmd, mdMap, seen)
 		if err != nil {
 			return nil, err
 		}
@@ -162,12 +162,12 @@ var importPathReplacer = strings.NewReplacer(
 	"-", "_",
 )
 
-func buildMethods(buf *strings.Builder, md *protokit.Descriptor, mds map[string]*protokit.Descriptor) (map[string]string, error) {
+func buildMethods(buf *strings.Builder, md *protokit.Descriptor, mdMap map[string]*protokit.Descriptor) (map[string]string, error) {
 	imports := map[string]string{
 		"types": "github.com/gogo/protobuf/types",
 	}
 
-	paths, err := appendPaths(make([]string, 0, len(md.GetMessageFields())), "", md, mds, nil)
+	paths, err := appendPaths(make([]string, 0, len(md.GetMessageFields())), "", md, mdMap, nil)
 	if err != nil {
 		// TODO: Return error here
 		log.Printf("Failed to traverse `%s`: %s, skipping...", md.GetFullName(), err)
@@ -250,7 +250,7 @@ func (dst *%s) SetFields(src *%s, mask *types.FieldMask) {
 			}
 
 			var ok bool
-			fm, ok = mds[fd.GetTypeName()]
+			fm, ok = mdMap[fd.GetTypeName()]
 			if !ok {
 				return nil, unknownTypeError(fd.GetTypeName())
 			}
@@ -316,7 +316,7 @@ func (dst *%s) SetFields(src *%s, mask *types.FieldMask) {
 			}
 
 			var ok bool
-			fm, ok = mds[fd.GetTypeName()]
+			fm, ok = mdMap[fd.GetTypeName()]
 			if !ok {
 				return nil, unknownTypeError(fd.GetTypeName())
 			}
@@ -523,7 +523,7 @@ copy(%s.Paths, %s.Paths)`,
 		}
 
 		if isRepeated {
-			if strings.HasSuffix(fd.GetTypeName(), "Entry") && mds[fd.GetFullName()] == nil {
+			if strings.HasSuffix(fd.GetTypeName(), "Entry") && mdMap[fd.GetFullName()] == nil {
 				// fd is a map field, however obtaining its type is non-trivial, hence we resort to reflection
 				fmt.Fprintf(buf, `
 			%s`, deepCopyOp(dstPath, srcPath))
@@ -584,6 +584,21 @@ copy(%s.Paths, %s.Paths)`,
 	return imports, nil
 }
 
+func registerMessages(mdMap map[string]*protokit.Descriptor, mds ...*protokit.Descriptor) {
+	if len(mds) == 0 {
+		return
+	}
+
+	for _, md := range mds {
+		k := fmt.Sprintf(".%s", md.GetFullName())
+		if _, ok := mdMap[k]; ok {
+			panic(fmt.Errorf("Message name clash at `%s`", k))
+		}
+		mdMap[k] = md
+		registerMessages(mdMap, md.GetMessages()...)
+	}
+}
+
 type plugin struct{}
 
 func (p plugin) Generate(in *plugin_go.CodeGeneratorRequest) (*plugin_go.CodeGeneratorResponse, error) {
@@ -591,17 +606,9 @@ func (p plugin) Generate(in *plugin_go.CodeGeneratorRequest) (*plugin_go.CodeGen
 
 	fds := protokit.ParseCodeGenRequest(in)
 
-	mds := map[string]*protokit.Descriptor{}
+	mdMap := map[string]*protokit.Descriptor{}
 	for _, fd := range fds {
-		for _, md := range fd.GetMessages() {
-			for _, smd := range append(md.GetMessages(), md) {
-				k := fmt.Sprintf(".%s", smd.GetFullName())
-				if _, ok := mds[k]; ok {
-					return nil, fmt.Errorf("Message name clash at `%s`", k)
-				}
-				mds[k] = smd
-			}
-		}
+		registerMessages(mdMap, fd.GetMessages()...)
 	}
 
 	dirs := map[string]struct{}{}
@@ -614,8 +621,6 @@ func (p plugin) Generate(in *plugin_go.CodeGeneratorRequest) (*plugin_go.CodeGen
 		if dirName == "" {
 			dirName = filepath.Dir(fd.GetName())
 		}
-		dirs[dirName] = struct{}{}
-
 		fileName := filepath.Join(dirName, fmt.Sprintf("%s.pb.fm.go", strings.TrimSuffix(filepath.Base(fd.GetName()), filepath.Ext(fd.GetName()))))
 
 		imports := map[string]string{}
@@ -626,7 +631,7 @@ func (p plugin) Generate(in *plugin_go.CodeGeneratorRequest) (*plugin_go.CodeGen
 			}
 
 			mBuf := &strings.Builder{}
-			mImports, err := buildMethods(mBuf, md, mds)
+			mImports, err := buildMethods(mBuf, md, mdMap)
 			if err != nil {
 				return nil, err
 			}
@@ -649,6 +654,8 @@ func (p plugin) Generate(in *plugin_go.CodeGeneratorRequest) (*plugin_go.CodeGen
 		if buf.Len() == 0 {
 			continue
 		}
+
+		dirs[dirName] = struct{}{}
 
 		var importString string
 		switch len(imports) {
