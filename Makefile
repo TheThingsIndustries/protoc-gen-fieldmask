@@ -10,10 +10,7 @@ WORKDIR:=$(shell mkdir -p $(PWD)/.work && mktemp -d -p $(PWD)/.work)
 DOCKER ?= docker
 PROTOC_DOCKER_IMAGE ?= thethingsindustries/protoc:3.0.15
 PROTOC_DOCKER_ARGS := run --user `id -u` --rm \
-										 --mount type=bind,src=$(WORKDIR),dst=$(WORKDIR) \
-										 --mount type=bind,src=$(PWD)/testdata,dst=$(PWD)/testdata \
-										 --mount type=bind,src=$(PWD)/vendor,dst=$(PWD)/vendor \
-										 --mount type=bind,src=$(PWD)/internal/extensions,dst=$(PWD)/internal/extensions \
+										 --mount type=bind,src=$(PWD),dst=$(PWD) \
 										 -e IN_TEST \
 										 -w $(PWD)
 PROTOC ?= $(DOCKER) $(PROTOC_DOCKER_ARGS) $(PROTOC_DOCKER_IMAGE)

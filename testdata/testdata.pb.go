@@ -36,7 +36,7 @@ func (m *Test) Reset()         { *m = Test{} }
 func (m *Test) String() string { return proto.CompactTextString(m) }
 func (*Test) ProtoMessage()    {}
 func (*Test) Descriptor() ([]byte, []int) {
-	return fileDescriptor_testdata_6a9238fbdd58cee2, []int{0}
+	return fileDescriptor_testdata_1578859d61a5d069, []int{0}
 }
 func (m *Test) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Test.Unmarshal(m, b)
@@ -85,7 +85,7 @@ func (m *Test_TestNested) Reset()         { *m = Test_TestNested{} }
 func (m *Test_TestNested) String() string { return proto.CompactTextString(m) }
 func (*Test_TestNested) ProtoMessage()    {}
 func (*Test_TestNested) Descriptor() ([]byte, []int) {
-	return fileDescriptor_testdata_6a9238fbdd58cee2, []int{0, 0}
+	return fileDescriptor_testdata_1578859d61a5d069, []int{0, 0}
 }
 func (m *Test_TestNested) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Test_TestNested.Unmarshal(m, b)
@@ -147,7 +147,7 @@ func (m *Test_TestNested_TestNestedNested) Reset()         { *m = Test_TestNeste
 func (m *Test_TestNested_TestNestedNested) String() string { return proto.CompactTextString(m) }
 func (*Test_TestNested_TestNestedNested) ProtoMessage()    {}
 func (*Test_TestNested_TestNestedNested) Descriptor() ([]byte, []int) {
-	return fileDescriptor_testdata_6a9238fbdd58cee2, []int{0, 0, 0}
+	return fileDescriptor_testdata_1578859d61a5d069, []int{0, 0, 0}
 }
 func (m *Test_TestNested_TestNestedNested) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Test_TestNested_TestNestedNested.Unmarshal(m, b)
@@ -202,9 +202,9 @@ func init() {
 	proto.RegisterMapType((map[int32]uint32)(nil), "testdata.Test.TestNested.TestNestedNested.DEntry")
 }
 
-func init() { proto.RegisterFile("testdata.proto", fileDescriptor_testdata_6a9238fbdd58cee2) }
+func init() { proto.RegisterFile("testdata.proto", fileDescriptor_testdata_1578859d61a5d069) }
 
-var fileDescriptor_testdata_6a9238fbdd58cee2 = []byte{
+var fileDescriptor_testdata_1578859d61a5d069 = []byte{
 	// 400 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x92, 0xc1, 0x6a, 0xdb, 0x40,
 	0x10, 0x86, 0x19, 0x4b, 0x36, 0xed, 0xda, 0x35, 0x66, 0xe9, 0x41, 0x15, 0xa5, 0x36, 0xbd, 0xd4,
