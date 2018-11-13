@@ -11,8 +11,10 @@ DOCKER ?= docker
 PROTOC_DOCKER_IMAGE ?= thethingsindustries/protoc:3.0.15
 PROTOC_DOCKER_ARGS := run --user `id -u` --rm \
 										 --mount type=bind,src=$(WORKDIR),dst=$(WORKDIR) \
+										 --mount type=bind,src=$(PWD)/testdata,dst=$(PWD)/testdata \
 										 --mount type=bind,src=$(PWD)/vendor,dst=$(PWD)/vendor \
 										 --mount type=bind,src=$(PWD)/internal/extensions,dst=$(PWD)/internal/extensions \
+										 -e IN_TEST \
 										 -w $(PWD)
 PROTOC ?= $(DOCKER) $(PROTOC_DOCKER_ARGS) $(PROTOC_DOCKER_IMAGE)
 
@@ -25,7 +27,6 @@ internal/extensions/gogoproto/gogo.pb.go: vendor/github.com/gogo/protobuf/gogopr
 		$< > $(WORKDIR)/gogo.proto
 	$(PROTOC) -I$(WORKDIR) -I$(PWD)/vendor --go_out=$(WORKDIR) $(WORKDIR)/gogo.proto
 	mv $(WORKDIR)/github.com/TheThingsIndustries/protoc-gen-fieldmask/internal/extensions/gogoproto/gogo.pb.go $@
-	rm -rf $(WORKDIR)
 
 .PHONY: extensions
 
@@ -35,8 +36,12 @@ extensions: internal/extensions/gogoproto/gogo.pb.go
 
 clean:
 	rm -rf .work
+	find ./testdata -name '*.pb.go' -delete -or -name '*.pb.fm.go' -delete
 
 .PHONY: test
 
 test:
-	go test -coverprofile=coverage.out ./...
+	$(info Regenerating golden files...)
+	@TMPDIR="$(WORKDIR)" WORKDIR="$(WORKDIR)" PROTOC="$(PROTOC)" go test -regenerate
+	$(info Running tests...)
+	@TMPDIR="$(WORKDIR)" WORKDIR="$(WORKDIR)" PROTOC="$(PROTOC)" go test -coverprofile=coverage.out ./...

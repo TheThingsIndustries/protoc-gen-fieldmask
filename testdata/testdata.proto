@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+
+package testdata;
+
+option go_package = "github.com/TheThingsIndustries/protoc-gen-fieldmask/testdata";
+
+message Test {
+  message TestNested {
+    message TestNestedNested {
+      int32 A = 1;
+      sfixed64 B = 2;
+      repeated bytes C = 3;
+      map<int32,uint32> D = 4;
+    }
+    TestNestedNested A = 1;
+    bytes B = 2;
+    google.protobuf.Duration C = 3 [(gogoproto.stdduration) = true];
+    google.protobuf.Timestamp D = 4 [(gogoproto.stdtime) = true];
+    string E = 5 [(gogoproto.customtype) = "CustomType"];
+  }
+  TestNested A = 1;
+  TestNested B = 2 [(gogoproto.customname) = "CustomName"];
+}
