@@ -398,7 +398,7 @@ copy(%s, %s)`,
 					}
 					break
 				}
-				return nil, unsupportedTypeError(fd.GetType().String())
+				return nil, unsupportedTypeError(fd.GetTypeName())
 
 			case protoDurationType:
 				if v, ok := fd.OptionExtensions["gogoproto.stdduration"].(*bool); ok && *v {
@@ -406,7 +406,7 @@ copy(%s, %s)`,
 					goType = "time.Duration"
 					break
 				}
-				return nil, unsupportedTypeError(fd.GetType().String())
+				return nil, unsupportedTypeError(fd.GetTypeName())
 
 			case protoAnyType:
 				goType = "types.Any"
