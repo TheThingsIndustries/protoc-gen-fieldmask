@@ -7,7 +7,7 @@ import (
 	time "time"
 )
 
-var _TestFieldPaths = [...]string{"A.A.A", "A.A.B", "A.A.C", "A.A.D", "A.B", "A.C", "A.D", "A.E", "B.A.A", "B.A.B", "B.A.C", "B.A.D", "B.B", "B.C", "B.D", "B.E"}
+var _TestFieldPaths = [...]string{"a.a.a", "a.a.b", "a.a.c", "a.a.d", "a.b", "a.c", "a.d", "a.e", "b.a.a", "b.a.b", "b.a.c", "b.a.d", "b.b", "b.c", "b.d", "b.e"}
 
 func (*Test) FieldMaskPaths() []string {
 	ret := make([]string, len(_TestFieldPaths))
@@ -18,7 +18,7 @@ func (*Test) FieldMaskPaths() []string {
 func (dst *Test) SetFields(src *Test, mask *types.FieldMask) {
 	for _, path := range mask.GetPaths() {
 		switch path {
-		case "A.A.A":
+		case "a.a.a":
 			var nilPath bool
 			nilPath = nilPath || src.A == nil
 			nilPath = nilPath || src.A.A == nil
@@ -45,7 +45,7 @@ func (dst *Test) SetFields(src *Test, mask *types.FieldMask) {
 				continue
 			}
 			dst.A.A.A = src.A.A.A
-		case "A.A.B":
+		case "a.a.b":
 			var nilPath bool
 			nilPath = nilPath || src.A == nil
 			nilPath = nilPath || src.A.A == nil
@@ -72,7 +72,7 @@ func (dst *Test) SetFields(src *Test, mask *types.FieldMask) {
 				continue
 			}
 			dst.A.A.B = src.A.A.B
-		case "A.A.C":
+		case "a.a.c":
 			var nilPath bool
 			nilPath = nilPath || src.A == nil
 			nilPath = nilPath || src.A.A == nil
@@ -102,7 +102,7 @@ func (dst *Test) SetFields(src *Test, mask *types.FieldMask) {
 				dst.A.A.C[i] = make([]byte, len(v))
 				copy(dst.A.A.C[i], v)
 			}
-		case "A.A.D":
+		case "a.a.d":
 			var nilPath bool
 			nilPath = nilPath || src.A == nil
 			nilPath = nilPath || src.A.A == nil
@@ -128,7 +128,7 @@ func (dst *Test) SetFields(src *Test, mask *types.FieldMask) {
 				continue
 			}
 			deepCopy(&dst.A.A.D, &src.A.A.D)
-		case "A.B":
+		case "a.b":
 			var nilPath bool
 			nilPath = nilPath || src.A == nil
 
@@ -147,7 +147,7 @@ func (dst *Test) SetFields(src *Test, mask *types.FieldMask) {
 			}
 			dst.A.B = make([]byte, len(src.A.B))
 			copy(dst.A.B, src.A.B)
-		case "A.C":
+		case "a.c":
 			var nilPath bool
 			nilPath = nilPath || src.A == nil
 
@@ -166,7 +166,7 @@ func (dst *Test) SetFields(src *Test, mask *types.FieldMask) {
 			var v time.Duration
 			dst.A.C = &v
 			(*dst.A.C) = (*src.A.C)
-		case "A.D":
+		case "a.d":
 			var nilPath bool
 			nilPath = nilPath || src.A == nil
 
@@ -185,7 +185,7 @@ func (dst *Test) SetFields(src *Test, mask *types.FieldMask) {
 			var v time.Time
 			dst.A.D = &v
 			(*dst.A.D) = time.Unix(0, (*src.A.D).UnixNano()).UTC()
-		case "A.E":
+		case "a.e":
 			var nilPath bool
 			nilPath = nilPath || src.A == nil
 
@@ -204,7 +204,7 @@ func (dst *Test) SetFields(src *Test, mask *types.FieldMask) {
 			var v CustomType
 			dst.A.E = &v
 			deepCopy(&(*dst.A.E), &(*src.A.E))
-		case "B.A.A":
+		case "b.a.a":
 			var nilPath bool
 			nilPath = nilPath || src.CustomName == nil
 			nilPath = nilPath || src.CustomName.A == nil
@@ -231,7 +231,7 @@ func (dst *Test) SetFields(src *Test, mask *types.FieldMask) {
 				continue
 			}
 			dst.CustomName.A.A = src.CustomName.A.A
-		case "B.A.B":
+		case "b.a.b":
 			var nilPath bool
 			nilPath = nilPath || src.CustomName == nil
 			nilPath = nilPath || src.CustomName.A == nil
@@ -258,7 +258,7 @@ func (dst *Test) SetFields(src *Test, mask *types.FieldMask) {
 				continue
 			}
 			dst.CustomName.A.B = src.CustomName.A.B
-		case "B.A.C":
+		case "b.a.c":
 			var nilPath bool
 			nilPath = nilPath || src.CustomName == nil
 			nilPath = nilPath || src.CustomName.A == nil
@@ -288,7 +288,7 @@ func (dst *Test) SetFields(src *Test, mask *types.FieldMask) {
 				dst.CustomName.A.C[i] = make([]byte, len(v))
 				copy(dst.CustomName.A.C[i], v)
 			}
-		case "B.A.D":
+		case "b.a.d":
 			var nilPath bool
 			nilPath = nilPath || src.CustomName == nil
 			nilPath = nilPath || src.CustomName.A == nil
@@ -314,7 +314,7 @@ func (dst *Test) SetFields(src *Test, mask *types.FieldMask) {
 				continue
 			}
 			deepCopy(&dst.CustomName.A.D, &src.CustomName.A.D)
-		case "B.B":
+		case "b.b":
 			var nilPath bool
 			nilPath = nilPath || src.CustomName == nil
 
@@ -333,7 +333,7 @@ func (dst *Test) SetFields(src *Test, mask *types.FieldMask) {
 			}
 			dst.CustomName.B = make([]byte, len(src.CustomName.B))
 			copy(dst.CustomName.B, src.CustomName.B)
-		case "B.C":
+		case "b.c":
 			var nilPath bool
 			nilPath = nilPath || src.CustomName == nil
 
@@ -352,7 +352,7 @@ func (dst *Test) SetFields(src *Test, mask *types.FieldMask) {
 			var v time.Duration
 			dst.CustomName.C = &v
 			(*dst.CustomName.C) = (*src.CustomName.C)
-		case "B.D":
+		case "b.d":
 			var nilPath bool
 			nilPath = nilPath || src.CustomName == nil
 
@@ -371,7 +371,7 @@ func (dst *Test) SetFields(src *Test, mask *types.FieldMask) {
 			var v time.Time
 			dst.CustomName.D = &v
 			(*dst.CustomName.D) = time.Unix(0, (*src.CustomName.D).UnixNano()).UTC()
-		case "B.E":
+		case "b.e":
 			var nilPath bool
 			nilPath = nilPath || src.CustomName == nil
 
