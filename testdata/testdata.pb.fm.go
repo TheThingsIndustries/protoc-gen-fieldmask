@@ -3,6 +3,7 @@
 package testdata
 
 import (
+	fmt "fmt"
 	types "github.com/gogo/protobuf/types"
 	time "time"
 )
@@ -390,6 +391,8 @@ func (dst *Test) SetFields(src *Test, mask *types.FieldMask) {
 			var v CustomType
 			dst.CustomName.E = &v
 			deepCopy(&(*dst.CustomName.E), &(*src.CustomName.E))
+		default:
+			panic(fmt.Errorf("Invaild fieldpath: '%s'", path))
 		}
 	}
 }
