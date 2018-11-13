@@ -133,22 +133,22 @@ func TestGolden(t *testing.T) {
 func TestFieldMaskPaths(t *testing.T) {
 	pb := &testdata.Test{}
 	assertions.New(t).So(pb.FieldMaskPaths(), should.Resemble, []string{
-		"A.A.A",
-		"A.A.B",
-		"A.A.C",
-		"A.A.D",
-		"A.B",
-		"A.C",
-		"A.D",
-		"A.E",
-		"B.A.A",
-		"B.A.B",
-		"B.A.C",
-		"B.A.D",
-		"B.B",
-		"B.C",
-		"B.D",
-		"B.E",
+		"a.a.a",
+		"a.a.b",
+		"a.a.c",
+		"a.a.d",
+		"a.b",
+		"a.c",
+		"a.d",
+		"a.e",
+		"b.a.a",
+		"b.a.b",
+		"b.a.c",
+		"b.a.d",
+		"b.b",
+		"b.c",
+		"b.d",
+		"b.e",
 	})
 }
 
@@ -167,7 +167,7 @@ func TestSetFields(t *testing.T) {
 		CustomName: &testdata.Test_TestNested{
 			B: []byte{1, 2, 4},
 		},
-	}, &types.FieldMask{Paths: []string{"A.B"}})
+	}, &types.FieldMask{Paths: []string{"a.b"}})
 	a.So(pb, should.Resemble, &testdata.Test{
 		A: &testdata.Test_TestNested{
 			B: []byte{1, 2, 3},

@@ -25,17 +25,17 @@ option go_package = "github.com/TheThingsIndustries/protoc-gen-fieldmask/testdat
 message Test {
   message TestNested {
     message TestNestedNested {
-      int32 A = 1;
-      sfixed64 B = 2;
-      repeated bytes C = 3;
-      map<int32,uint32> D = 4;
+      int32 a = 1;
+      sfixed64 b = 2;
+      repeated bytes c = 3;
+      map<int32,uint32> d = 4;
     }
-    TestNestedNested A = 1;
-    bytes B = 2;
-    google.protobuf.Duration C = 3 [(gogoproto.stdduration) = true];
-    google.protobuf.Timestamp D = 4 [(gogoproto.stdtime) = true];
-    string E = 5 [(gogoproto.customtype) = "CustomType"];
+    TestNestedNested a = 1;
+    bytes b = 2;
+    google.protobuf.Duration c = 3 [(gogoproto.stdduration) = true];
+    google.protobuf.Timestamp d = 4 [(gogoproto.stdtime) = true];
+    string e = 5 [(gogoproto.customtype) = "CustomType"];
   }
-  TestNested A = 1;
-  TestNested B = 2 [(gogoproto.customname) = "CustomName"];
+  TestNested a = 1;
+  TestNested b = 2 [(gogoproto.customname) = "CustomName"];
 }
