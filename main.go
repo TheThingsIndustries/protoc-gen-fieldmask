@@ -729,7 +729,7 @@ func deepCopy(dst, src interface{}) {
 	copyRecursive(reflect.ValueOf(dst), reflect.ValueOf(src))
 }
 
-// NOTE: The following block is sligthly modified https://github.com/mohae/deepcopy/tree/c48cc78d482608239f6c4c92a4abd87eb8761c90
+// NOTE: The following block is slightly modified https://github.com/mohae/deepcopy/tree/c48cc78d482608239f6c4c92a4abd87eb8761c90
 
 // The MIT License (MIT)
 //
