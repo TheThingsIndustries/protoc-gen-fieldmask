@@ -181,7 +181,7 @@ func buildMethods(buf *strings.Builder, md *protokit.Descriptor, mdMap map[strin
 
 	paths, err := appendPaths(make([]string, 0, len(md.GetMessageFields())), "", md, mdMap, nil)
 	if err != nil {
-		// TODO: Return error here
+		// TODO: Return error here once https://github.com/TheThingsIndustries/protoc-gen-fieldmask/issues/5 is resolved.
 		log.Printf("Failed to traverse `%s`: %s, skipping...", md.GetFullName(), err)
 		return nil, nil
 	}
@@ -423,13 +423,13 @@ copy(%s, %s)`,
 			case protoAnyType:
 				imports["types"] = "github.com/gogo/protobuf/types"
 				goType = "types.Any"
-				// TODO: Implement non-reflective copying
+				// TODO: Implement non-reflective copying (https://github.com/TheThingsIndustries/protoc-gen-fieldmask/issues/4).
 				copyOp = deepCopyOp
 
 			case protoStructType:
 				imports["types"] = "github.com/gogo/protobuf/types"
 				goType = "types.Struct"
-				// TODO: Implement non-reflective copying
+				// TODO: Implement non-reflective copying (https://github.com/TheThingsIndustries/protoc-gen-fieldmask/issues/4).
 				copyOp = deepCopyOp
 
 			case protoFieldMaskType:
@@ -454,6 +454,7 @@ copy(%s.Paths, %s.Paths)`,
 		var isNullable bool
 		if v, ok := fd.OptionExtensions["gogoproto.customtype"].(*string); ok {
 			isNullable = true
+			// TODO: Implement non-reflective copying (https://github.com/TheThingsIndustries/protoc-gen-fieldmask/issues/4).
 			copyOp = deepCopyOp
 			if i := strings.LastIndex(*v, "."); i >= 0 {
 				pkgPath := (*v)[:i]
@@ -540,6 +541,7 @@ copy(%s.Paths, %s.Paths)`,
 		if isRepeated {
 			if strings.HasSuffix(fd.GetTypeName(), "Entry") && mdMap[fd.GetFullName()] == nil {
 				// fd is a map field, however obtaining its type is non-trivial, hence we resort to reflection
+				// TODO: Implement non-reflective copying (https://github.com/TheThingsIndustries/protoc-gen-fieldmask/issues/4).
 				fmt.Fprintf(buf, `
 			%s`, deepCopyOp(dstPath, srcPath))
 				continue
