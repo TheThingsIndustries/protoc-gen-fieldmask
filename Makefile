@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-WORKDIR:=$(shell mkdir -p $(PWD)/.work && mktemp -d -p $(PWD)/.work)
+WORKDIR := $(shell mkdir -p $(PWD)/.work && mktemp -d "$(PWD)/.work/tmp.XXX")
 
 DOCKER ?= docker
 PROTOC_DOCKER_IMAGE ?= thethingsindustries/protoc:3.0.15
