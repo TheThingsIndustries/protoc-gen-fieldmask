@@ -61,14 +61,6 @@ func (e recursionError) Error() string {
 	return fmt.Sprintf("field '%s' defined at %s is recursive", e.field, e.file)
 }
 
-func eqCopyOp(dst, src string) string {
-	return fmt.Sprintf("%s = %s", dst, src)
-}
-
-func deepCopyOp(dst, src string) string {
-	return fmt.Sprintf("deepCopy(&%s, &%s)", dst, src)
-}
-
 func appendPaths(paths []string, prefix string, md *protokit.Descriptor, mdMap map[string]*protokit.Descriptor, seen map[string]struct{}) ([]string, error) {
 	if seen == nil {
 		seen = map[string]struct{}{}
@@ -175,6 +167,14 @@ var importPathReplacer = strings.NewReplacer(
 	"/", "_",
 	"-", "_",
 )
+
+func eqCopyOp(dst, src string) string {
+	return fmt.Sprintf("%s = %s", dst, src)
+}
+
+func deepCopyOp(dst, src string) string {
+	return fmt.Sprintf("deepCopy(&%s, &%s)", dst, src)
+}
 
 func buildMethods(buf *strings.Builder, md *protokit.Descriptor, mdMap map[string]*protokit.Descriptor) (map[string]string, error) {
 	imports := map[string]string{
