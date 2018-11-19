@@ -444,8 +444,9 @@ copy(%s.Paths, %s.Paths)`,
 				}
 
 			default:
-				// NOTE: Message has no fields, so we can copy with `=`
 				goType = fieldTypeName(fd)
+				// TODO: Implement non-reflective copying (https://github.com/TheThingsIndustries/protoc-gen-fieldmask/issues/4).
+				copyOp = deepCopyOp
 			}
 
 		default:
