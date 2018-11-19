@@ -4,7 +4,6 @@ package testdata
 
 import (
 	fmt "fmt"
-	types "github.com/gogo/protobuf/types"
 	time "time"
 )
 
@@ -16,8 +15,8 @@ func (*Test) FieldMaskPaths() []string {
 	return ret
 }
 
-func (dst *Test) SetFields(src *Test, mask *types.FieldMask) {
-	for _, path := range mask.GetPaths() {
+func (dst *Test) SetFields(src *Test, paths ...string) {
+	for _, path := range paths {
 		switch path {
 		case "a.a.a":
 			var nilPath bool

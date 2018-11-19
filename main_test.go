@@ -25,7 +25,6 @@ import (
 	"testing"
 
 	"github.com/TheThingsIndustries/protoc-gen-fieldmask/testdata"
-	"github.com/gogo/protobuf/types"
 	"github.com/kr/pretty"
 	"github.com/smartystreets/assertions"
 	"github.com/smartystreets/assertions/should"
@@ -167,7 +166,7 @@ func TestSetFields(t *testing.T) {
 		CustomName: &testdata.Test_TestNested{
 			B: []byte{1, 2, 4},
 		},
-	}, &types.FieldMask{Paths: []string{"a.b"}})
+	}, "a.b")
 	a.So(pb, should.Resemble, &testdata.Test{
 		A: &testdata.Test_TestNested{
 			B: []byte{1, 2, 3},

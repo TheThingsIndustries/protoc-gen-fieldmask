@@ -177,9 +177,7 @@ func deepCopyOp(dst, src string) string {
 }
 
 func buildMethods(buf *strings.Builder, md *protokit.Descriptor, mdMap map[string]*protokit.Descriptor) (map[string]string, error) {
-	imports := map[string]string{
-		"types": "github.com/gogo/protobuf/types",
-	}
+	imports := map[string]string{}
 
 	paths, err := appendPaths(make([]string, 0, len(md.GetMessageFields())), "", md, mdMap, nil)
 	if err != nil {
@@ -214,8 +212,8 @@ func (*%s) FieldMaskPaths() []string {`,
 	fmt.Fprintf(buf, `
 }
 
-func (dst *%s) SetFields(src *%s, mask *types.FieldMask) {
-	for _, path := range mask.GetPaths() {
+func (dst *%s) SetFields(src *%s, paths ...string) {
+	for _, path := range paths {
 		switch path {`,
 		md.GetName(), md.GetName(),
 	)
@@ -423,16 +421,19 @@ copy(%s, %s)`,
 				return nil, unsupportedTypeError(fd.GetTypeName())
 
 			case protoAnyType:
+				imports["types"] = "github.com/gogo/protobuf/types"
 				goType = "types.Any"
 				// TODO: Implement non-reflective copying
 				copyOp = deepCopyOp
 
 			case protoStructType:
+				imports["types"] = "github.com/gogo/protobuf/types"
 				goType = "types.Struct"
 				// TODO: Implement non-reflective copying
 				copyOp = deepCopyOp
 
 			case protoFieldMaskType:
+				imports["types"] = "github.com/gogo/protobuf/types"
 				goType = "types.FieldMask"
 				copyOp = func(dst, src string) string {
 					return fmt.Sprintf(`%s.Paths = make([]string, len(%s.Paths))
