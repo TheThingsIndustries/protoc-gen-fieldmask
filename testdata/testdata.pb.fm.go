@@ -181,7 +181,7 @@ func (dst *Test) SetFields(src *Test, paths ...string) {
 			}
 			dst.TestOneof.(*Test_F).F = src.GetF()
 		default:
-			panic(fmt.Errorf("Invaild fieldpath: '%s'", path))
+			panic(fmt.Errorf("Invalid field path: '%s'", path))
 		}
 	}
 }

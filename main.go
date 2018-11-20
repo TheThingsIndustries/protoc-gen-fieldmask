@@ -395,7 +395,7 @@ func (dst *%s) SetFields(src *%s, paths ...string) {
 	}
 	fmt.Fprintf(buf, `
 		default:
-			panic(fmt.Errorf("Invaild fieldpath: '%%s'", path))
+			panic(fmt.Errorf("Invalid field path: '%%s'", path))
 		}
 	}
 }`,
