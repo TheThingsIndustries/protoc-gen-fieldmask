@@ -176,8 +176,19 @@ func deepCopyOp(dst, src string) string {
 	return fmt.Sprintf("deepCopy(&%s, &%s)", dst, src)
 }
 
+type importMap map[string]string
+
+// Add adds pkg to importMap under key name. Add is not safe for concurrent use.
+func (m importMap) Add(name, pkg string) error {
+	if v, ok := m[name]; ok && v != pkg {
+		return fmt.Errorf("import name clash at `%s`. Imported `%s` and `%s`", name, pkg, v)
+	}
+	m[name] = pkg
+	return nil
+}
+
 func buildMethods(buf *strings.Builder, md *protokit.Descriptor, mdMap map[string]*protokit.Descriptor) (map[string]string, error) {
-	imports := map[string]string{}
+	imports := importMap{}
 
 	paths, err := appendPaths(make([]string, 0, len(md.GetMessageFields())), "", md, mdMap, nil)
 	if err != nil {
@@ -220,13 +231,15 @@ func (dst *%s) SetFields(src *%s, paths ...string) {
 
 	for _, p := range paths {
 		fmt.Fprintf(buf, `
-		case "%s":
-			var nilPath bool`,
+		case "%s":`,
 			p)
 
 		sp := strings.Split(p, ".")
 
 		srcPath := "src"
+
+		var nillable []string
+
 		fm := md
 		for i := 0; i < len(sp)-1; i++ {
 			fd := fm.GetMessageField(sp[i])
@@ -251,12 +264,6 @@ func (dst *%s) SetFields(src *%s, paths ...string) {
 				}
 
 				srcPath = fmt.Sprintf("%s.Get%s()", srcPath, goName)
-
-				fmt.Fprintf(buf, `
-			nilPath = nilPath || %s == nil`,
-					srcPath,
-				)
-
 			} else {
 				srcPath = fmt.Sprintf("%s.%s", srcPath, goName)
 			}
@@ -271,13 +278,23 @@ func (dst *%s) SetFields(src *%s, paths ...string) {
 				continue
 			}
 
-			fmt.Fprintf(buf, `
-			nilPath = nilPath || %s == nil`,
-				srcPath,
-			)
+			nillable = append(nillable, srcPath)
 		}
 
-		fmt.Fprintln(buf)
+		if len(nillable) > 0 {
+			fmt.Fprintf(buf, `
+			var nilPath bool`,
+			)
+
+			for _, linkPath := range nillable {
+				fmt.Fprintf(buf, `
+			nilPath = nilPath || %s == nil`,
+					linkPath,
+				)
+			}
+
+			fmt.Fprintln(buf)
+		}
 
 		dstPath := "dst"
 		fm = md
@@ -306,7 +323,8 @@ func (dst *%s) SetFields(src *%s, paths ...string) {
 
 				dstPath = fmt.Sprintf("%s.%s", dstPath, oneOfName)
 
-				fmt.Fprintf(buf, `
+				if len(nillable) > 0 {
+					fmt.Fprintf(buf, `
 			switch {
 			case %s != nil && nilPath:
 			case %s == nil && nilPath:
@@ -315,11 +333,21 @@ func (dst *%s) SetFields(src *%s, paths ...string) {
 				%s = &%s{}
 			}
 `,
-					dstPath,
-					dstPath,
-					dstPath,
-					dstPath, oneOfType,
-				)
+						dstPath,
+						dstPath,
+						dstPath,
+						dstPath, oneOfType,
+					)
+				} else {
+					fmt.Fprintf(buf, `
+			if %s == nil {
+				%s = &%s{}
+			}
+`,
+						dstPath,
+						dstPath, oneOfType,
+					)
+				}
 
 				dstPath = fmt.Sprintf("%s.(*%s).%s", dstPath, oneOfType, goName)
 
@@ -356,6 +384,7 @@ func (dst *%s) SetFields(src *%s, paths ...string) {
 		fd := fm.GetMessageField(sp[len(sp)-1])
 
 		copyOp := eqCopyOp
+		addGoTypeImport := func(importMap) error { return nil }
 		var goType string
 		switch fd.GetType() {
 		case descriptor.FieldDescriptorProto_TYPE_BOOL:
@@ -403,7 +432,10 @@ copy(%s, %s)`,
 			switch goType {
 			case protoTimestampType:
 				if v, ok := fd.OptionExtensions["gogoproto.stdtime"].(*bool); ok && *v {
-					imports["time"] = "time"
+					// NOTE: time package is immediately added to imports, as copyOp uses it.
+					if err := imports.Add("time", "time"); err != nil {
+						return nil, err
+					}
 					goType = "time.Time"
 					copyOp = func(dst, src string) string {
 						return fmt.Sprintf("%s = time.Unix(0, %s.UnixNano()).UTC()", dst, src)
@@ -414,26 +446,34 @@ copy(%s, %s)`,
 
 			case protoDurationType:
 				if v, ok := fd.OptionExtensions["gogoproto.stdduration"].(*bool); ok && *v {
-					imports["time"] = "time"
+					addGoTypeImport = func(m importMap) error {
+						return m.Add("time", "time")
+					}
 					goType = "time.Duration"
 					break
 				}
 				return nil, unsupportedTypeError(fd.GetTypeName())
 
 			case protoAnyType:
-				imports["types"] = "github.com/gogo/protobuf/types"
+				addGoTypeImport = func(m importMap) error {
+					return m.Add("types", "github.com/gogo/protobuf/types")
+				}
 				goType = "types.Any"
 				// TODO: Implement non-reflective copying (https://github.com/TheThingsIndustries/protoc-gen-fieldmask/issues/4).
 				copyOp = deepCopyOp
 
 			case protoStructType:
-				imports["types"] = "github.com/gogo/protobuf/types"
+				addGoTypeImport = func(m importMap) error {
+					return m.Add("types", "github.com/gogo/protobuf/types")
+				}
 				goType = "types.Struct"
 				// TODO: Implement non-reflective copying (https://github.com/TheThingsIndustries/protoc-gen-fieldmask/issues/4).
 				copyOp = deepCopyOp
 
 			case protoFieldMaskType:
-				imports["types"] = "github.com/gogo/protobuf/types"
+				addGoTypeImport = func(m importMap) error {
+					return m.Add("types", "github.com/gogo/protobuf/types")
+				}
 				goType = "types.FieldMask"
 				copyOp = func(dst, src string) string {
 					return fmt.Sprintf(`%s.Paths = make([]string, len(%s.Paths))
@@ -458,17 +498,14 @@ copy(%s.Paths, %s.Paths)`,
 			// TODO: Implement non-reflective copying (https://github.com/TheThingsIndustries/protoc-gen-fieldmask/issues/4).
 			copyOp = deepCopyOp
 			if i := strings.LastIndex(*v, "."); i >= 0 {
-				pkgPath := (*v)[:i]
-				typeName := (*v)[i+1:]
 				pkgAlias := importPathReplacer.Replace((*v)[:i])
-
-				goType = fmt.Sprintf("%s.%s", pkgAlias, typeName)
-				if imported, ok := imports[pkgAlias]; ok && imported != pkgPath {
-					panic(fmt.Errorf("Import name clash at `%s`. Imported `%s` and `%s`", pkgAlias, pkgPath, imported))
+				goType = fmt.Sprintf("%s.%s", pkgAlias, (*v)[i+1:])
+				addGoTypeImport = func(m importMap) error {
+					return m.Add(pkgAlias, (*v)[:i])
 				}
-				imports[pkgAlias] = pkgPath
 			} else {
 				goType = *v
+				addGoTypeImport = func(importMap) error { return nil }
 			}
 		}
 
@@ -495,7 +532,8 @@ copy(%s.Paths, %s.Paths)`,
 			srcPath = fmt.Sprintf("%s.Get%s()", srcPath, goName)
 			dstPath = fmt.Sprintf("%s.%s", dstPath, oneOfName)
 
-			fmt.Fprintf(buf, `
+			if len(nillable) > 0 {
+				fmt.Fprintf(buf, `
 			switch {
 			case %s != nil && nilPath:
 			case %s == nil && nilPath:
@@ -504,11 +542,21 @@ copy(%s.Paths, %s.Paths)`,
 				%s = &%s{}
 			}
 `,
-				dstPath,
-				dstPath,
-				dstPath,
-				dstPath, oneOfType,
-			)
+					dstPath,
+					dstPath,
+					dstPath,
+					dstPath, oneOfType,
+				)
+			} else {
+				fmt.Fprintf(buf, `
+			if %s == nil {
+				%s = &%s{}
+			}
+`,
+					dstPath,
+					dstPath, oneOfType,
+				)
+			}
 
 			dstPath = fmt.Sprintf("%s.(*%s).%s", dstPath, oneOfType, goName)
 
@@ -518,7 +566,7 @@ copy(%s.Paths, %s.Paths)`,
 		}
 
 		isRepeated := fd.GetLabel() == descriptor.FieldDescriptorProto_LABEL_REPEATED
-		if isNullable || isRepeated {
+		if len(nillable) > 0 && (isNullable || isRepeated) {
 			fmt.Fprintf(buf, `
 			if nilPath || %s == nil {
 				%s = nil
@@ -527,7 +575,20 @@ copy(%s.Paths, %s.Paths)`,
 				srcPath,
 				dstPath,
 			)
-		} else {
+		} else if isNullable || isRepeated {
+			fmt.Fprintf(buf, `
+			if %s == nil {
+				%s = nil
+				continue
+			}`,
+				srcPath,
+				dstPath,
+			)
+		} else if len(nillable) > 0 {
+			if err := addGoTypeImport(imports); err != nil {
+				return nil, err
+			}
+
 			fmt.Fprintf(buf, `
 			if nilPath {
 				var v %s
@@ -546,6 +607,10 @@ copy(%s.Paths, %s.Paths)`,
 				fmt.Fprintf(buf, `
 			%s`, deepCopyOp(dstPath, srcPath))
 				continue
+			}
+
+			if err := addGoTypeImport(imports); err != nil {
+				return nil, err
 			}
 
 			if isNullable {
@@ -574,6 +639,10 @@ copy(%s.Paths, %s.Paths)`,
 		}
 
 		if isNullable {
+			if err := addGoTypeImport(imports); err != nil {
+				return nil, err
+			}
+
 			fmt.Fprintf(buf, `
 			var v %s
 			%s = &v`,
@@ -594,7 +663,9 @@ copy(%s.Paths, %s.Paths)`,
 		}
 		fmt.Fprint(buf, copyStr)
 	}
-	imports["fmt"] = "fmt"
+	if err = imports.Add("fmt", "fmt"); err != nil {
+		return nil, err
+	}
 	fmt.Fprintf(buf, `
 		default:
 			panic(fmt.Errorf("Invaild fieldpath: '%%s'", path))
