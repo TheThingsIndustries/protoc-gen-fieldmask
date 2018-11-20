@@ -4,7 +4,7 @@ package testdata
 
 import fmt "fmt"
 
-var _TestFieldPaths = [...]string{"a", "a.a", "a.a.a", "a.a.b", "a.a.c", "a.a.d", "a.b", "a.c", "a.d", "a.e", "b", "b.a", "b.a.a", "b.a.b", "b.a.c", "b.a.d", "b.b", "b.c", "b.d", "b.e", "c", "c.a", "c.a.a", "c.a.b", "c.a.c", "c.a.d", "c.b", "c.c", "c.d", "c.e"}
+var _TestFieldPaths = [...]string{"a", "a.a", "a.a.a", "a.a.b", "a.a.c", "a.a.d", "a.b", "a.c", "a.d", "a.e", "b", "b.a", "b.a.a", "b.a.b", "b.a.c", "b.a.d", "b.b", "b.c", "b.d", "b.e", "c", "c.a", "c.a.a", "c.a.b", "c.a.c", "c.a.d", "c.b", "c.c", "c.d", "c.e", "d", "e", "f"}
 
 func (*Test) FieldMaskPaths() []string {
 	ret := make([]string, len(_TestFieldPaths))
@@ -165,6 +165,21 @@ func (dst *Test) SetFields(src *Test, paths ...string) {
 			dst.C.D = src.C.D
 		case "c.e":
 			dst.C.E = src.C.E
+		case "d":
+			if dst.TestOneof == nil {
+				dst.TestOneof = &Test_D{}
+			}
+			dst.TestOneof.(*Test_D).D = src.GetD()
+		case "e":
+			if dst.TestOneof == nil {
+				dst.TestOneof = &Test_E{}
+			}
+			dst.TestOneof.(*Test_E).E = src.GetE()
+		case "f":
+			if dst.TestOneof == nil {
+				dst.TestOneof = &Test_F{}
+			}
+			dst.TestOneof.(*Test_F).F = src.GetF()
 		default:
 			panic(fmt.Errorf("Invaild fieldpath: '%s'", path))
 		}

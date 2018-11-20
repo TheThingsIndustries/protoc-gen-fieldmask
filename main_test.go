@@ -162,6 +162,9 @@ func TestFieldMaskPaths(t *testing.T) {
 		"c.c",
 		"c.d",
 		"c.e",
+		"d",
+		"e",
+		"f",
 	})
 }
 
