@@ -34,7 +34,7 @@ func (p *plugin) WriteMessage(w io.Writer, md *protokit.Descriptor, messages map
 	fmt.Fprintln(w, "	if len(mask.GetPaths()) == 0 {")
 	fmt.Fprintln(w, "		mask = &types.FieldMask{Paths: m.FieldMaskPaths()}")
 	fmt.Fprintln(w, "	}")
-	fmt.Fprintln(w, "	for _, path := range mask.Paths {")
+	fmt.Fprintln(w, "	for _, path := range TopLevelPaths(mask.Paths...) {")
 	fmt.Fprintln(w, "		switch path {")
 	for _, mfd := range md.GetMessageFields() {
 		allPaths = append(allPaths, mfd.GetName())

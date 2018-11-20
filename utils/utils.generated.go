@@ -40,6 +40,16 @@ func CleanFieldMask(mask *types.FieldMask) *types.FieldMask {
 	return &types.FieldMask{Paths: CleanPaths(mask.Paths...)}
 }
 
+// TopLevelPaths returns the list of paths
+func TopLevelPaths(paths ...string) []string {
+	topLevel := make([]string, len(paths))
+	for i, path := range paths {
+		parts := strings.SplitN(path, ".", 2)
+		topLevel[i] = parts[0]
+	}
+	return CleanPaths(topLevel...)
+}
+
 // PathsWithPrefix returns the list of paths, each with the given prefix prepended.
 func PathsWithPrefix(prefix string, paths ...string) []string {
 	if !strings.HasSuffix(prefix, ".") {
