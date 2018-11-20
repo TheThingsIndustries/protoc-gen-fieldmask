@@ -148,6 +148,14 @@ func TestFieldMaskPaths(t *testing.T) {
 		"b.c",
 		"b.d",
 		"b.e",
+		"c.a.a",
+		"c.a.b",
+		"c.a.c",
+		"c.a.d",
+		"c.b",
+		"c.c",
+		"c.d",
+		"c.e",
 	})
 }
 

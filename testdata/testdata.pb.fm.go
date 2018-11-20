@@ -7,7 +7,7 @@ import (
 	time "time"
 )
 
-var _TestFieldPaths = [...]string{"a.a.a", "a.a.b", "a.a.c", "a.a.d", "a.b", "a.c", "a.d", "a.e", "b.a.a", "b.a.b", "b.a.c", "b.a.d", "b.b", "b.c", "b.d", "b.e"}
+var _TestFieldPaths = [...]string{"a.a.a", "a.a.b", "a.a.c", "a.a.d", "a.b", "a.c", "a.d", "a.e", "b.a.a", "b.a.b", "b.a.c", "b.a.d", "b.b", "b.c", "b.d", "b.e", "c.a.a", "c.a.b", "c.a.c", "c.a.d", "c.b", "c.c", "c.d", "c.e"}
 
 func (*Test) FieldMaskPaths() []string {
 	ret := make([]string, len(_TestFieldPaths))
@@ -390,6 +390,107 @@ func (dst *Test) SetFields(src *Test, paths ...string) {
 			var v CustomType
 			dst.CustomName.E = &v
 			deepCopy(&(*dst.CustomName.E), &(*src.CustomName.E))
+		case "c.a.a":
+			var nilPath bool
+			nilPath = nilPath || src.C.A == nil
+
+			switch {
+			case dst.C.A != nil && nilPath:
+			case dst.C.A == nil && nilPath:
+				continue
+			case dst.C.A == nil:
+				dst.C.A = &Test_TestNested_TestNestedNested{}
+			}
+
+			if nilPath {
+				var v int32
+				dst.C.A.A = v
+				continue
+			}
+			dst.C.A.A = src.C.A.A
+		case "c.a.b":
+			var nilPath bool
+			nilPath = nilPath || src.C.A == nil
+
+			switch {
+			case dst.C.A != nil && nilPath:
+			case dst.C.A == nil && nilPath:
+				continue
+			case dst.C.A == nil:
+				dst.C.A = &Test_TestNested_TestNestedNested{}
+			}
+
+			if nilPath {
+				var v int64
+				dst.C.A.B = v
+				continue
+			}
+			dst.C.A.B = src.C.A.B
+		case "c.a.c":
+			var nilPath bool
+			nilPath = nilPath || src.C.A == nil
+
+			switch {
+			case dst.C.A != nil && nilPath:
+			case dst.C.A == nil && nilPath:
+				continue
+			case dst.C.A == nil:
+				dst.C.A = &Test_TestNested_TestNestedNested{}
+			}
+
+			if nilPath || src.C.A.C == nil {
+				dst.C.A.C = nil
+				continue
+			}
+			dst.C.A.C = make([][]byte, len(src.C.A.C))
+			for i, v := range src.C.A.C {
+				dst.C.A.C[i] = make([]byte, len(v))
+				copy(dst.C.A.C[i], v)
+			}
+		case "c.a.d":
+			var nilPath bool
+			nilPath = nilPath || src.C.A == nil
+
+			switch {
+			case dst.C.A != nil && nilPath:
+			case dst.C.A == nil && nilPath:
+				continue
+			case dst.C.A == nil:
+				dst.C.A = &Test_TestNested_TestNestedNested{}
+			}
+
+			if nilPath || src.C.A.D == nil {
+				dst.C.A.D = nil
+				continue
+			}
+			deepCopy(&dst.C.A.D, &src.C.A.D)
+		case "c.b":
+			dst.C.B = make([]byte, len(src.C.B))
+			copy(dst.C.B, src.C.B)
+		case "c.c":
+			if src.C.C == nil {
+				dst.C.C = nil
+				continue
+			}
+			var v time.Duration
+			dst.C.C = &v
+			(*dst.C.C) = (*src.C.C)
+		case "c.d":
+			if src.C.D == nil {
+				dst.C.D = nil
+				continue
+			}
+			var v time.Time
+			dst.C.D = &v
+			(*dst.C.D) = time.Unix(0, (*src.C.D).UnixNano()).UTC()
+		case "c.e":
+			if src.C.E == nil {
+				dst.C.E = nil
+				continue
+			}
+			var v CustomType
+			dst.C.E = &v
+			deepCopy(&(*dst.C.E), &(*src.C.E))
 		default:
 			panic(fmt.Errorf("Invaild fieldpath: '%s'", path))
 		}
