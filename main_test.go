@@ -132,6 +132,8 @@ func TestGolden(t *testing.T) {
 func TestFieldMaskPaths(t *testing.T) {
 	pb := &testdata.Test{}
 	assertions.New(t).So(pb.FieldMaskPaths(), should.Resemble, []string{
+		"a",
+		"a.a",
 		"a.a.a",
 		"a.a.b",
 		"a.a.c",
@@ -140,6 +142,8 @@ func TestFieldMaskPaths(t *testing.T) {
 		"a.c",
 		"a.d",
 		"a.e",
+		"b",
+		"b.a",
 		"b.a.a",
 		"b.a.b",
 		"b.a.c",
@@ -148,6 +152,8 @@ func TestFieldMaskPaths(t *testing.T) {
 		"b.c",
 		"b.d",
 		"b.e",
+		"c",
+		"c.a",
 		"c.a.a",
 		"c.a.b",
 		"c.a.c",

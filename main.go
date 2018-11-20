@@ -79,14 +79,9 @@ func appendPaths(paths []string, prefix string, md *protokit.Descriptor, mdMap m
 		if prefix != "" {
 			fp = fmt.Sprintf("%s.%s", prefix, fp)
 		}
+		paths = append(paths, fp)
 
-		if fd.GetLabel() == descriptor.FieldDescriptorProto_LABEL_REPEATED {
-			paths = append(paths, fp)
-			delete(seen, fd.GetFullName())
-			continue
-		}
-		if fd.GetType() != descriptor.FieldDescriptorProto_TYPE_MESSAGE {
-			paths = append(paths, fp)
+		if fd.GetLabel() == descriptor.FieldDescriptorProto_LABEL_REPEATED || fd.GetType() != descriptor.FieldDescriptorProto_TYPE_MESSAGE {
 			delete(seen, fd.GetFullName())
 			continue
 		}
@@ -95,7 +90,6 @@ func appendPaths(paths []string, prefix string, md *protokit.Descriptor, mdMap m
 		if !ok {
 			switch fd.GetTypeName() {
 			case protoTimestampType, protoFieldMaskType, protoDurationType, protoStructType, protoAnyType:
-				paths = append(paths, fp)
 				delete(seen, fd.GetFullName())
 				continue
 			}
@@ -103,7 +97,6 @@ func appendPaths(paths []string, prefix string, md *protokit.Descriptor, mdMap m
 		}
 
 		if len(fmd.GetMessageFields()) == 0 {
-			paths = append(paths, fp)
 			delete(seen, fd.GetFullName())
 			continue
 		}
@@ -168,14 +161,6 @@ var importPathReplacer = strings.NewReplacer(
 	"-", "_",
 )
 
-func eqCopyOp(dst, src string) string {
-	return fmt.Sprintf("%s = %s", dst, src)
-}
-
-func deepCopyOp(dst, src string) string {
-	return fmt.Sprintf("deepCopy(&%s, &%s)", dst, src)
-}
-
 type importMap map[string]string
 
 // Add adds pkg to importMap under key name. Add is not safe for concurrent use.
@@ -237,67 +222,8 @@ func (dst *%s) SetFields(src *%s, paths ...string) {
 		sp := strings.Split(p, ".")
 
 		srcPath := "src"
-
-		var nillable []string
-
-		fm := md
-		for i := 0; i < len(sp)-1; i++ {
-			fd := fm.GetMessageField(sp[i])
-			if fd.GetLabel() == descriptor.FieldDescriptorProto_LABEL_REPEATED {
-				panic(errors.New("Fieldmask for repeated field generated"))
-			}
-
-			goType := fieldTypeName(fd)
-
-			goName := generator.CamelCase(fd.GetName())
-			if v, ok := fd.OptionExtensions["gogoproto.customname"].(*string); ok {
-				goName = *v
-			}
-			if v, ok := fd.OptionExtensions["gogoproto.embed"].(*bool); ok && *v {
-				goName = goType
-			}
-
-			if fd.OneofIndex != nil {
-				oneOfType := fmt.Sprintf("%s_%s", fm.GetName(), goName)
-				if fm.GetMessage(goName) != nil {
-					oneOfType = fmt.Sprintf("%s_", oneOfType)
-				}
-
-				srcPath = fmt.Sprintf("%s.Get%s()", srcPath, goName)
-			} else {
-				srcPath = fmt.Sprintf("%s.%s", srcPath, goName)
-			}
-
-			var ok bool
-			fm, ok = mdMap[fd.GetTypeName()]
-			if !ok {
-				return nil, unknownTypeError(fd.GetTypeName())
-			}
-
-			if v, ok := fd.OptionExtensions["gogoproto.nullable"].(*bool); ok && !*v {
-				continue
-			}
-
-			nillable = append(nillable, srcPath)
-		}
-
-		if len(nillable) > 0 {
-			fmt.Fprintf(buf, `
-			var nilPath bool`,
-			)
-
-			for _, linkPath := range nillable {
-				fmt.Fprintf(buf, `
-			nilPath = nilPath || %s == nil`,
-					linkPath,
-				)
-			}
-
-			fmt.Fprintln(buf)
-		}
-
 		dstPath := "dst"
-		fm = md
+		fm := md
 		for i := 0; i < len(sp)-1; i++ {
 			fd := fm.GetMessageField(sp[i])
 			if fd.GetLabel() == descriptor.FieldDescriptorProto_LABEL_REPEATED {
@@ -323,35 +249,18 @@ func (dst *%s) SetFields(src *%s, paths ...string) {
 
 				dstPath = fmt.Sprintf("%s.%s", dstPath, oneOfName)
 
-				if len(nillable) > 0 {
-					fmt.Fprintf(buf, `
-			switch {
-			case %s != nil && nilPath:
-			case %s == nil && nilPath:
-				continue
-			case %s == nil:
-				%s = &%s{}
-			}
-`,
-						dstPath,
-						dstPath,
-						dstPath,
-						dstPath, oneOfType,
-					)
-				} else {
-					fmt.Fprintf(buf, `
+				fmt.Fprintf(buf, `
 			if %s == nil {
 				%s = &%s{}
-			}
-`,
-						dstPath,
-						dstPath, oneOfType,
-					)
-				}
+			}`,
+					dstPath,
+					dstPath, oneOfType,
+				)
 
+				srcPath = fmt.Sprintf("%s.Get%s()", srcPath, goName)
 				dstPath = fmt.Sprintf("%s.(*%s).%s", dstPath, oneOfType, goName)
-
 			} else {
+				srcPath = fmt.Sprintf("%s.%s", srcPath, goName)
 				dstPath = fmt.Sprintf("%s.%s", dstPath, goName)
 			}
 
@@ -366,16 +275,9 @@ func (dst *%s) SetFields(src *%s, paths ...string) {
 			}
 
 			fmt.Fprintf(buf, `
-			switch {
-			case %s != nil && nilPath:
-			case %s == nil && nilPath:
-				continue
-			case %s == nil:
+			if %s == nil {
 				%s = &%s{}
-			}
-`,
-				dstPath,
-				dstPath,
+			}`,
 				dstPath,
 				dstPath, goType,
 			)
@@ -383,143 +285,79 @@ func (dst *%s) SetFields(src *%s, paths ...string) {
 
 		fd := fm.GetMessageField(sp[len(sp)-1])
 
-		copyOp := eqCopyOp
-		addGoTypeImport := func(importMap) error { return nil }
-		var goType string
-		switch fd.GetType() {
-		case descriptor.FieldDescriptorProto_TYPE_BOOL:
-			goType = "bool"
-
-		case descriptor.FieldDescriptorProto_TYPE_DOUBLE:
-			goType = "float64"
-
-		case descriptor.FieldDescriptorProto_TYPE_FLOAT:
-			goType = "float32"
-
-		case descriptor.FieldDescriptorProto_TYPE_INT32, descriptor.FieldDescriptorProto_TYPE_SINT32, descriptor.FieldDescriptorProto_TYPE_SFIXED32:
-			goType = "int32"
-
-		case descriptor.FieldDescriptorProto_TYPE_INT64, descriptor.FieldDescriptorProto_TYPE_SINT64, descriptor.FieldDescriptorProto_TYPE_SFIXED64:
-			goType = "int64"
-
-		case descriptor.FieldDescriptorProto_TYPE_UINT32, descriptor.FieldDescriptorProto_TYPE_FIXED32:
-			goType = "uint32"
-
-		case descriptor.FieldDescriptorProto_TYPE_UINT64, descriptor.FieldDescriptorProto_TYPE_FIXED64:
-			goType = "uint64"
-
-		case descriptor.FieldDescriptorProto_TYPE_STRING:
-			goType = "string"
-
-		case descriptor.FieldDescriptorProto_TYPE_BYTES:
-			goType = "[]byte"
-			copyOp = func(dst, src string) string {
-				return fmt.Sprintf(`%s = make([]byte, len(%s))
-copy(%s, %s)`,
-					dst, src,
-					dst, src,
-				)
-			}
-
-		case descriptor.FieldDescriptorProto_TYPE_GROUP:
-			return nil, unsupportedTypeError(fd.GetType().String())
-
-		case descriptor.FieldDescriptorProto_TYPE_ENUM:
-			goType = enumTypeName(fd)
-
-		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
-			goType = fd.GetTypeName()
-			switch goType {
-			case protoTimestampType:
-				if v, ok := fd.OptionExtensions["gogoproto.stdtime"].(*bool); ok && *v {
-					// NOTE: time package is immediately added to imports, as copyOp uses it.
-					if err := imports.Add("time", "time"); err != nil {
-						return nil, err
-					}
-					goType = "time.Time"
-					copyOp = func(dst, src string) string {
-						return fmt.Sprintf("%s = time.Unix(0, %s.UnixNano()).UTC()", dst, src)
-					}
-					break
-				}
-				return nil, unsupportedTypeError(fd.GetTypeName())
-
-			case protoDurationType:
-				if v, ok := fd.OptionExtensions["gogoproto.stdduration"].(*bool); ok && *v {
-					addGoTypeImport = func(m importMap) error {
-						return m.Add("time", "time")
-					}
-					goType = "time.Duration"
-					break
-				}
-				return nil, unsupportedTypeError(fd.GetTypeName())
-
-			case protoAnyType:
-				addGoTypeImport = func(m importMap) error {
-					return m.Add("types", "github.com/gogo/protobuf/types")
-				}
-				goType = "types.Any"
-				// TODO: Implement non-reflective copying (https://github.com/TheThingsIndustries/protoc-gen-fieldmask/issues/4).
-				copyOp = deepCopyOp
-
-			case protoStructType:
-				addGoTypeImport = func(m importMap) error {
-					return m.Add("types", "github.com/gogo/protobuf/types")
-				}
-				goType = "types.Struct"
-				// TODO: Implement non-reflective copying (https://github.com/TheThingsIndustries/protoc-gen-fieldmask/issues/4).
-				copyOp = deepCopyOp
-
-			case protoFieldMaskType:
-				addGoTypeImport = func(m importMap) error {
-					return m.Add("types", "github.com/gogo/protobuf/types")
-				}
-				goType = "types.FieldMask"
-				copyOp = func(dst, src string) string {
-					return fmt.Sprintf(`%s.Paths = make([]string, len(%s.Paths))
-copy(%s.Paths, %s.Paths)`,
-						dst, src,
-						dst, src,
-					)
-				}
-
-			default:
-				goType = fieldTypeName(fd)
-				// TODO: Implement non-reflective copying (https://github.com/TheThingsIndustries/protoc-gen-fieldmask/issues/4).
-				copyOp = deepCopyOp
-			}
-
-		default:
-			return nil, unsupportedTypeError(fd.GetType().String())
-		}
-		var isNullable bool
-		if v, ok := fd.OptionExtensions["gogoproto.customtype"].(*string); ok {
-			isNullable = true
-			// TODO: Implement non-reflective copying (https://github.com/TheThingsIndustries/protoc-gen-fieldmask/issues/4).
-			copyOp = deepCopyOp
-			if i := strings.LastIndex(*v, "."); i >= 0 {
-				pkgAlias := importPathReplacer.Replace((*v)[:i])
-				goType = fmt.Sprintf("%s.%s", pkgAlias, (*v)[i+1:])
-				addGoTypeImport = func(m importMap) error {
-					return m.Add(pkgAlias, (*v)[:i])
-				}
-			} else {
-				goType = *v
-				addGoTypeImport = func(importMap) error { return nil }
-			}
-		}
-
-		isNullable = isNullable || fd.GetType() == descriptor.FieldDescriptorProto_TYPE_MESSAGE || fd.GetType() == descriptor.FieldDescriptorProto_TYPE_GROUP
-		if v, ok := fd.OptionExtensions["gogoproto.nullable"].(*bool); ok {
-			isNullable = *v
-		}
-
 		goName := generator.CamelCase(fd.GetName())
 		if v, ok := fd.OptionExtensions["gogoproto.customname"].(*string); ok {
 			goName = *v
 		}
 		if v, ok := fd.OptionExtensions["gogoproto.embed"].(*bool); ok && *v {
-			goName = goType
+			var goType string
+			switch fd.GetType() {
+			case descriptor.FieldDescriptorProto_TYPE_BOOL,
+				descriptor.FieldDescriptorProto_TYPE_DOUBLE,
+				descriptor.FieldDescriptorProto_TYPE_FLOAT,
+				descriptor.FieldDescriptorProto_TYPE_INT32,
+				descriptor.FieldDescriptorProto_TYPE_SINT32,
+				descriptor.FieldDescriptorProto_TYPE_SFIXED32,
+				descriptor.FieldDescriptorProto_TYPE_INT64,
+				descriptor.FieldDescriptorProto_TYPE_SINT64,
+				descriptor.FieldDescriptorProto_TYPE_SFIXED64,
+				descriptor.FieldDescriptorProto_TYPE_UINT32,
+				descriptor.FieldDescriptorProto_TYPE_FIXED32,
+				descriptor.FieldDescriptorProto_TYPE_UINT64,
+				descriptor.FieldDescriptorProto_TYPE_FIXED64,
+				descriptor.FieldDescriptorProto_TYPE_STRING,
+				descriptor.FieldDescriptorProto_TYPE_BYTES:
+				return nil, fmt.Errorf("Invalid type specifed for embedded field: %s", fd.GetType())
+
+			case descriptor.FieldDescriptorProto_TYPE_GROUP:
+				return nil, unsupportedTypeError(fd.GetType().String())
+
+			case descriptor.FieldDescriptorProto_TYPE_ENUM:
+				goType = enumTypeName(fd)
+
+			case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
+				goType = fd.GetTypeName()
+				switch goType {
+				case protoTimestampType:
+					if v, ok := fd.OptionExtensions["gogoproto.stdtime"].(*bool); ok && *v {
+						goType = "time.Time"
+						break
+					}
+					return nil, unsupportedTypeError(fd.GetTypeName())
+
+				case protoDurationType:
+					if v, ok := fd.OptionExtensions["gogoproto.stdduration"].(*bool); ok && *v {
+						goType = "time.Duration"
+						break
+					}
+					return nil, unsupportedTypeError(fd.GetTypeName())
+
+				case protoAnyType:
+					goType = "types.Any"
+
+				case protoStructType:
+					goType = "types.Struct"
+
+				case protoFieldMaskType:
+					goType = "types.FieldMask"
+
+				default:
+					goType = fieldTypeName(fd)
+				}
+
+			default:
+				return nil, unsupportedTypeError(fd.GetType().String())
+			}
+
+			if v, ok := fd.OptionExtensions["gogoproto.customtype"].(*string); ok {
+				goType = *v
+			}
+
+			if i := strings.LastIndex(goType, "."); i >= 0 {
+				goName = goType[i+1:]
+			} else {
+				goName = goType
+			}
 		}
 
 		if fd.OneofIndex != nil {
@@ -532,31 +370,13 @@ copy(%s.Paths, %s.Paths)`,
 			srcPath = fmt.Sprintf("%s.Get%s()", srcPath, goName)
 			dstPath = fmt.Sprintf("%s.%s", dstPath, oneOfName)
 
-			if len(nillable) > 0 {
-				fmt.Fprintf(buf, `
-			switch {
-			case %s != nil && nilPath:
-			case %s == nil && nilPath:
-				continue
-			case %s == nil:
-				%s = &%s{}
-			}
-`,
-					dstPath,
-					dstPath,
-					dstPath,
-					dstPath, oneOfType,
-				)
-			} else {
-				fmt.Fprintf(buf, `
+			fmt.Fprintf(buf, `
 			if %s == nil {
 				%s = &%s{}
-			}
-`,
-					dstPath,
-					dstPath, oneOfType,
-				)
-			}
+			}`,
+				dstPath,
+				dstPath, oneOfType,
+			)
 
 			dstPath = fmt.Sprintf("%s.(*%s).%s", dstPath, oneOfType, goName)
 
@@ -565,103 +385,10 @@ copy(%s.Paths, %s.Paths)`,
 			dstPath = fmt.Sprintf("%s.%s", dstPath, goName)
 		}
 
-		isRepeated := fd.GetLabel() == descriptor.FieldDescriptorProto_LABEL_REPEATED
-		if len(nillable) > 0 && (isNullable || isRepeated) {
-			fmt.Fprintf(buf, `
-			if nilPath || %s == nil {
-				%s = nil
-				continue
-			}`,
-				srcPath,
-				dstPath,
-			)
-		} else if isNullable || isRepeated {
-			fmt.Fprintf(buf, `
-			if %s == nil {
-				%s = nil
-				continue
-			}`,
-				srcPath,
-				dstPath,
-			)
-		} else if len(nillable) > 0 {
-			if err := addGoTypeImport(imports); err != nil {
-				return nil, err
-			}
-
-			fmt.Fprintf(buf, `
-			if nilPath {
-				var v %s
-				%s = v
-				continue
-			}`,
-				goType,
-				dstPath,
-			)
-		}
-
-		if isRepeated {
-			if strings.HasSuffix(fd.GetTypeName(), "Entry") && mdMap[fd.GetFullName()] == nil {
-				// fd is a map field, however obtaining its type is non-trivial, hence we resort to reflection
-				// TODO: Implement non-reflective copying (https://github.com/TheThingsIndustries/protoc-gen-fieldmask/issues/4).
-				fmt.Fprintf(buf, `
-			%s`, deepCopyOp(dstPath, srcPath))
-				continue
-			}
-
-			if err := addGoTypeImport(imports); err != nil {
-				return nil, err
-			}
-
-			if isNullable {
-				goType = fmt.Sprintf("[]*%s", goType)
-			} else {
-				goType = fmt.Sprintf("[]%s", goType)
-			}
-
-			var copyStr string
-			for _, l := range strings.Split(copyOp(fmt.Sprintf("%s[%s]", dstPath, "i"), "v"), "\n") {
-				copyStr += fmt.Sprintf(`
-				%s`,
-					l,
-				)
-			}
-
-			fmt.Fprintf(buf, `
-			%s = make(%s, len(%s))
-			for i, v := range %s {%s
-			}`,
-				dstPath, goType, srcPath,
-				srcPath, copyStr,
-			)
-
-			continue
-		}
-
-		if isNullable {
-			if err := addGoTypeImport(imports); err != nil {
-				return nil, err
-			}
-
-			fmt.Fprintf(buf, `
-			var v %s
-			%s = &v`,
-				goType,
-				dstPath,
-			)
-
-			srcPath = fmt.Sprintf("(*%s)", srcPath)
-			dstPath = fmt.Sprintf("(*%s)", dstPath)
-		}
-
-		var copyStr string
-		for _, l := range strings.Split(copyOp(dstPath, srcPath), "\n") {
-			copyStr += fmt.Sprintf(`
-			%s`,
-				l,
-			)
-		}
-		fmt.Fprint(buf, copyStr)
+		fmt.Fprintf(buf, `
+			%s = %s`,
+			dstPath, srcPath,
+		)
 	}
 	if err = imports.Add("fmt", "fmt"); err != nil {
 		return nil, err
