@@ -233,7 +233,7 @@ func (dst *%s) SetFields(src *%s, paths ...string) {
 		if sp := strings.Split(p, "."); len(sp) > 1 {
 			fd := md.GetMessageField(sp[0])
 			if fd.GetLabel() == descriptor.FieldDescriptorProto_LABEL_REPEATED {
-				panic(errors.New("Fieldmask for repeated field generated"))
+				panic(errors.New("fieldmask for repeated field generated"))
 			}
 
 			goType := fieldTypeName(fd)
@@ -314,7 +314,7 @@ func (dst *%s) SetFields(src *%s, paths ...string) {
 				descriptor.FieldDescriptorProto_TYPE_FIXED64,
 				descriptor.FieldDescriptorProto_TYPE_STRING,
 				descriptor.FieldDescriptorProto_TYPE_BYTES:
-				return nil, fmt.Errorf("Invalid type specifed for embedded field: %s", fd.GetType())
+				return nil, fmt.Errorf("invalid type specifed for embedded field `%s`: %s", p, fd.GetType())
 
 			case descriptor.FieldDescriptorProto_TYPE_GROUP:
 				return nil, unsupportedTypeError(fd.GetType().String())
@@ -402,7 +402,7 @@ func (dst *%s) SetFields(src *%s, paths ...string) {
 	}
 	fmt.Fprintf(buf, `
 		default:
-			panic(fmt.Errorf("Invalid field path: '%%s'", path))
+			panic(fmt.Errorf("invalid field path: '%%s'", path))
 		}
 	}
 }`,
@@ -427,7 +427,7 @@ func registerMessages(mdMap map[string]*protokit.Descriptor, mds ...*protokit.De
 		if err := walkMessage(md, func(md *protokit.Descriptor) error {
 			k := fmt.Sprintf(".%s", md.GetFullName())
 			if _, ok := mdMap[k]; ok {
-				return fmt.Errorf("Message name clash at `%s`", k)
+				return fmt.Errorf("message name clash at `%s`", k)
 			}
 			mdMap[k] = md
 			return nil
@@ -485,7 +485,7 @@ func (p plugin) Generate(in *plugin_go.CodeGeneratorRequest) (*plugin_go.CodeGen
 
 				for name, pkg := range mImports {
 					if v, ok := imports[name]; ok && v != pkg {
-						return fmt.Errorf("Import name clash at `%s`. Imported `%s` and `%s`", name, pkg, v)
+						return fmt.Errorf("import name clash at `%s`. Imported `%s` and `%s`", name, pkg, v)
 					}
 					imports[name] = pkg
 				}

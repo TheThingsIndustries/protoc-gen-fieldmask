@@ -179,7 +179,7 @@ func (dst *Test) SetFields(src *Test, paths ...string) {
 			}
 			dst.TestOneof.(*Test_F).F = src.GetF()
 		default:
-			panic(fmt.Errorf("Invalid field path: '%s'", path))
+			panic(fmt.Errorf("invalid field path: '%s'", path))
 		}
 	}
 }
@@ -236,7 +236,7 @@ func (dst *Test_TestNested) SetFields(src *Test_TestNested, paths ...string) {
 		case "e":
 			dst.E = src.E
 		default:
-			panic(fmt.Errorf("Invalid field path: '%s'", path))
+			panic(fmt.Errorf("invalid field path: '%s'", path))
 		}
 	}
 }
@@ -266,7 +266,7 @@ func (dst *Test_TestNested_TestNestedNested) SetFields(src *Test_TestNested_Test
 		case "d":
 			dst.D = src.D
 		default:
-			panic(fmt.Errorf("Invalid field path: '%s'", path))
+			panic(fmt.Errorf("invalid field path: '%s'", path))
 		}
 	}
 }
