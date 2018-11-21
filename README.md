@@ -1,6 +1,6 @@
 # protoc-gen-fieldmask
 
-Generate Field Mask Utilities for GoGo protos.
+A protoc plug-in, which generates fieldmask utilities. Compatible with gogoproto extensions.
 
 ## Installation:
 
