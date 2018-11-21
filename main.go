@@ -182,36 +182,44 @@ func buildMethods(buf *strings.Builder, md *protokit.Descriptor, mdMap map[strin
 		return nil, nil
 	}
 
-	fmt.Fprintf(buf, `
-var _%sFieldPaths = [...]string{%s}
+	goType := md.GetName()
+	for parent := md.GetParent(); parent != nil; parent = parent.GetParent() {
+		goType = fmt.Sprintf("%s_%s", parent.GetName(), goType)
+	}
 
-func (*%s) FieldMaskPaths() []string {`,
-		md.GetName(), `"`+strings.Join(paths, `", "`)+`"`,
-		md.GetName(),
-	)
-
-	sort.Strings(paths)
 	if len(paths) == 0 {
 		fmt.Fprintf(buf, `
-	return nil`,
+func (*%s) FieldMaskPaths() []string {,
+	return nil
+}`,
+			goType,
 		)
 	} else {
+		sort.Strings(paths)
 		fmt.Fprintf(buf, `
+var _%sFieldPaths = [...]string{
+	%s
+}
+
+func (*%s) FieldMaskPaths() []string {
 	ret := make([]string, len(_%sFieldPaths))
 	copy(ret, _%sFieldPaths[:])
-	return ret`,
-			md.GetName(),
-			md.GetName(),
+	return ret
+}`,
+			goType, `"`+strings.Join(paths, `",
+	"`)+`",`,
+			goType,
+			goType,
+			goType,
 		)
 	}
 
 	fmt.Fprintf(buf, `
-}
 
 func (dst *%s) SetFields(src *%s, paths ...string) {
-	for _, path := range paths {
+	for _, path := range _cleanPaths(paths) {
 		switch path {`,
-		md.GetName(), md.GetName(),
+		goType, goType,
 	)
 
 	for _, p := range paths {
@@ -219,13 +227,11 @@ func (dst *%s) SetFields(src *%s, paths ...string) {
 		case "%s":`,
 			p)
 
-		sp := strings.Split(p, ".")
-
 		srcPath := "src"
 		dstPath := "dst"
-		fm := md
-		for i := 0; i < len(sp)-1; i++ {
-			fd := fm.GetMessageField(sp[i])
+
+		if sp := strings.Split(p, "."); len(sp) > 1 {
+			fd := md.GetMessageField(sp[0])
 			if fd.GetLabel() == descriptor.FieldDescriptorProto_LABEL_REPEATED {
 				panic(errors.New("Fieldmask for repeated field generated"))
 			}
@@ -241,11 +247,11 @@ func (dst *%s) SetFields(src *%s, paths ...string) {
 			}
 
 			if fd.OneofIndex != nil {
-				oneOfType := fmt.Sprintf("%s_%s", fm.GetName(), goName)
-				if fm.GetMessage(goName) != nil {
+				oneOfType := fmt.Sprintf("%s_%s", md.GetName(), goName)
+				if md.GetMessage(goName) != nil {
 					oneOfType = fmt.Sprintf("%s_", oneOfType)
 				}
-				oneOfName := generator.CamelCase(fm.GetOneofDecl()[fd.GetOneofIndex()].GetName())
+				oneOfName := generator.CamelCase(md.GetOneofDecl()[fd.GetOneofIndex()].GetName())
 
 				dstPath = fmt.Sprintf("%s.%s", dstPath, oneOfName)
 
@@ -264,26 +270,27 @@ func (dst *%s) SetFields(src *%s, paths ...string) {
 				dstPath = fmt.Sprintf("%s.%s", dstPath, goName)
 			}
 
-			var ok bool
-			fm, ok = mdMap[fd.GetTypeName()]
-			if !ok {
-				return nil, unknownTypeError(fd.GetTypeName())
-			}
-
 			if v, ok := fd.OptionExtensions["gogoproto.nullable"].(*bool); ok && !*v {
-				continue
-			}
+				fmt.Fprintf(buf, `
+			%s.SetFields(&%s, _pathsWithoutPrefix("%s", paths)...)`,
+					dstPath, srcPath, sp[0],
+				)
 
-			fmt.Fprintf(buf, `
+			} else {
+				fmt.Fprintf(buf, `
 			if %s == nil {
 				%s = &%s{}
-			}`,
-				dstPath,
-				dstPath, goType,
-			)
+			}
+			%s.SetFields(%s, _pathsWithoutPrefix("%s", paths)...)`,
+					dstPath,
+					dstPath, goType,
+					dstPath, srcPath, sp[0],
+				)
+			}
+			continue
 		}
 
-		fd := fm.GetMessageField(sp[len(sp)-1])
+		fd := md.GetMessageField(p)
 
 		goName := generator.CamelCase(fd.GetName())
 		if v, ok := fd.OptionExtensions["gogoproto.customname"].(*string); ok {
@@ -361,11 +368,11 @@ func (dst *%s) SetFields(src *%s, paths ...string) {
 		}
 
 		if fd.OneofIndex != nil {
-			oneOfType := fmt.Sprintf("%s_%s", fm.GetName(), goName)
-			if fm.GetMessage(goName) != nil {
+			oneOfType := fmt.Sprintf("%s_%s", md.GetName(), goName)
+			if md.GetMessage(goName) != nil {
 				oneOfType = fmt.Sprintf("%s_", oneOfType)
 			}
-			oneOfName := generator.CamelCase(fm.GetOneofDecl()[fd.GetOneofIndex()].GetName())
+			oneOfName := generator.CamelCase(md.GetOneofDecl()[fd.GetOneofIndex()].GetName())
 
 			srcPath = fmt.Sprintf("%s.Get%s()", srcPath, goName)
 			dstPath = fmt.Sprintf("%s.%s", dstPath, oneOfName)
@@ -403,19 +410,32 @@ func (dst *%s) SetFields(src *%s, paths ...string) {
 	return imports, nil
 }
 
-func registerMessages(mdMap map[string]*protokit.Descriptor, mds ...*protokit.Descriptor) {
-	if len(mds) == 0 {
-		return
+func walkMessage(md *protokit.Descriptor, f func(md *protokit.Descriptor) error) error {
+	if err := f(md); err != nil {
+		return err
 	}
-
-	for _, md := range mds {
-		k := fmt.Sprintf(".%s", md.GetFullName())
-		if _, ok := mdMap[k]; ok {
-			panic(fmt.Errorf("Message name clash at `%s`", k))
+	for _, smd := range md.GetMessages() {
+		if err := walkMessage(smd, f); err != nil {
+			return err
 		}
-		mdMap[k] = md
-		registerMessages(mdMap, md.GetMessages()...)
 	}
+	return nil
+}
+
+func registerMessages(mdMap map[string]*protokit.Descriptor, mds ...*protokit.Descriptor) error {
+	for _, md := range mds {
+		if err := walkMessage(md, func(md *protokit.Descriptor) error {
+			k := fmt.Sprintf(".%s", md.GetFullName())
+			if _, ok := mdMap[k]; ok {
+				return fmt.Errorf("Message name clash at `%s`", k)
+			}
+			mdMap[k] = md
+			return nil
+		}); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 type plugin struct{}
@@ -427,7 +447,9 @@ func (p plugin) Generate(in *plugin_go.CodeGeneratorRequest) (*plugin_go.CodeGen
 
 	mdMap := map[string]*protokit.Descriptor{}
 	for _, fd := range fds {
-		registerMessages(mdMap, fd.GetMessages()...)
+		if err := registerMessages(mdMap, fd.GetMessages()...); err != nil {
+			panic(err)
+		}
 	}
 
 	dirs := map[string]struct{}{}
@@ -449,25 +471,39 @@ func (p plugin) Generate(in *plugin_go.CodeGeneratorRequest) (*plugin_go.CodeGen
 				continue
 			}
 
-			mBuf := &strings.Builder{}
-			mImports, err := buildMethods(mBuf, md, mdMap)
-			if err != nil {
+			var mBufs []*strings.Builder
+			if err := walkMessage(md, func(md *protokit.Descriptor) error {
+				if md.GetOptions().GetMapEntry() {
+					return nil
+				}
+
+				mBuf := &strings.Builder{}
+				mImports, err := buildMethods(mBuf, md, mdMap)
+				if err != nil {
+					return err
+				}
+
+				for name, pkg := range mImports {
+					if v, ok := imports[name]; ok && v != pkg {
+						return fmt.Errorf("Import name clash at `%s`. Imported `%s` and `%s`", name, pkg, v)
+					}
+					imports[name] = pkg
+				}
+
+				if mBuf.Len() == 0 {
+					return nil
+				}
+				mBufs = append(mBufs, mBuf)
+				return nil
+			}); err != nil {
 				return nil, err
 			}
 
-			for name, pkg := range mImports {
-				if v, ok := imports[name]; ok && v != pkg {
-					return nil, fmt.Errorf("Import name clash at `%s`. Imported `%s` and `%s`", name, pkg, v)
-				}
-				imports[name] = pkg
-			}
-
-			if mBuf.Len() == 0 {
-				continue
-			}
-			fmt.Fprintf(buf, `
+			for _, mBuf := range mBufs {
+				fmt.Fprintf(buf, `
 %s`,
-				mBuf.String())
+					mBuf.String())
+			}
 		}
 
 		if buf.Len() == 0 {
@@ -523,124 +559,50 @@ package %s
 package %s
 
 import (
-	"reflect"
-	"time"
+	"sort"
+	"strings"
 )
 
-func deepCopy(dst, src interface{}) {
-	copyRecursive(reflect.ValueOf(dst), reflect.ValueOf(src))
-}
-
-// NOTE: The following block is slightly modified https://github.com/mohae/deepcopy/tree/c48cc78d482608239f6c4c92a4abd87eb8761c90
-
-// The MIT License (MIT)
-//
-// Copyright (c) 2014 Joel
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
-
-// deepCopier for delegating copy process to type
-type deepCopier interface {
-	DeepCopy() interface{}
-}
-
-// copyRecursive does the actual copying of the interface. It currently has
-// limited support for what it can handle. Add as needed.
-func copyRecursive(cpy, original reflect.Value) {
-	// check for implement deepcopy.deepCopier
-	if original.CanInterface() {
-		if copier, ok := original.Interface().(deepCopier); ok {
-			cpy.Set(reflect.ValueOf(copier.DeepCopy()))
-			return
-		}
+// _cleanPaths cleans the given field mask paths. It returns a sorted slice of
+// unique paths without any child paths that are already covered by parent paths.
+func _cleanPaths(paths []string) []string {
+	unique := make(map[string]struct{}, len(paths))
+	for _, path := range paths {
+		unique[path] = struct{}{}
 	}
-
-	// handle according to original's Kind
-	switch original.Kind() {
-	case reflect.Ptr:
-		// Get the actual value being pointed to.
-		originalValue := original.Elem()
-
-		// if  it isn't valid, return.
-		if !originalValue.IsValid() {
-			return
+	for path := range unique {
+		parts := strings.Split(path, ".")
+		if len(parts) == 1 {
+			continue
 		}
-		cpy.Set(reflect.New(originalValue.Type()))
-		copyRecursive(cpy.Elem(), originalValue)
-
-	case reflect.Interface:
-		// If this is a nil, don't do anything
-		if original.IsNil() {
-			return
-		}
-		// Get the value for the interface, not the pointer.
-		originalValue := original.Elem()
-
-		// Get the value by calling Elem().
-		copyValue := reflect.New(originalValue.Type()).Elem()
-		copyRecursive(copyValue, originalValue)
-		cpy.Set(copyValue)
-
-	case reflect.Struct:
-		t, ok := original.Interface().(time.Time)
-		if ok {
-			cpy.Set(reflect.ValueOf(t))
-			return
-		}
-		// Go through each field of the struct and copy it.
-		for i := 0; i < original.NumField(); i++ {
-			// The Type's StructField for a given field is checked to see if StructField.PkgPath
-			// is set to determine if the field is exported or not because CanSet() returns false
-			// for settable fields.  I'm not sure why.  -mohae
-			if original.Type().Field(i).PkgPath != "" {
-				continue
+		for i := 1; i < len(parts); i++ {
+			if _, ok := unique[strings.Join(parts[:1], ".")]; ok {
+				delete(unique, path)
 			}
-			copyRecursive(cpy.Field(i), original.Field(i))
 		}
-
-	case reflect.Slice:
-		if original.IsNil() {
-			return
-		}
-		// Make a new slice and copy each element.
-		cpy.Set(reflect.MakeSlice(original.Type(), original.Len(), original.Cap()))
-		for i := 0; i < original.Len(); i++ {
-			copyRecursive(cpy.Index(i), original.Index(i))
-		}
-
-	case reflect.Map:
-		if original.IsNil() {
-			return
-		}
-		cpy.Set(reflect.MakeMap(original.Type()))
-		for _, originalKey := range original.MapKeys() {
-			originalValue := original.MapIndex(originalKey)
-			copyValue := reflect.New(originalValue.Type()).Elem()
-			copyRecursive(copyValue, originalValue)
-			copyKey := reflect.New(originalKey.Type()).Elem()
-			copyRecursive(copyKey, originalKey)
-			cpy.SetMapIndex(copyKey, copyValue)
-		}
-
-	default:
-		cpy.Set(original)
 	}
+
+	out := make([]string, 0, len(unique))
+	for path := range unique {
+		out = append(out, path)
+	}
+	sort.Strings(out)
+	return out
+}
+
+// _pathsWithoutPrefix returns the paths that contain the given prefix, but
+// without that prefix.
+func _pathsWithoutPrefix(prefix string, paths []string) []string {
+	prefix += "."
+
+	out := make([]string, 0, len(paths))
+	for _, path := range paths {
+		if !strings.HasPrefix(path, prefix) {
+			continue
+		}
+		out = append(out, strings.TrimPrefix(path, prefix))
+	}
+	return out
 }
 `,
 				FileHeader,

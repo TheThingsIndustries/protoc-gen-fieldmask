@@ -4,7 +4,41 @@ package testdata
 
 import fmt "fmt"
 
-var _TestFieldPaths = [...]string{"a", "a.a", "a.a.a", "a.a.b", "a.a.c", "a.a.d", "a.b", "a.c", "a.d", "a.e", "b", "b.a", "b.a.a", "b.a.b", "b.a.c", "b.a.d", "b.b", "b.c", "b.d", "b.e", "c", "c.a", "c.a.a", "c.a.b", "c.a.c", "c.a.d", "c.b", "c.c", "c.d", "c.e", "d", "e", "f"}
+var _TestFieldPaths = [...]string{
+	"a",
+	"a.a",
+	"a.a.a",
+	"a.a.b",
+	"a.a.c",
+	"a.a.d",
+	"a.b",
+	"a.c",
+	"a.d",
+	"a.e",
+	"b",
+	"b.a",
+	"b.a.a",
+	"b.a.b",
+	"b.a.c",
+	"b.a.d",
+	"b.b",
+	"b.c",
+	"b.d",
+	"b.e",
+	"c",
+	"c.a",
+	"c.a.a",
+	"c.a.b",
+	"c.a.c",
+	"c.a.d",
+	"c.b",
+	"c.c",
+	"c.d",
+	"c.e",
+	"d",
+	"e",
+	"f",
+}
 
 func (*Test) FieldMaskPaths() []string {
 	ret := make([]string, len(_TestFieldPaths))
@@ -13,7 +47,7 @@ func (*Test) FieldMaskPaths() []string {
 }
 
 func (dst *Test) SetFields(src *Test, paths ...string) {
-	for _, path := range paths {
+	for _, path := range _cleanPaths(paths) {
 		switch path {
 		case "a":
 			dst.A = src.A
@@ -21,150 +55,114 @@ func (dst *Test) SetFields(src *Test, paths ...string) {
 			if dst.A == nil {
 				dst.A = &Test_TestNested{}
 			}
-			dst.A.A = src.A.A
+			dst.A.SetFields(src.A, _pathsWithoutPrefix("a", paths)...)
 		case "a.a.a":
 			if dst.A == nil {
 				dst.A = &Test_TestNested{}
 			}
-			if dst.A.A == nil {
-				dst.A.A = &Test_TestNested_TestNestedNested{}
-			}
-			dst.A.A.A = src.A.A.A
+			dst.A.SetFields(src.A, _pathsWithoutPrefix("a", paths)...)
 		case "a.a.b":
 			if dst.A == nil {
 				dst.A = &Test_TestNested{}
 			}
-			if dst.A.A == nil {
-				dst.A.A = &Test_TestNested_TestNestedNested{}
-			}
-			dst.A.A.B = src.A.A.B
+			dst.A.SetFields(src.A, _pathsWithoutPrefix("a", paths)...)
 		case "a.a.c":
 			if dst.A == nil {
 				dst.A = &Test_TestNested{}
 			}
-			if dst.A.A == nil {
-				dst.A.A = &Test_TestNested_TestNestedNested{}
-			}
-			dst.A.A.C = src.A.A.C
+			dst.A.SetFields(src.A, _pathsWithoutPrefix("a", paths)...)
 		case "a.a.d":
 			if dst.A == nil {
 				dst.A = &Test_TestNested{}
 			}
-			if dst.A.A == nil {
-				dst.A.A = &Test_TestNested_TestNestedNested{}
-			}
-			dst.A.A.D = src.A.A.D
+			dst.A.SetFields(src.A, _pathsWithoutPrefix("a", paths)...)
 		case "a.b":
 			if dst.A == nil {
 				dst.A = &Test_TestNested{}
 			}
-			dst.A.B = src.A.B
+			dst.A.SetFields(src.A, _pathsWithoutPrefix("a", paths)...)
 		case "a.c":
 			if dst.A == nil {
 				dst.A = &Test_TestNested{}
 			}
-			dst.A.C = src.A.C
+			dst.A.SetFields(src.A, _pathsWithoutPrefix("a", paths)...)
 		case "a.d":
 			if dst.A == nil {
 				dst.A = &Test_TestNested{}
 			}
-			dst.A.D = src.A.D
+			dst.A.SetFields(src.A, _pathsWithoutPrefix("a", paths)...)
 		case "a.e":
 			if dst.A == nil {
 				dst.A = &Test_TestNested{}
 			}
-			dst.A.E = src.A.E
+			dst.A.SetFields(src.A, _pathsWithoutPrefix("a", paths)...)
 		case "b":
 			dst.CustomName = src.CustomName
 		case "b.a":
 			if dst.CustomName == nil {
 				dst.CustomName = &Test_TestNested{}
 			}
-			dst.CustomName.A = src.CustomName.A
+			dst.CustomName.SetFields(src.CustomName, _pathsWithoutPrefix("b", paths)...)
 		case "b.a.a":
 			if dst.CustomName == nil {
 				dst.CustomName = &Test_TestNested{}
 			}
-			if dst.CustomName.A == nil {
-				dst.CustomName.A = &Test_TestNested_TestNestedNested{}
-			}
-			dst.CustomName.A.A = src.CustomName.A.A
+			dst.CustomName.SetFields(src.CustomName, _pathsWithoutPrefix("b", paths)...)
 		case "b.a.b":
 			if dst.CustomName == nil {
 				dst.CustomName = &Test_TestNested{}
 			}
-			if dst.CustomName.A == nil {
-				dst.CustomName.A = &Test_TestNested_TestNestedNested{}
-			}
-			dst.CustomName.A.B = src.CustomName.A.B
+			dst.CustomName.SetFields(src.CustomName, _pathsWithoutPrefix("b", paths)...)
 		case "b.a.c":
 			if dst.CustomName == nil {
 				dst.CustomName = &Test_TestNested{}
 			}
-			if dst.CustomName.A == nil {
-				dst.CustomName.A = &Test_TestNested_TestNestedNested{}
-			}
-			dst.CustomName.A.C = src.CustomName.A.C
+			dst.CustomName.SetFields(src.CustomName, _pathsWithoutPrefix("b", paths)...)
 		case "b.a.d":
 			if dst.CustomName == nil {
 				dst.CustomName = &Test_TestNested{}
 			}
-			if dst.CustomName.A == nil {
-				dst.CustomName.A = &Test_TestNested_TestNestedNested{}
-			}
-			dst.CustomName.A.D = src.CustomName.A.D
+			dst.CustomName.SetFields(src.CustomName, _pathsWithoutPrefix("b", paths)...)
 		case "b.b":
 			if dst.CustomName == nil {
 				dst.CustomName = &Test_TestNested{}
 			}
-			dst.CustomName.B = src.CustomName.B
+			dst.CustomName.SetFields(src.CustomName, _pathsWithoutPrefix("b", paths)...)
 		case "b.c":
 			if dst.CustomName == nil {
 				dst.CustomName = &Test_TestNested{}
 			}
-			dst.CustomName.C = src.CustomName.C
+			dst.CustomName.SetFields(src.CustomName, _pathsWithoutPrefix("b", paths)...)
 		case "b.d":
 			if dst.CustomName == nil {
 				dst.CustomName = &Test_TestNested{}
 			}
-			dst.CustomName.D = src.CustomName.D
+			dst.CustomName.SetFields(src.CustomName, _pathsWithoutPrefix("b", paths)...)
 		case "b.e":
 			if dst.CustomName == nil {
 				dst.CustomName = &Test_TestNested{}
 			}
-			dst.CustomName.E = src.CustomName.E
+			dst.CustomName.SetFields(src.CustomName, _pathsWithoutPrefix("b", paths)...)
 		case "c":
 			dst.C = src.C
 		case "c.a":
-			dst.C.A = src.C.A
+			dst.C.SetFields(&src.C, _pathsWithoutPrefix("c", paths)...)
 		case "c.a.a":
-			if dst.C.A == nil {
-				dst.C.A = &Test_TestNested_TestNestedNested{}
-			}
-			dst.C.A.A = src.C.A.A
+			dst.C.SetFields(&src.C, _pathsWithoutPrefix("c", paths)...)
 		case "c.a.b":
-			if dst.C.A == nil {
-				dst.C.A = &Test_TestNested_TestNestedNested{}
-			}
-			dst.C.A.B = src.C.A.B
+			dst.C.SetFields(&src.C, _pathsWithoutPrefix("c", paths)...)
 		case "c.a.c":
-			if dst.C.A == nil {
-				dst.C.A = &Test_TestNested_TestNestedNested{}
-			}
-			dst.C.A.C = src.C.A.C
+			dst.C.SetFields(&src.C, _pathsWithoutPrefix("c", paths)...)
 		case "c.a.d":
-			if dst.C.A == nil {
-				dst.C.A = &Test_TestNested_TestNestedNested{}
-			}
-			dst.C.A.D = src.C.A.D
+			dst.C.SetFields(&src.C, _pathsWithoutPrefix("c", paths)...)
 		case "c.b":
-			dst.C.B = src.C.B
+			dst.C.SetFields(&src.C, _pathsWithoutPrefix("c", paths)...)
 		case "c.c":
-			dst.C.C = src.C.C
+			dst.C.SetFields(&src.C, _pathsWithoutPrefix("c", paths)...)
 		case "c.d":
-			dst.C.D = src.C.D
+			dst.C.SetFields(&src.C, _pathsWithoutPrefix("c", paths)...)
 		case "c.e":
-			dst.C.E = src.C.E
+			dst.C.SetFields(&src.C, _pathsWithoutPrefix("c", paths)...)
 		case "d":
 			if dst.TestOneof == nil {
 				dst.TestOneof = &Test_D{}
@@ -180,6 +178,93 @@ func (dst *Test) SetFields(src *Test, paths ...string) {
 				dst.TestOneof = &Test_F{}
 			}
 			dst.TestOneof.(*Test_F).F = src.GetF()
+		default:
+			panic(fmt.Errorf("Invalid field path: '%s'", path))
+		}
+	}
+}
+
+var _Test_TestNestedFieldPaths = [...]string{
+	"a",
+	"a.a",
+	"a.b",
+	"a.c",
+	"a.d",
+	"b",
+	"c",
+	"d",
+	"e",
+}
+
+func (*Test_TestNested) FieldMaskPaths() []string {
+	ret := make([]string, len(_Test_TestNestedFieldPaths))
+	copy(ret, _Test_TestNestedFieldPaths[:])
+	return ret
+}
+
+func (dst *Test_TestNested) SetFields(src *Test_TestNested, paths ...string) {
+	for _, path := range _cleanPaths(paths) {
+		switch path {
+		case "a":
+			dst.A = src.A
+		case "a.a":
+			if dst.A == nil {
+				dst.A = &Test_TestNested_TestNestedNested{}
+			}
+			dst.A.SetFields(src.A, _pathsWithoutPrefix("a", paths)...)
+		case "a.b":
+			if dst.A == nil {
+				dst.A = &Test_TestNested_TestNestedNested{}
+			}
+			dst.A.SetFields(src.A, _pathsWithoutPrefix("a", paths)...)
+		case "a.c":
+			if dst.A == nil {
+				dst.A = &Test_TestNested_TestNestedNested{}
+			}
+			dst.A.SetFields(src.A, _pathsWithoutPrefix("a", paths)...)
+		case "a.d":
+			if dst.A == nil {
+				dst.A = &Test_TestNested_TestNestedNested{}
+			}
+			dst.A.SetFields(src.A, _pathsWithoutPrefix("a", paths)...)
+		case "b":
+			dst.B = src.B
+		case "c":
+			dst.C = src.C
+		case "d":
+			dst.D = src.D
+		case "e":
+			dst.E = src.E
+		default:
+			panic(fmt.Errorf("Invalid field path: '%s'", path))
+		}
+	}
+}
+
+var _Test_TestNested_TestNestedNestedFieldPaths = [...]string{
+	"a",
+	"b",
+	"c",
+	"d",
+}
+
+func (*Test_TestNested_TestNestedNested) FieldMaskPaths() []string {
+	ret := make([]string, len(_Test_TestNested_TestNestedNestedFieldPaths))
+	copy(ret, _Test_TestNested_TestNestedNestedFieldPaths[:])
+	return ret
+}
+
+func (dst *Test_TestNested_TestNestedNested) SetFields(src *Test_TestNested_TestNestedNested, paths ...string) {
+	for _, path := range _cleanPaths(paths) {
+		switch path {
+		case "a":
+			dst.A = src.A
+		case "b":
+			dst.B = src.B
+		case "c":
+			dst.C = src.C
+		case "d":
+			dst.D = src.D
 		default:
 			panic(fmt.Errorf("Invalid field path: '%s'", path))
 		}
