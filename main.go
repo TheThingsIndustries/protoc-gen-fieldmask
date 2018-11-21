@@ -155,26 +155,7 @@ func enumTypeName(fd *protokit.FieldDescriptor) (goType string) {
 	return goType
 }
 
-var importPathReplacer = strings.NewReplacer(
-	".", "_",
-	"/", "_",
-	"-", "_",
-)
-
-type importMap map[string]string
-
-// Add adds pkg to importMap under key name. Add is not safe for concurrent use.
-func (m importMap) Add(name, pkg string) error {
-	if v, ok := m[name]; ok && v != pkg {
-		return fmt.Errorf("import name clash at `%s`. Imported `%s` and `%s`", name, pkg, v)
-	}
-	m[name] = pkg
-	return nil
-}
-
 func buildMethods(buf *strings.Builder, md *protokit.Descriptor, mdMap map[string]*protokit.Descriptor) (map[string]string, error) {
-	imports := importMap{}
-
 	paths, err := appendPaths(make([]string, 0, len(md.GetMessageFields())), "", md, mdMap, nil)
 	if err != nil {
 		// TODO: Return error here once https://github.com/TheThingsIndustries/protoc-gen-fieldmask/issues/5 is resolved.
@@ -397,9 +378,6 @@ func (dst *%s) SetFields(src *%s, paths ...string) {
 			dstPath, srcPath,
 		)
 	}
-	if err = imports.Add("fmt", "fmt"); err != nil {
-		return nil, err
-	}
 	fmt.Fprintf(buf, `
 		default:
 			panic(fmt.Errorf("invalid field path: '%%s'", path))
@@ -407,7 +385,7 @@ func (dst *%s) SetFields(src *%s, paths ...string) {
 	}
 }`,
 	)
-	return imports, nil
+	return map[string]string{"fmt": "fmt"}, nil
 }
 
 func walkMessage(md *protokit.Descriptor, f func(md *protokit.Descriptor) error) error {
@@ -448,7 +426,7 @@ func (p plugin) Generate(in *plugin_go.CodeGeneratorRequest) (*plugin_go.CodeGen
 	mdMap := map[string]*protokit.Descriptor{}
 	for _, fd := range fds {
 		if err := registerMessages(mdMap, fd.GetMessages()...); err != nil {
-			panic(err)
+			return nil, err
 		}
 	}
 
