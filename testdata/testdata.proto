@@ -22,6 +22,8 @@ package testdata;
 
 option go_package = "github.com/TheThingsIndustries/protoc-gen-fieldmask/testdata";
 
+message Empty {}
+
 message Test {
   message TestNested {
     message TestNestedNested {
@@ -44,4 +46,5 @@ message Test {
     uint32 e = 5;
     bytes f = 6;
   }
+  Empty g = 7;
 }
