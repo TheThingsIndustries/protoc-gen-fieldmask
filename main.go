@@ -266,19 +266,30 @@ func (dst *%s) SetFields(src *%s, paths ...string) error {
 
 			if v, ok := fd.OptionExtensions["gogoproto.nullable"].(*bool); ok && !*v {
 				fmt.Fprintf(buf, `
-			%s.SetFields(&%s, _pathsWithoutPrefix("%s", paths)...)`,
+			if err := %s.SetFields(&%s, _pathsWithoutPrefix("%s", paths)...); err != nil {
+				return fmt.Errorf("field mask '%s' could not be applied: %%s", err)
+			}`,
 					dstPath, srcPath, sp[0],
+					p,
 				)
 
 			} else {
 				fmt.Fprintf(buf, `
 			if %s == nil {
+				return fmt.Errorf("field mask '%s' could not be applied: field '%s' is not set" )
+			}
+			if %s == nil {
 				%s = &%s{}
 			}
-			%s.SetFields(%s, _pathsWithoutPrefix("%s", paths)...)`,
+			if err := %s.SetFields(%s, _pathsWithoutPrefix("%s", paths)...); err != nil {
+				return fmt.Errorf("field mask '%s' could not be applied: %%s", err)
+			}`,
+					srcPath,
+					p, sp[0],
 					dstPath,
 					dstPath, goType,
 					dstPath, srcPath, sp[0],
+					p,
 				)
 			}
 			continue
@@ -393,9 +404,10 @@ func (dst *%s) SetFields(src *%s, paths ...string) error {
 	}
 	fmt.Fprintf(buf, `
 		default:
-			panic(fmt.Errorf("invalid field path: '%%s'", path))
+			return fmt.Errorf("invalid field path: '%%s'", path)
 		}
 	}
+	return nil
 }`,
 	)
 	return map[string]string{"fmt": "fmt"}, nil
