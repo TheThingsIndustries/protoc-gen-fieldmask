@@ -74,6 +74,7 @@ func (*Test) FieldMaskPaths() []string {
 	copy(ret, _TestFieldPaths[:])
 	return ret
 }
+
 func (dst *Test) GetFields(src *Test, paths ...string) error {
 	for _, path := range _cleanPaths(paths) {
 		switch path {
@@ -412,6 +413,7 @@ func (dst *Test) GetFields(src *Test, paths ...string) error {
 	}
 	return nil
 }
+
 func (dst *Test) SetFields(src *Test, paths ...string) error {
 	if src == nil {
 		return fmt.Errorf("source is nil")
@@ -423,7 +425,7 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 		case "a.a":
 			srcField := src.A
 			if srcField == nil {
-				return fmt.Errorf("field mask 'a.a' could not be applied: field 'a' is not set" )
+				return fmt.Errorf("field mask 'a.a' could not be applied: field 'a' is not set")
 			}
 			if dst.A == nil {
 				dst.A = &Test_TestNested{}
@@ -434,7 +436,7 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 		case "a.a.a":
 			srcField := src.A
 			if srcField == nil {
-				return fmt.Errorf("field mask 'a.a.a' could not be applied: field 'a' is not set" )
+				return fmt.Errorf("field mask 'a.a.a' could not be applied: field 'a' is not set")
 			}
 			if dst.A == nil {
 				dst.A = &Test_TestNested{}
@@ -445,7 +447,7 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 		case "a.a.b":
 			srcField := src.A
 			if srcField == nil {
-				return fmt.Errorf("field mask 'a.a.b' could not be applied: field 'a' is not set" )
+				return fmt.Errorf("field mask 'a.a.b' could not be applied: field 'a' is not set")
 			}
 			if dst.A == nil {
 				dst.A = &Test_TestNested{}
@@ -456,7 +458,7 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 		case "a.a.c":
 			srcField := src.A
 			if srcField == nil {
-				return fmt.Errorf("field mask 'a.a.c' could not be applied: field 'a' is not set" )
+				return fmt.Errorf("field mask 'a.a.c' could not be applied: field 'a' is not set")
 			}
 			if dst.A == nil {
 				dst.A = &Test_TestNested{}
@@ -467,7 +469,7 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 		case "a.a.d":
 			srcField := src.A
 			if srcField == nil {
-				return fmt.Errorf("field mask 'a.a.d' could not be applied: field 'a' is not set" )
+				return fmt.Errorf("field mask 'a.a.d' could not be applied: field 'a' is not set")
 			}
 			if dst.A == nil {
 				dst.A = &Test_TestNested{}
@@ -478,7 +480,7 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 		case "a.b":
 			srcField := src.A
 			if srcField == nil {
-				return fmt.Errorf("field mask 'a.b' could not be applied: field 'a' is not set" )
+				return fmt.Errorf("field mask 'a.b' could not be applied: field 'a' is not set")
 			}
 			if dst.A == nil {
 				dst.A = &Test_TestNested{}
@@ -489,7 +491,7 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 		case "a.c":
 			srcField := src.A
 			if srcField == nil {
-				return fmt.Errorf("field mask 'a.c' could not be applied: field 'a' is not set" )
+				return fmt.Errorf("field mask 'a.c' could not be applied: field 'a' is not set")
 			}
 			if dst.A == nil {
 				dst.A = &Test_TestNested{}
@@ -500,7 +502,7 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 		case "a.d":
 			srcField := src.A
 			if srcField == nil {
-				return fmt.Errorf("field mask 'a.d' could not be applied: field 'a' is not set" )
+				return fmt.Errorf("field mask 'a.d' could not be applied: field 'a' is not set")
 			}
 			if dst.A == nil {
 				dst.A = &Test_TestNested{}
@@ -511,7 +513,7 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 		case "a.e":
 			srcField := src.A
 			if srcField == nil {
-				return fmt.Errorf("field mask 'a.e' could not be applied: field 'a' is not set" )
+				return fmt.Errorf("field mask 'a.e' could not be applied: field 'a' is not set")
 			}
 			if dst.A == nil {
 				dst.A = &Test_TestNested{}
@@ -524,7 +526,7 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 		case "b.a":
 			srcField := src.CustomName
 			if srcField == nil {
-				return fmt.Errorf("field mask 'b.a' could not be applied: field 'b' is not set" )
+				return fmt.Errorf("field mask 'b.a' could not be applied: field 'b' is not set")
 			}
 			if dst.CustomName == nil {
 				dst.CustomName = &Test_TestNested{}
@@ -535,7 +537,7 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 		case "b.a.a":
 			srcField := src.CustomName
 			if srcField == nil {
-				return fmt.Errorf("field mask 'b.a.a' could not be applied: field 'b' is not set" )
+				return fmt.Errorf("field mask 'b.a.a' could not be applied: field 'b' is not set")
 			}
 			if dst.CustomName == nil {
 				dst.CustomName = &Test_TestNested{}
@@ -546,7 +548,7 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 		case "b.a.b":
 			srcField := src.CustomName
 			if srcField == nil {
-				return fmt.Errorf("field mask 'b.a.b' could not be applied: field 'b' is not set" )
+				return fmt.Errorf("field mask 'b.a.b' could not be applied: field 'b' is not set")
 			}
 			if dst.CustomName == nil {
 				dst.CustomName = &Test_TestNested{}
@@ -557,7 +559,7 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 		case "b.a.c":
 			srcField := src.CustomName
 			if srcField == nil {
-				return fmt.Errorf("field mask 'b.a.c' could not be applied: field 'b' is not set" )
+				return fmt.Errorf("field mask 'b.a.c' could not be applied: field 'b' is not set")
 			}
 			if dst.CustomName == nil {
 				dst.CustomName = &Test_TestNested{}
@@ -568,7 +570,7 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 		case "b.a.d":
 			srcField := src.CustomName
 			if srcField == nil {
-				return fmt.Errorf("field mask 'b.a.d' could not be applied: field 'b' is not set" )
+				return fmt.Errorf("field mask 'b.a.d' could not be applied: field 'b' is not set")
 			}
 			if dst.CustomName == nil {
 				dst.CustomName = &Test_TestNested{}
@@ -579,7 +581,7 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 		case "b.b":
 			srcField := src.CustomName
 			if srcField == nil {
-				return fmt.Errorf("field mask 'b.b' could not be applied: field 'b' is not set" )
+				return fmt.Errorf("field mask 'b.b' could not be applied: field 'b' is not set")
 			}
 			if dst.CustomName == nil {
 				dst.CustomName = &Test_TestNested{}
@@ -590,7 +592,7 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 		case "b.c":
 			srcField := src.CustomName
 			if srcField == nil {
-				return fmt.Errorf("field mask 'b.c' could not be applied: field 'b' is not set" )
+				return fmt.Errorf("field mask 'b.c' could not be applied: field 'b' is not set")
 			}
 			if dst.CustomName == nil {
 				dst.CustomName = &Test_TestNested{}
@@ -601,7 +603,7 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 		case "b.d":
 			srcField := src.CustomName
 			if srcField == nil {
-				return fmt.Errorf("field mask 'b.d' could not be applied: field 'b' is not set" )
+				return fmt.Errorf("field mask 'b.d' could not be applied: field 'b' is not set")
 			}
 			if dst.CustomName == nil {
 				dst.CustomName = &Test_TestNested{}
@@ -612,7 +614,7 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 		case "b.e":
 			srcField := src.CustomName
 			if srcField == nil {
-				return fmt.Errorf("field mask 'b.e' could not be applied: field 'b' is not set" )
+				return fmt.Errorf("field mask 'b.e' could not be applied: field 'b' is not set")
 			}
 			if dst.CustomName == nil {
 				dst.CustomName = &Test_TestNested{}
@@ -699,6 +701,7 @@ func (*Test_TestNested) FieldMaskPaths() []string {
 	copy(ret, _Test_TestNestedFieldPaths[:])
 	return ret
 }
+
 func (dst *Test_TestNested) GetFields(src *Test_TestNested, paths ...string) error {
 	for _, path := range _cleanPaths(paths) {
 		switch path {
@@ -778,6 +781,7 @@ func (dst *Test_TestNested) GetFields(src *Test_TestNested, paths ...string) err
 	}
 	return nil
 }
+
 func (dst *Test_TestNested) SetFields(src *Test_TestNested, paths ...string) error {
 	if src == nil {
 		return fmt.Errorf("source is nil")
@@ -789,7 +793,7 @@ func (dst *Test_TestNested) SetFields(src *Test_TestNested, paths ...string) err
 		case "a.a":
 			srcField := src.A
 			if srcField == nil {
-				return fmt.Errorf("field mask 'a.a' could not be applied: field 'a' is not set" )
+				return fmt.Errorf("field mask 'a.a' could not be applied: field 'a' is not set")
 			}
 			if dst.A == nil {
 				dst.A = &Test_TestNested_TestNestedNested{}
@@ -800,7 +804,7 @@ func (dst *Test_TestNested) SetFields(src *Test_TestNested, paths ...string) err
 		case "a.b":
 			srcField := src.A
 			if srcField == nil {
-				return fmt.Errorf("field mask 'a.b' could not be applied: field 'a' is not set" )
+				return fmt.Errorf("field mask 'a.b' could not be applied: field 'a' is not set")
 			}
 			if dst.A == nil {
 				dst.A = &Test_TestNested_TestNestedNested{}
@@ -811,7 +815,7 @@ func (dst *Test_TestNested) SetFields(src *Test_TestNested, paths ...string) err
 		case "a.c":
 			srcField := src.A
 			if srcField == nil {
-				return fmt.Errorf("field mask 'a.c' could not be applied: field 'a' is not set" )
+				return fmt.Errorf("field mask 'a.c' could not be applied: field 'a' is not set")
 			}
 			if dst.A == nil {
 				dst.A = &Test_TestNested_TestNestedNested{}
@@ -822,7 +826,7 @@ func (dst *Test_TestNested) SetFields(src *Test_TestNested, paths ...string) err
 		case "a.d":
 			srcField := src.A
 			if srcField == nil {
-				return fmt.Errorf("field mask 'a.d' could not be applied: field 'a' is not set" )
+				return fmt.Errorf("field mask 'a.d' could not be applied: field 'a' is not set")
 			}
 			if dst.A == nil {
 				dst.A = &Test_TestNested_TestNestedNested{}
@@ -857,6 +861,7 @@ func (*Test_TestNested_TestNestedNested) FieldMaskPaths() []string {
 	copy(ret, _Test_TestNested_TestNestedNestedFieldPaths[:])
 	return ret
 }
+
 func (dst *Test_TestNested_TestNestedNested) GetFields(src *Test_TestNested_TestNestedNested, paths ...string) error {
 	for _, path := range _cleanPaths(paths) {
 		switch path {
@@ -874,6 +879,7 @@ func (dst *Test_TestNested_TestNestedNested) GetFields(src *Test_TestNested_Test
 	}
 	return nil
 }
+
 func (dst *Test_TestNested_TestNestedNested) SetFields(src *Test_TestNested_TestNestedNested, paths ...string) error {
 	if src == nil {
 		return fmt.Errorf("source is nil")

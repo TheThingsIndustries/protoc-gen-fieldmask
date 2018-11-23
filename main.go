@@ -475,10 +475,14 @@ func (*%s) FieldMaskPaths() []string {
 		goType,
 	)
 
+	fmt.Fprintln(buf)
+
 	imports, err := buildMethod(buf, md, paths, goType, false)
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Fprintln(buf)
 
 	setImports, err := buildMethod(buf, md, paths, goType, true)
 	if err != nil {
