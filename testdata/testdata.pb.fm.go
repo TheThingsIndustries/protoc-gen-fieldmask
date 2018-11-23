@@ -11,9 +11,19 @@ func (*Empty) FieldMaskPaths() []string {
 	return nil
 }
 
+func (dst *Empty) GetFields(src *Empty, paths ...string) error {
+	if len(paths) != 0 {
+		return fmt.Errorf("message Empty has no fields, but paths %s were specified", paths)
+	}
+	if src != nil {
+		*dst = *src
+	}
+	return nil
+}
+
 func (dst *Empty) SetFields(src *Empty, paths ...string) error {
 	if len(paths) != 0 {
-		return fmt.Errorf("Empty has no fields, but paths %s were specified", paths)
+		return fmt.Errorf("message Empty has no fields, but paths %s were specified", paths)
 	}
 	if src == nil {
 		return errors.New("src is nil")
@@ -64,191 +74,475 @@ func (*Test) FieldMaskPaths() []string {
 	copy(ret, _TestFieldPaths[:])
 	return ret
 }
+func (dst *Test) GetFields(src *Test, paths ...string) error {
+	for _, path := range _cleanPaths(paths) {
+		switch path {
+		case "a":
+			dst.A = src.A
+		case "a.a":
+			src := src.A
+			if src == nil {
+				src = &Test_TestNested{}
+			}
+			if dst.A == nil {
+				dst.A = &Test_TestNested{}
+			}
+			if err := dst.A.GetFields(src, _pathsWithoutPrefix("a", paths)...); err != nil {
+				return fmt.Errorf("field mask 'a.a' could not be applied: %s", err)
+			}
+		case "a.a.a":
+			src := src.A
+			if src == nil {
+				src = &Test_TestNested{}
+			}
+			if dst.A == nil {
+				dst.A = &Test_TestNested{}
+			}
+			if err := dst.A.GetFields(src, _pathsWithoutPrefix("a", paths)...); err != nil {
+				return fmt.Errorf("field mask 'a.a.a' could not be applied: %s", err)
+			}
+		case "a.a.b":
+			src := src.A
+			if src == nil {
+				src = &Test_TestNested{}
+			}
+			if dst.A == nil {
+				dst.A = &Test_TestNested{}
+			}
+			if err := dst.A.GetFields(src, _pathsWithoutPrefix("a", paths)...); err != nil {
+				return fmt.Errorf("field mask 'a.a.b' could not be applied: %s", err)
+			}
+		case "a.a.c":
+			src := src.A
+			if src == nil {
+				src = &Test_TestNested{}
+			}
+			if dst.A == nil {
+				dst.A = &Test_TestNested{}
+			}
+			if err := dst.A.GetFields(src, _pathsWithoutPrefix("a", paths)...); err != nil {
+				return fmt.Errorf("field mask 'a.a.c' could not be applied: %s", err)
+			}
+		case "a.a.d":
+			src := src.A
+			if src == nil {
+				src = &Test_TestNested{}
+			}
+			if dst.A == nil {
+				dst.A = &Test_TestNested{}
+			}
+			if err := dst.A.GetFields(src, _pathsWithoutPrefix("a", paths)...); err != nil {
+				return fmt.Errorf("field mask 'a.a.d' could not be applied: %s", err)
+			}
+		case "a.b":
+			src := src.A
+			if src == nil {
+				src = &Test_TestNested{}
+			}
+			if dst.A == nil {
+				dst.A = &Test_TestNested{}
+			}
+			if err := dst.A.GetFields(src, _pathsWithoutPrefix("a", paths)...); err != nil {
+				return fmt.Errorf("field mask 'a.b' could not be applied: %s", err)
+			}
+		case "a.c":
+			src := src.A
+			if src == nil {
+				src = &Test_TestNested{}
+			}
+			if dst.A == nil {
+				dst.A = &Test_TestNested{}
+			}
+			if err := dst.A.GetFields(src, _pathsWithoutPrefix("a", paths)...); err != nil {
+				return fmt.Errorf("field mask 'a.c' could not be applied: %s", err)
+			}
+		case "a.d":
+			src := src.A
+			if src == nil {
+				src = &Test_TestNested{}
+			}
+			if dst.A == nil {
+				dst.A = &Test_TestNested{}
+			}
+			if err := dst.A.GetFields(src, _pathsWithoutPrefix("a", paths)...); err != nil {
+				return fmt.Errorf("field mask 'a.d' could not be applied: %s", err)
+			}
+		case "a.e":
+			src := src.A
+			if src == nil {
+				src = &Test_TestNested{}
+			}
+			if dst.A == nil {
+				dst.A = &Test_TestNested{}
+			}
+			if err := dst.A.GetFields(src, _pathsWithoutPrefix("a", paths)...); err != nil {
+				return fmt.Errorf("field mask 'a.e' could not be applied: %s", err)
+			}
+		case "b":
+			dst.CustomName = src.CustomName
+		case "b.a":
+			src := src.CustomName
+			if src == nil {
+				src = &Test_TestNested{}
+			}
+			if dst.CustomName == nil {
+				dst.CustomName = &Test_TestNested{}
+			}
+			if err := dst.CustomName.GetFields(src, _pathsWithoutPrefix("b", paths)...); err != nil {
+				return fmt.Errorf("field mask 'b.a' could not be applied: %s", err)
+			}
+		case "b.a.a":
+			src := src.CustomName
+			if src == nil {
+				src = &Test_TestNested{}
+			}
+			if dst.CustomName == nil {
+				dst.CustomName = &Test_TestNested{}
+			}
+			if err := dst.CustomName.GetFields(src, _pathsWithoutPrefix("b", paths)...); err != nil {
+				return fmt.Errorf("field mask 'b.a.a' could not be applied: %s", err)
+			}
+		case "b.a.b":
+			src := src.CustomName
+			if src == nil {
+				src = &Test_TestNested{}
+			}
+			if dst.CustomName == nil {
+				dst.CustomName = &Test_TestNested{}
+			}
+			if err := dst.CustomName.GetFields(src, _pathsWithoutPrefix("b", paths)...); err != nil {
+				return fmt.Errorf("field mask 'b.a.b' could not be applied: %s", err)
+			}
+		case "b.a.c":
+			src := src.CustomName
+			if src == nil {
+				src = &Test_TestNested{}
+			}
+			if dst.CustomName == nil {
+				dst.CustomName = &Test_TestNested{}
+			}
+			if err := dst.CustomName.GetFields(src, _pathsWithoutPrefix("b", paths)...); err != nil {
+				return fmt.Errorf("field mask 'b.a.c' could not be applied: %s", err)
+			}
+		case "b.a.d":
+			src := src.CustomName
+			if src == nil {
+				src = &Test_TestNested{}
+			}
+			if dst.CustomName == nil {
+				dst.CustomName = &Test_TestNested{}
+			}
+			if err := dst.CustomName.GetFields(src, _pathsWithoutPrefix("b", paths)...); err != nil {
+				return fmt.Errorf("field mask 'b.a.d' could not be applied: %s", err)
+			}
+		case "b.b":
+			src := src.CustomName
+			if src == nil {
+				src = &Test_TestNested{}
+			}
+			if dst.CustomName == nil {
+				dst.CustomName = &Test_TestNested{}
+			}
+			if err := dst.CustomName.GetFields(src, _pathsWithoutPrefix("b", paths)...); err != nil {
+				return fmt.Errorf("field mask 'b.b' could not be applied: %s", err)
+			}
+		case "b.c":
+			src := src.CustomName
+			if src == nil {
+				src = &Test_TestNested{}
+			}
+			if dst.CustomName == nil {
+				dst.CustomName = &Test_TestNested{}
+			}
+			if err := dst.CustomName.GetFields(src, _pathsWithoutPrefix("b", paths)...); err != nil {
+				return fmt.Errorf("field mask 'b.c' could not be applied: %s", err)
+			}
+		case "b.d":
+			src := src.CustomName
+			if src == nil {
+				src = &Test_TestNested{}
+			}
+			if dst.CustomName == nil {
+				dst.CustomName = &Test_TestNested{}
+			}
+			if err := dst.CustomName.GetFields(src, _pathsWithoutPrefix("b", paths)...); err != nil {
+				return fmt.Errorf("field mask 'b.d' could not be applied: %s", err)
+			}
+		case "b.e":
+			src := src.CustomName
+			if src == nil {
+				src = &Test_TestNested{}
+			}
+			if dst.CustomName == nil {
+				dst.CustomName = &Test_TestNested{}
+			}
+			if err := dst.CustomName.GetFields(src, _pathsWithoutPrefix("b", paths)...); err != nil {
+				return fmt.Errorf("field mask 'b.e' could not be applied: %s", err)
+			}
+		case "c":
+			dst.C = src.C
+		case "c.a":
+			if err := dst.C.GetFields(&src.C, _pathsWithoutPrefix("c", paths)...); err != nil {
+				return fmt.Errorf("field mask 'c.a' could not be applied: %s", err)
+			}
+		case "c.a.a":
+			if err := dst.C.GetFields(&src.C, _pathsWithoutPrefix("c", paths)...); err != nil {
+				return fmt.Errorf("field mask 'c.a.a' could not be applied: %s", err)
+			}
+		case "c.a.b":
+			if err := dst.C.GetFields(&src.C, _pathsWithoutPrefix("c", paths)...); err != nil {
+				return fmt.Errorf("field mask 'c.a.b' could not be applied: %s", err)
+			}
+		case "c.a.c":
+			if err := dst.C.GetFields(&src.C, _pathsWithoutPrefix("c", paths)...); err != nil {
+				return fmt.Errorf("field mask 'c.a.c' could not be applied: %s", err)
+			}
+		case "c.a.d":
+			if err := dst.C.GetFields(&src.C, _pathsWithoutPrefix("c", paths)...); err != nil {
+				return fmt.Errorf("field mask 'c.a.d' could not be applied: %s", err)
+			}
+		case "c.b":
+			if err := dst.C.GetFields(&src.C, _pathsWithoutPrefix("c", paths)...); err != nil {
+				return fmt.Errorf("field mask 'c.b' could not be applied: %s", err)
+			}
+		case "c.c":
+			if err := dst.C.GetFields(&src.C, _pathsWithoutPrefix("c", paths)...); err != nil {
+				return fmt.Errorf("field mask 'c.c' could not be applied: %s", err)
+			}
+		case "c.d":
+			if err := dst.C.GetFields(&src.C, _pathsWithoutPrefix("c", paths)...); err != nil {
+				return fmt.Errorf("field mask 'c.d' could not be applied: %s", err)
+			}
+		case "c.e":
+			if err := dst.C.GetFields(&src.C, _pathsWithoutPrefix("c", paths)...); err != nil {
+				return fmt.Errorf("field mask 'c.e' could not be applied: %s", err)
+			}
+		case "d":
+			if dst.TestOneof == nil {
+				dst.TestOneof = &Test_D{}
+			}
+			dst.TestOneof.(*Test_D).D = src.GetD()
+		case "e":
+			if dst.TestOneof == nil {
+				dst.TestOneof = &Test_E{}
+			}
+			dst.TestOneof.(*Test_E).E = src.GetE()
+		case "f":
+			if dst.TestOneof == nil {
+				dst.TestOneof = &Test_F{}
+			}
+			dst.TestOneof.(*Test_F).F = src.GetF()
+		case "g":
+			dst.G = src.G
+		default:
+			return fmt.Errorf("invalid field path: '%s'", path)
+		}
+	}
+	return nil
+}
 func (dst *Test) SetFields(src *Test, paths ...string) error {
 	for _, path := range _cleanPaths(paths) {
 		switch path {
 		case "a":
 			dst.A = src.A
 		case "a.a":
-			if src.A == nil {
+			src := src.A
+			if src == nil {
 				return fmt.Errorf("field mask 'a.a' could not be applied: field 'a' is not set" )
 			}
 			if dst.A == nil {
 				dst.A = &Test_TestNested{}
 			}
-			if err := dst.A.SetFields(src.A, _pathsWithoutPrefix("a", paths)...); err != nil {
+			if err := dst.A.SetFields(src, _pathsWithoutPrefix("a", paths)...); err != nil {
 				return fmt.Errorf("field mask 'a.a' could not be applied: %s", err)
 			}
 		case "a.a.a":
-			if src.A == nil {
+			src := src.A
+			if src == nil {
 				return fmt.Errorf("field mask 'a.a.a' could not be applied: field 'a' is not set" )
 			}
 			if dst.A == nil {
 				dst.A = &Test_TestNested{}
 			}
-			if err := dst.A.SetFields(src.A, _pathsWithoutPrefix("a", paths)...); err != nil {
+			if err := dst.A.SetFields(src, _pathsWithoutPrefix("a", paths)...); err != nil {
 				return fmt.Errorf("field mask 'a.a.a' could not be applied: %s", err)
 			}
 		case "a.a.b":
-			if src.A == nil {
+			src := src.A
+			if src == nil {
 				return fmt.Errorf("field mask 'a.a.b' could not be applied: field 'a' is not set" )
 			}
 			if dst.A == nil {
 				dst.A = &Test_TestNested{}
 			}
-			if err := dst.A.SetFields(src.A, _pathsWithoutPrefix("a", paths)...); err != nil {
+			if err := dst.A.SetFields(src, _pathsWithoutPrefix("a", paths)...); err != nil {
 				return fmt.Errorf("field mask 'a.a.b' could not be applied: %s", err)
 			}
 		case "a.a.c":
-			if src.A == nil {
+			src := src.A
+			if src == nil {
 				return fmt.Errorf("field mask 'a.a.c' could not be applied: field 'a' is not set" )
 			}
 			if dst.A == nil {
 				dst.A = &Test_TestNested{}
 			}
-			if err := dst.A.SetFields(src.A, _pathsWithoutPrefix("a", paths)...); err != nil {
+			if err := dst.A.SetFields(src, _pathsWithoutPrefix("a", paths)...); err != nil {
 				return fmt.Errorf("field mask 'a.a.c' could not be applied: %s", err)
 			}
 		case "a.a.d":
-			if src.A == nil {
+			src := src.A
+			if src == nil {
 				return fmt.Errorf("field mask 'a.a.d' could not be applied: field 'a' is not set" )
 			}
 			if dst.A == nil {
 				dst.A = &Test_TestNested{}
 			}
-			if err := dst.A.SetFields(src.A, _pathsWithoutPrefix("a", paths)...); err != nil {
+			if err := dst.A.SetFields(src, _pathsWithoutPrefix("a", paths)...); err != nil {
 				return fmt.Errorf("field mask 'a.a.d' could not be applied: %s", err)
 			}
 		case "a.b":
-			if src.A == nil {
+			src := src.A
+			if src == nil {
 				return fmt.Errorf("field mask 'a.b' could not be applied: field 'a' is not set" )
 			}
 			if dst.A == nil {
 				dst.A = &Test_TestNested{}
 			}
-			if err := dst.A.SetFields(src.A, _pathsWithoutPrefix("a", paths)...); err != nil {
+			if err := dst.A.SetFields(src, _pathsWithoutPrefix("a", paths)...); err != nil {
 				return fmt.Errorf("field mask 'a.b' could not be applied: %s", err)
 			}
 		case "a.c":
-			if src.A == nil {
+			src := src.A
+			if src == nil {
 				return fmt.Errorf("field mask 'a.c' could not be applied: field 'a' is not set" )
 			}
 			if dst.A == nil {
 				dst.A = &Test_TestNested{}
 			}
-			if err := dst.A.SetFields(src.A, _pathsWithoutPrefix("a", paths)...); err != nil {
+			if err := dst.A.SetFields(src, _pathsWithoutPrefix("a", paths)...); err != nil {
 				return fmt.Errorf("field mask 'a.c' could not be applied: %s", err)
 			}
 		case "a.d":
-			if src.A == nil {
+			src := src.A
+			if src == nil {
 				return fmt.Errorf("field mask 'a.d' could not be applied: field 'a' is not set" )
 			}
 			if dst.A == nil {
 				dst.A = &Test_TestNested{}
 			}
-			if err := dst.A.SetFields(src.A, _pathsWithoutPrefix("a", paths)...); err != nil {
+			if err := dst.A.SetFields(src, _pathsWithoutPrefix("a", paths)...); err != nil {
 				return fmt.Errorf("field mask 'a.d' could not be applied: %s", err)
 			}
 		case "a.e":
-			if src.A == nil {
+			src := src.A
+			if src == nil {
 				return fmt.Errorf("field mask 'a.e' could not be applied: field 'a' is not set" )
 			}
 			if dst.A == nil {
 				dst.A = &Test_TestNested{}
 			}
-			if err := dst.A.SetFields(src.A, _pathsWithoutPrefix("a", paths)...); err != nil {
+			if err := dst.A.SetFields(src, _pathsWithoutPrefix("a", paths)...); err != nil {
 				return fmt.Errorf("field mask 'a.e' could not be applied: %s", err)
 			}
 		case "b":
 			dst.CustomName = src.CustomName
 		case "b.a":
-			if src.CustomName == nil {
+			src := src.CustomName
+			if src == nil {
 				return fmt.Errorf("field mask 'b.a' could not be applied: field 'b' is not set" )
 			}
 			if dst.CustomName == nil {
 				dst.CustomName = &Test_TestNested{}
 			}
-			if err := dst.CustomName.SetFields(src.CustomName, _pathsWithoutPrefix("b", paths)...); err != nil {
+			if err := dst.CustomName.SetFields(src, _pathsWithoutPrefix("b", paths)...); err != nil {
 				return fmt.Errorf("field mask 'b.a' could not be applied: %s", err)
 			}
 		case "b.a.a":
-			if src.CustomName == nil {
+			src := src.CustomName
+			if src == nil {
 				return fmt.Errorf("field mask 'b.a.a' could not be applied: field 'b' is not set" )
 			}
 			if dst.CustomName == nil {
 				dst.CustomName = &Test_TestNested{}
 			}
-			if err := dst.CustomName.SetFields(src.CustomName, _pathsWithoutPrefix("b", paths)...); err != nil {
+			if err := dst.CustomName.SetFields(src, _pathsWithoutPrefix("b", paths)...); err != nil {
 				return fmt.Errorf("field mask 'b.a.a' could not be applied: %s", err)
 			}
 		case "b.a.b":
-			if src.CustomName == nil {
+			src := src.CustomName
+			if src == nil {
 				return fmt.Errorf("field mask 'b.a.b' could not be applied: field 'b' is not set" )
 			}
 			if dst.CustomName == nil {
 				dst.CustomName = &Test_TestNested{}
 			}
-			if err := dst.CustomName.SetFields(src.CustomName, _pathsWithoutPrefix("b", paths)...); err != nil {
+			if err := dst.CustomName.SetFields(src, _pathsWithoutPrefix("b", paths)...); err != nil {
 				return fmt.Errorf("field mask 'b.a.b' could not be applied: %s", err)
 			}
 		case "b.a.c":
-			if src.CustomName == nil {
+			src := src.CustomName
+			if src == nil {
 				return fmt.Errorf("field mask 'b.a.c' could not be applied: field 'b' is not set" )
 			}
 			if dst.CustomName == nil {
 				dst.CustomName = &Test_TestNested{}
 			}
-			if err := dst.CustomName.SetFields(src.CustomName, _pathsWithoutPrefix("b", paths)...); err != nil {
+			if err := dst.CustomName.SetFields(src, _pathsWithoutPrefix("b", paths)...); err != nil {
 				return fmt.Errorf("field mask 'b.a.c' could not be applied: %s", err)
 			}
 		case "b.a.d":
-			if src.CustomName == nil {
+			src := src.CustomName
+			if src == nil {
 				return fmt.Errorf("field mask 'b.a.d' could not be applied: field 'b' is not set" )
 			}
 			if dst.CustomName == nil {
 				dst.CustomName = &Test_TestNested{}
 			}
-			if err := dst.CustomName.SetFields(src.CustomName, _pathsWithoutPrefix("b", paths)...); err != nil {
+			if err := dst.CustomName.SetFields(src, _pathsWithoutPrefix("b", paths)...); err != nil {
 				return fmt.Errorf("field mask 'b.a.d' could not be applied: %s", err)
 			}
 		case "b.b":
-			if src.CustomName == nil {
+			src := src.CustomName
+			if src == nil {
 				return fmt.Errorf("field mask 'b.b' could not be applied: field 'b' is not set" )
 			}
 			if dst.CustomName == nil {
 				dst.CustomName = &Test_TestNested{}
 			}
-			if err := dst.CustomName.SetFields(src.CustomName, _pathsWithoutPrefix("b", paths)...); err != nil {
+			if err := dst.CustomName.SetFields(src, _pathsWithoutPrefix("b", paths)...); err != nil {
 				return fmt.Errorf("field mask 'b.b' could not be applied: %s", err)
 			}
 		case "b.c":
-			if src.CustomName == nil {
+			src := src.CustomName
+			if src == nil {
 				return fmt.Errorf("field mask 'b.c' could not be applied: field 'b' is not set" )
 			}
 			if dst.CustomName == nil {
 				dst.CustomName = &Test_TestNested{}
 			}
-			if err := dst.CustomName.SetFields(src.CustomName, _pathsWithoutPrefix("b", paths)...); err != nil {
+			if err := dst.CustomName.SetFields(src, _pathsWithoutPrefix("b", paths)...); err != nil {
 				return fmt.Errorf("field mask 'b.c' could not be applied: %s", err)
 			}
 		case "b.d":
-			if src.CustomName == nil {
+			src := src.CustomName
+			if src == nil {
 				return fmt.Errorf("field mask 'b.d' could not be applied: field 'b' is not set" )
 			}
 			if dst.CustomName == nil {
 				dst.CustomName = &Test_TestNested{}
 			}
-			if err := dst.CustomName.SetFields(src.CustomName, _pathsWithoutPrefix("b", paths)...); err != nil {
+			if err := dst.CustomName.SetFields(src, _pathsWithoutPrefix("b", paths)...); err != nil {
 				return fmt.Errorf("field mask 'b.d' could not be applied: %s", err)
 			}
 		case "b.e":
-			if src.CustomName == nil {
+			src := src.CustomName
+			if src == nil {
 				return fmt.Errorf("field mask 'b.e' could not be applied: field 'b' is not set" )
 			}
 			if dst.CustomName == nil {
 				dst.CustomName = &Test_TestNested{}
 			}
-			if err := dst.CustomName.SetFields(src.CustomName, _pathsWithoutPrefix("b", paths)...); err != nil {
+			if err := dst.CustomName.SetFields(src, _pathsWithoutPrefix("b", paths)...); err != nil {
 				return fmt.Errorf("field mask 'b.e' could not be applied: %s", err)
 			}
 		case "c":
@@ -330,49 +624,116 @@ func (*Test_TestNested) FieldMaskPaths() []string {
 	copy(ret, _Test_TestNestedFieldPaths[:])
 	return ret
 }
+func (dst *Test_TestNested) GetFields(src *Test_TestNested, paths ...string) error {
+	for _, path := range _cleanPaths(paths) {
+		switch path {
+		case "a":
+			dst.A = src.A
+		case "a.a":
+			src := src.A
+			if src == nil {
+				src = &Test_TestNested_TestNestedNested{}
+			}
+			if dst.A == nil {
+				dst.A = &Test_TestNested_TestNestedNested{}
+			}
+			if err := dst.A.GetFields(src, _pathsWithoutPrefix("a", paths)...); err != nil {
+				return fmt.Errorf("field mask 'a.a' could not be applied: %s", err)
+			}
+		case "a.b":
+			src := src.A
+			if src == nil {
+				src = &Test_TestNested_TestNestedNested{}
+			}
+			if dst.A == nil {
+				dst.A = &Test_TestNested_TestNestedNested{}
+			}
+			if err := dst.A.GetFields(src, _pathsWithoutPrefix("a", paths)...); err != nil {
+				return fmt.Errorf("field mask 'a.b' could not be applied: %s", err)
+			}
+		case "a.c":
+			src := src.A
+			if src == nil {
+				src = &Test_TestNested_TestNestedNested{}
+			}
+			if dst.A == nil {
+				dst.A = &Test_TestNested_TestNestedNested{}
+			}
+			if err := dst.A.GetFields(src, _pathsWithoutPrefix("a", paths)...); err != nil {
+				return fmt.Errorf("field mask 'a.c' could not be applied: %s", err)
+			}
+		case "a.d":
+			src := src.A
+			if src == nil {
+				src = &Test_TestNested_TestNestedNested{}
+			}
+			if dst.A == nil {
+				dst.A = &Test_TestNested_TestNestedNested{}
+			}
+			if err := dst.A.GetFields(src, _pathsWithoutPrefix("a", paths)...); err != nil {
+				return fmt.Errorf("field mask 'a.d' could not be applied: %s", err)
+			}
+		case "b":
+			dst.B = src.B
+		case "c":
+			dst.C = src.C
+		case "d":
+			dst.D = src.D
+		case "e":
+			dst.E = src.E
+		default:
+			return fmt.Errorf("invalid field path: '%s'", path)
+		}
+	}
+	return nil
+}
 func (dst *Test_TestNested) SetFields(src *Test_TestNested, paths ...string) error {
 	for _, path := range _cleanPaths(paths) {
 		switch path {
 		case "a":
 			dst.A = src.A
 		case "a.a":
-			if src.A == nil {
+			src := src.A
+			if src == nil {
 				return fmt.Errorf("field mask 'a.a' could not be applied: field 'a' is not set" )
 			}
 			if dst.A == nil {
 				dst.A = &Test_TestNested_TestNestedNested{}
 			}
-			if err := dst.A.SetFields(src.A, _pathsWithoutPrefix("a", paths)...); err != nil {
+			if err := dst.A.SetFields(src, _pathsWithoutPrefix("a", paths)...); err != nil {
 				return fmt.Errorf("field mask 'a.a' could not be applied: %s", err)
 			}
 		case "a.b":
-			if src.A == nil {
+			src := src.A
+			if src == nil {
 				return fmt.Errorf("field mask 'a.b' could not be applied: field 'a' is not set" )
 			}
 			if dst.A == nil {
 				dst.A = &Test_TestNested_TestNestedNested{}
 			}
-			if err := dst.A.SetFields(src.A, _pathsWithoutPrefix("a", paths)...); err != nil {
+			if err := dst.A.SetFields(src, _pathsWithoutPrefix("a", paths)...); err != nil {
 				return fmt.Errorf("field mask 'a.b' could not be applied: %s", err)
 			}
 		case "a.c":
-			if src.A == nil {
+			src := src.A
+			if src == nil {
 				return fmt.Errorf("field mask 'a.c' could not be applied: field 'a' is not set" )
 			}
 			if dst.A == nil {
 				dst.A = &Test_TestNested_TestNestedNested{}
 			}
-			if err := dst.A.SetFields(src.A, _pathsWithoutPrefix("a", paths)...); err != nil {
+			if err := dst.A.SetFields(src, _pathsWithoutPrefix("a", paths)...); err != nil {
 				return fmt.Errorf("field mask 'a.c' could not be applied: %s", err)
 			}
 		case "a.d":
-			if src.A == nil {
+			src := src.A
+			if src == nil {
 				return fmt.Errorf("field mask 'a.d' could not be applied: field 'a' is not set" )
 			}
 			if dst.A == nil {
 				dst.A = &Test_TestNested_TestNestedNested{}
 			}
-			if err := dst.A.SetFields(src.A, _pathsWithoutPrefix("a", paths)...); err != nil {
+			if err := dst.A.SetFields(src, _pathsWithoutPrefix("a", paths)...); err != nil {
 				return fmt.Errorf("field mask 'a.d' could not be applied: %s", err)
 			}
 		case "b":
@@ -401,6 +762,23 @@ func (*Test_TestNested_TestNestedNested) FieldMaskPaths() []string {
 	ret := make([]string, len(_Test_TestNested_TestNestedNestedFieldPaths))
 	copy(ret, _Test_TestNested_TestNestedNestedFieldPaths[:])
 	return ret
+}
+func (dst *Test_TestNested_TestNestedNested) GetFields(src *Test_TestNested_TestNestedNested, paths ...string) error {
+	for _, path := range _cleanPaths(paths) {
+		switch path {
+		case "a":
+			dst.A = src.A
+		case "b":
+			dst.B = src.B
+		case "c":
+			dst.C = src.C
+		case "d":
+			dst.D = src.D
+		default:
+			return fmt.Errorf("invalid field path: '%s'", path)
+		}
+	}
+	return nil
 }
 func (dst *Test_TestNested_TestNestedNested) SetFields(src *Test_TestNested_TestNestedNested, paths ...string) error {
 	for _, path := range _cleanPaths(paths) {

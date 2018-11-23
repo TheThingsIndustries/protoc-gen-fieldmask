@@ -155,65 +155,17 @@ func enumTypeName(fd *protokit.FieldDescriptor) (goType string) {
 	return goType
 }
 
-func buildMethods(buf *strings.Builder, md *protokit.Descriptor, mdMap map[string]*protokit.Descriptor) (map[string]string, error) {
-	paths, err := appendPaths(make([]string, 0, len(md.GetMessageFields())), "", md, mdMap, nil)
-	if err != nil {
-		// TODO: Return error here once https://github.com/TheThingsIndustries/protoc-gen-fieldmask/issues/5 is resolved.
-		log.Printf("Failed to traverse `%s`: %s, skipping...", md.GetFullName(), err)
-		return nil, nil
+func buildMethod(buf *strings.Builder, md *protokit.Descriptor, paths []string, goType string, isSet bool) (map[string]string, error) {
+	methName := "GetFields"
+	if isSet {
+		methName = "SetFields"
 	}
-
-	goType := md.GetName()
-	for parent := md.GetParent(); parent != nil; parent = parent.GetParent() {
-		goType = fmt.Sprintf("%s_%s", parent.GetName(), goType)
-	}
-
-	if len(paths) == 0 {
-		fmt.Fprintf(buf, `
-func (*%s) FieldMaskPaths() []string {
-	return nil
-}
-
-func (dst *%s) SetFields(src *%s, paths ...string) error {
-	if len(paths) != 0 {
-		return fmt.Errorf("%s has no fields, but paths %%s were specified", paths)
-	}
-	if src == nil {
-		return errors.New("src is nil")
-	}
-	*dst = *src
-	return nil
-}`,
-			goType,
-			goType, goType,
-			goType,
-		)
-		return map[string]string{"errors": "errors"}, nil
-	}
-
-	sort.Strings(paths)
-	fmt.Fprintf(buf, `
-var _%sFieldPaths = [...]string{
-	%s
-}
-
-func (*%s) FieldMaskPaths() []string {
-	ret := make([]string, len(_%sFieldPaths))
-	copy(ret, _%sFieldPaths[:])
-	return ret
-}`,
-		goType, `"`+strings.Join(paths, `",
-	"`)+`",`,
-		goType,
-		goType,
-		goType,
-	)
 
 	fmt.Fprintf(buf, `
-func (dst *%s) SetFields(src *%s, paths ...string) error {
+func (dst *%s) %s(src *%s, paths ...string) error {
 	for _, path := range _cleanPaths(paths) {
 		switch path {`,
-		goType, goType,
+		goType, methName, goType,
 	)
 
 	for _, p := range paths {
@@ -266,29 +218,43 @@ func (dst *%s) SetFields(src *%s, paths ...string) error {
 
 			if v, ok := fd.OptionExtensions["gogoproto.nullable"].(*bool); ok && !*v {
 				fmt.Fprintf(buf, `
-			if err := %s.SetFields(&%s, _pathsWithoutPrefix("%s", paths)...); err != nil {
+			if err := %s.%s(&%s, _pathsWithoutPrefix("%s", paths)...); err != nil {
 				return fmt.Errorf("field mask '%s' could not be applied: %%s", err)
 			}`,
-					dstPath, srcPath, sp[0],
+					dstPath, methName, srcPath, sp[0],
 					p,
 				)
 
 			} else {
 				fmt.Fprintf(buf, `
-			if %s == nil {
-				return fmt.Errorf("field mask '%s' could not be applied: field '%s' is not set" )
+			src := %s
+			if src == nil {`,
+					srcPath,
+				)
+
+				if isSet {
+					fmt.Fprintf(buf, `
+				return fmt.Errorf("field mask '%s' could not be applied: field '%s' is not set" )`,
+						p, sp[0],
+					)
+				} else {
+					fmt.Fprintf(buf, `
+				src = &%s{}`,
+						goType,
+					)
+				}
+
+				fmt.Fprintf(buf, `
 			}
 			if %s == nil {
 				%s = &%s{}
 			}
-			if err := %s.SetFields(%s, _pathsWithoutPrefix("%s", paths)...); err != nil {
+			if err := %s.%s(src, _pathsWithoutPrefix("%s", paths)...); err != nil {
 				return fmt.Errorf("field mask '%s' could not be applied: %%s", err)
 			}`,
-					srcPath,
-					p, sp[0],
 					dstPath,
 					dstPath, goType,
-					dstPath, srcPath, sp[0],
+					dstPath, methName, sp[0],
 					p,
 				)
 			}
@@ -411,6 +377,91 @@ func (dst *%s) SetFields(src *%s, paths ...string) error {
 }`,
 	)
 	return map[string]string{"fmt": "fmt"}, nil
+}
+
+func buildMethods(buf *strings.Builder, md *protokit.Descriptor, mdMap map[string]*protokit.Descriptor) (map[string]string, error) {
+	paths, err := appendPaths(make([]string, 0, len(md.GetMessageFields())), "", md, mdMap, nil)
+	if err != nil {
+		// TODO: Return error here once https://github.com/TheThingsIndustries/protoc-gen-fieldmask/issues/5 is resolved.
+		log.Printf("Failed to traverse `%s`: %s, skipping...", md.GetFullName(), err)
+		return nil, nil
+	}
+
+	goType := md.GetName()
+	for parent := md.GetParent(); parent != nil; parent = parent.GetParent() {
+		goType = fmt.Sprintf("%s_%s", parent.GetName(), goType)
+	}
+
+	if len(paths) == 0 {
+		fmt.Fprintf(buf, `
+func (*%s) FieldMaskPaths() []string {
+	return nil
+}
+
+func (dst *%s) GetFields(src *%s, paths ...string) error {
+	if len(paths) != 0 {
+		return fmt.Errorf("message %s has no fields, but paths %%s were specified", paths)
+	}
+	if src != nil {
+		*dst = *src
+	}
+	return nil
+}
+
+func (dst *%s) SetFields(src *%s, paths ...string) error {
+	if len(paths) != 0 {
+		return fmt.Errorf("message %s has no fields, but paths %%s were specified", paths)
+	}
+	if src == nil {
+		return errors.New("src is nil")
+	}
+	*dst = *src
+	return nil
+}`,
+			goType,
+			goType, goType,
+			goType,
+			goType, goType,
+			goType,
+		)
+		return map[string]string{"errors": "errors"}, nil
+	}
+
+	sort.Strings(paths)
+	fmt.Fprintf(buf, `
+var _%sFieldPaths = [...]string{
+	%s
+}
+
+func (*%s) FieldMaskPaths() []string {
+	ret := make([]string, len(_%sFieldPaths))
+	copy(ret, _%sFieldPaths[:])
+	return ret
+}`,
+		goType, `"`+strings.Join(paths, `",
+	"`)+`",`,
+		goType,
+		goType,
+		goType,
+	)
+
+	imports, err := buildMethod(buf, md, paths, goType, false)
+	if err != nil {
+		return nil, err
+	}
+
+	setImports, err := buildMethod(buf, md, paths, goType, true)
+	if err != nil {
+		return nil, err
+	}
+
+	for name, pkg := range setImports {
+		if v, ok := imports[name]; ok && v != pkg {
+			return nil, fmt.Errorf("import name clash at `%s`. Imported `%s` and `%s`", name, pkg, v)
+		}
+		imports[name] = pkg
+	}
+	return imports, nil
 }
 
 func walkMessage(md *protokit.Descriptor, f func(md *protokit.Descriptor) error) error {
