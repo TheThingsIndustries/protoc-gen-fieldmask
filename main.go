@@ -162,10 +162,21 @@ func buildMethod(buf *strings.Builder, md *protokit.Descriptor, paths []string, 
 	}
 
 	fmt.Fprintf(buf, `
-func (dst *%s) %s(src *%s, paths ...string) error {
+func (dst *%s) %s(src *%s, paths ...string) error {`,
+		goType, methName, goType,
+	)
+
+	if isSet {
+		fmt.Fprintf(buf, `
+	if src == nil {
+		return fmt.Errorf("source is nil")
+	}`,
+		)
+	}
+
+	fmt.Fprintf(buf, `
 	for _, path := range _cleanPaths(paths) {
 		switch path {`,
-		goType, methName, goType,
 	)
 
 	for _, p := range paths {
@@ -201,6 +212,15 @@ func (dst *%s) %s(src *%s, paths ...string) error {
 
 				dstPath = fmt.Sprintf("%s.%s", dstPath, oneOfName)
 
+				if !isSet {
+					fmt.Fprintf(buf, `
+			if src == nil {
+				%s = nil
+				continue
+			}`,
+						dstPath,
+					)
+				}
 				fmt.Fprintf(buf, `
 			if %s == nil {
 				%s = &%s{}
@@ -226,20 +246,30 @@ func (dst *%s) %s(src *%s, paths ...string) error {
 				)
 
 			} else {
+				if !isSet && fd.OneofIndex == nil {
+					fmt.Fprintf(buf, `
+			if src == nil {
+				%s = nil
+				continue
+			}`,
+						dstPath,
+					)
+				}
+
 				fmt.Fprintf(buf, `
-			src := %s
-			if src == nil {`,
+			srcField := %s
+			if srcField == nil {`,
 					srcPath,
 				)
 
 				if isSet {
 					fmt.Fprintf(buf, `
-				return fmt.Errorf("field mask '%s' could not be applied: field '%s' is not set" )`,
+				return fmt.Errorf("field mask '%s' could not be applied: field '%s' is not set")`,
 						p, sp[0],
 					)
 				} else {
 					fmt.Fprintf(buf, `
-				src = &%s{}`,
+				srcField = &%s{}`,
 						goType,
 					)
 				}
@@ -249,7 +279,7 @@ func (dst *%s) %s(src *%s, paths ...string) error {
 			if %s == nil {
 				%s = &%s{}
 			}
-			if err := %s.%s(src, _pathsWithoutPrefix("%s", paths)...); err != nil {
+			if err := %s.%s(srcField, _pathsWithoutPrefix("%s", paths)...); err != nil {
 				return fmt.Errorf("field mask '%s' could not be applied: %%s", err)
 			}`,
 					dstPath,

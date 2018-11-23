@@ -26,6 +26,7 @@ import (
 
 	"github.com/TheThingsIndustries/protoc-gen-fieldmask/testdata"
 	"github.com/kr/pretty"
+	"github.com/mohae/deepcopy"
 	"github.com/smartystreets/assertions"
 	"github.com/smartystreets/assertions/should"
 )
@@ -169,28 +170,182 @@ func TestFieldMaskPaths(t *testing.T) {
 	})
 }
 
-func TestSetFields(t *testing.T) {
-	a := assertions.New(t)
+func TestGetFields(t *testing.T) {
+	for _, tc := range []struct {
+		Name                        string
+		Source, Destination, Result *testdata.Test
+		Paths                       []string
+		ErrorAssertion              func(t *testing.T, err error) bool
+	}{
+		{
+			Name: "nil source",
+			Destination: &testdata.Test{
+				A: &testdata.Test_TestNested{},
+				CustomName: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{},
+				},
+			},
+			Source: nil,
+			Paths:  []string{"a.b"},
+			Result: &testdata.Test{
+				CustomName: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{},
+				},
+			},
+		},
+		{
+			Name: "no paths",
+			Destination: &testdata.Test{
+				CustomName: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{},
+				},
+			},
+			Source: &testdata.Test{
+				A: &testdata.Test_TestNested{
+					B: []byte{1, 2, 3},
+				},
+				CustomName: &testdata.Test_TestNested{
+					B: []byte{1, 2, 4},
+				},
+			},
+			Paths: nil,
+			Result: &testdata.Test{
+				CustomName: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{},
+				},
+			},
+		},
+		{
+			Name: "a.b",
+			Destination: &testdata.Test{
+				CustomName: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{},
+				},
+			},
+			Source: &testdata.Test{
+				A: &testdata.Test_TestNested{
+					B: []byte{1, 2, 3},
+				},
+				CustomName: &testdata.Test_TestNested{
+					B: []byte{1, 2, 4},
+				},
+			},
+			Paths: []string{"a.b"},
+			Result: &testdata.Test{
+				A: &testdata.Test_TestNested{
+					B: []byte{1, 2, 3},
+				},
+				CustomName: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{},
+				},
+			},
+		},
+	} {
+		t.Run(tc.Name, func(t *testing.T) {
+			a := assertions.New(t)
 
-	pb := &testdata.Test{
-		CustomName: &testdata.Test_TestNested{
-			A: &testdata.Test_TestNested_TestNestedNested{},
-		},
+			src := deepcopy.Copy(tc.Source).(*testdata.Test)
+			dst := deepcopy.Copy(tc.Destination).(*testdata.Test)
+
+			err := dst.GetFields(src, tc.Paths...)
+			if tc.ErrorAssertion != nil {
+				a.So(tc.ErrorAssertion(t, err), should.BeTrue)
+			} else {
+				a.So(err, should.BeNil)
+			}
+			a.So(src, should.Resemble, tc.Source)
+			a.So(dst, should.Resemble, tc.Result)
+		})
 	}
-	pb.SetFields(&testdata.Test{
-		A: &testdata.Test_TestNested{
-			B: []byte{1, 2, 3},
+}
+
+func TestSetFields(t *testing.T) {
+	for _, tc := range []struct {
+		Name                        string
+		Source, Destination, Result *testdata.Test
+		Paths                       []string
+		ErrorAssertion              func(t *testing.T, err error) bool
+	}{
+		{
+			Name: "nil source",
+			Destination: &testdata.Test{
+				CustomName: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{},
+				},
+			},
+			Source: nil,
+			Paths:  []string{"a.b"},
+			Result: &testdata.Test{
+				CustomName: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{},
+				},
+			},
+			ErrorAssertion: func(t *testing.T, err error) bool {
+				return assertions.New(t).So(err, should.BeError)
+			},
 		},
-		CustomName: &testdata.Test_TestNested{
-			B: []byte{1, 2, 4},
+		{
+			Name: "no paths",
+			Destination: &testdata.Test{
+				CustomName: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{},
+				},
+			},
+			Source: &testdata.Test{
+				A: &testdata.Test_TestNested{
+					B: []byte{1, 2, 3},
+				},
+				CustomName: &testdata.Test_TestNested{
+					B: []byte{1, 2, 4},
+				},
+			},
+			Paths: nil,
+			Result: &testdata.Test{
+				CustomName: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{},
+				},
+			},
 		},
-	}, "a.b")
-	a.So(pb, should.Resemble, &testdata.Test{
-		A: &testdata.Test_TestNested{
-			B: []byte{1, 2, 3},
+		{
+			Name: "a.b",
+			Destination: &testdata.Test{
+				CustomName: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{},
+				},
+			},
+			Source: &testdata.Test{
+				A: &testdata.Test_TestNested{
+					B: []byte{1, 2, 3},
+				},
+				CustomName: &testdata.Test_TestNested{
+					B: []byte{1, 2, 4},
+				},
+			},
+			Paths: []string{"a.b"},
+			Result: &testdata.Test{
+				A: &testdata.Test_TestNested{
+					B: []byte{1, 2, 3},
+				},
+				CustomName: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{},
+				},
+			},
 		},
-		CustomName: &testdata.Test_TestNested{
-			A: &testdata.Test_TestNested_TestNestedNested{},
-		},
-	})
+	} {
+		t.Run(tc.Name, func(t *testing.T) {
+			a := assertions.New(t)
+
+			src := deepcopy.Copy(tc.Source).(*testdata.Test)
+			dst := deepcopy.Copy(tc.Destination).(*testdata.Test)
+
+			err := dst.SetFields(src, tc.Paths...)
+			if tc.ErrorAssertion != nil {
+				a.So(tc.ErrorAssertion(t, err), should.BeTrue)
+			} else {
+				a.So(err, should.BeNil)
+			}
+			a.So(src, should.Resemble, tc.Source)
+			a.So(dst, should.Resemble, tc.Result)
+		})
+	}
 }
