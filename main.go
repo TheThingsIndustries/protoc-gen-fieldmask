@@ -170,14 +170,29 @@ func buildMethods(buf *strings.Builder, md *protokit.Descriptor, mdMap map[strin
 
 	if len(paths) == 0 {
 		fmt.Fprintf(buf, `
-func (*%s) FieldMaskPaths() []string {,
+func (*%s) FieldMaskPaths() []string {
+	return nil
+}
+
+func (dst *%s) SetFields(src *%s, paths ...string) error {
+	if len(paths) != 0 {
+		return fmt.Errorf("%s has no fields, but paths %%s were specified", paths)
+	}
+	if src == nil {
+		return errors.New("src is nil")
+	}
+	*dst = *src
 	return nil
 }`,
 			goType,
+			goType, goType,
+			goType,
 		)
-	} else {
-		sort.Strings(paths)
-		fmt.Fprintf(buf, `
+		return map[string]string{"errors": "errors"}, nil
+	}
+
+	sort.Strings(paths)
+	fmt.Fprintf(buf, `
 var _%sFieldPaths = [...]string{
 	%s
 }
@@ -187,17 +202,15 @@ func (*%s) FieldMaskPaths() []string {
 	copy(ret, _%sFieldPaths[:])
 	return ret
 }`,
-			goType, `"`+strings.Join(paths, `",
+		goType, `"`+strings.Join(paths, `",
 	"`)+`",`,
-			goType,
-			goType,
-			goType,
-		)
-	}
+		goType,
+		goType,
+		goType,
+	)
 
 	fmt.Fprintf(buf, `
-
-func (dst *%s) SetFields(src *%s, paths ...string) {
+func (dst *%s) SetFields(src *%s, paths ...string) error {
 	for _, path := range _cleanPaths(paths) {
 		switch path {`,
 		goType, goType,
