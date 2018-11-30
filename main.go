@@ -52,13 +52,64 @@ func (e unsupportedTypeError) Error() string {
 	return fmt.Sprintf("fields of proto type '%s' are unsupported", string(e))
 }
 
-type recursionError struct {
-	file  string
-	field string
+func walkMessage(md *protokit.Descriptor, f func(md *protokit.Descriptor) error) error {
+	if err := f(md); err != nil {
+		return err
+	}
+	for _, smd := range md.GetMessages() {
+		if err := walkMessage(smd, f); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
-func (e recursionError) Error() string {
-	return fmt.Sprintf("field '%s' defined at %s is recursive", e.field, e.file)
+func registerMessages(mdMap map[string]*protokit.Descriptor, mds ...*protokit.Descriptor) error {
+	for _, md := range mds {
+		if err := walkMessage(md, func(md *protokit.Descriptor) error {
+			k := fmt.Sprintf(".%s", md.GetFullName())
+			if _, ok := mdMap[k]; ok {
+				return fmt.Errorf("message name clash at `%s`", k)
+			}
+			mdMap[k] = md
+			return nil
+		}); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+type importMap map[string]string
+
+func (m importMap) Add(name, pkg string) error {
+	if name == "" && pkg == "" {
+		return nil
+	}
+	if name == "" {
+		return fmt.Errorf("import name must be specified")
+	}
+	if pkg == "" {
+		return fmt.Errorf("package path must be specified")
+	}
+
+	if v, ok := m[name]; ok && v != pkg {
+		return fmt.Errorf("import name clash at `%s`. Imported `%s` and `%s`", name, pkg, v)
+	}
+	m[name] = pkg
+	return nil
+}
+
+func (m importMap) AddMultiple(pairs ...string) error {
+	if len(pairs) == 0 || len(pairs)%2 != 0 {
+		panic(errors.New("no imports specified"))
+	}
+	for i := 0; i < len(pairs)-1; i += 2 {
+		if err := m.Add(pairs[i], pairs[i+1]); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func appendPaths(paths []string, prefix string, md *protokit.Descriptor, mdMap map[string]*protokit.Descriptor, seen map[string]struct{}) ([]string, error) {
@@ -67,18 +118,20 @@ func appendPaths(paths []string, prefix string, md *protokit.Descriptor, mdMap m
 	}
 
 	for _, fd := range md.GetMessageFields() {
-		if _, ok := seen[fd.GetFullName()]; ok {
-			return nil, recursionError{
-				file:  fd.GetFile().GetName(),
-				field: fd.GetFullName(),
-			}
-		}
-		seen[fd.GetFullName()] = struct{}{}
-
 		fp := fd.GetName()
+		if fd.OneofIndex != nil {
+			fp = fmt.Sprintf("%s.%s", md.GetOneofDecl()[fd.GetOneofIndex()].GetName(), fp)
+		}
 		if prefix != "" {
 			fp = fmt.Sprintf("%s.%s", prefix, fp)
 		}
+
+		if _, ok := seen[fd.GetFullName()]; ok {
+			log.Printf("Field '%s' defined at %s is recursive, stopping traversal", fp, fd.GetFile().GetName())
+			return paths, nil
+		}
+		seen[fd.GetFullName()] = struct{}{}
+
 		paths = append(paths, fp)
 
 		if fd.GetLabel() == descriptor.FieldDescriptorProto_LABEL_REPEATED || fd.GetType() != descriptor.FieldDescriptorProto_TYPE_MESSAGE {
@@ -108,333 +161,399 @@ func appendPaths(paths []string, prefix string, md *protokit.Descriptor, mdMap m
 		}
 		delete(seen, fd.GetFullName())
 	}
+	for _, od := range md.GetOneofDecl() {
+		paths = append(paths, od.GetName())
+	}
 	return paths, nil
 }
 
-func fieldTypeName(fd *protokit.FieldDescriptor) (goType string) {
-	goType = fd.GetTypeName()
-	if i := strings.LastIndex(goType, "."); i > 0 {
-		goType = goType[i+1:]
-	}
-
-	protoType := fd.GetTypeName()[1:]
-
-	for parent := fd.GetMessage(); parent != nil; parent = parent.GetParent() {
-		for _, smd := range parent.GetMessages() {
-			if protoType == smd.GetFullName() {
-				goType = fmt.Sprintf("%s_%s", parent.GetName(), goType)
-				if i := strings.LastIndex(goType, "."); i > 0 {
-					goType = goType[i+1:]
-				}
-				protoType = parent.GetFullName()
-			}
-		}
-	}
-	return goType
+type goType struct {
+	Name       string
+	Pkg        string
+	IsNullable bool
+	SetFielder bool
+	Elem       *goType
 }
 
-func enumTypeName(fd *protokit.FieldDescriptor) (goType string) {
-	goType = fd.GetTypeName()
-	if i := strings.LastIndex(goType, "."); i > 0 {
-		goType = goType[i+1:]
-	}
+var importPathReplacer = strings.NewReplacer(
+	".", "_",
+	"/", "_",
+	"-", "_",
+)
 
-	protoType := fd.GetTypeName()[1:]
-
-	for parent := fd.GetMessage(); parent != nil; parent = parent.GetParent() {
-		for _, sed := range parent.GetEnums() {
-			if protoType == sed.GetFullName() {
-				goType = fmt.Sprintf("%s_%s", parent.GetName(), goType)
-				if i := strings.LastIndex(goType, "."); i > 0 {
-					goType = goType[i+1:]
-				}
-				protoType = parent.GetFullName()
-			}
-		}
-	}
-	return goType
+func (t goType) PkgAlias() string {
+	return importPathReplacer.Replace(t.Pkg)
 }
 
-func buildMethod(buf *strings.Builder, md *protokit.Descriptor, paths []string, goType string, isSet bool) (map[string]string, error) {
-	methName := "GetFields"
-	if isSet {
-		methName = "SetFields"
+func (t goType) String() string {
+	if t.Pkg == "" {
+		return t.Name
+	}
+	return fmt.Sprintf("%s.%s", t.PkgAlias(), t.Name)
+}
+
+type goField struct {
+	Name      string
+	Type      goType
+	Anonymous bool
+}
+
+func goFieldOf(fd *protokit.FieldDescriptor) goField {
+	var typ goType
+
+	switch fd.GetType() {
+	case descriptor.FieldDescriptorProto_TYPE_BOOL:
+		typ.Name = "bool"
+
+	case descriptor.FieldDescriptorProto_TYPE_DOUBLE:
+		typ.Name = "float64"
+
+	case descriptor.FieldDescriptorProto_TYPE_FLOAT:
+		typ.Name = "float32"
+
+	case descriptor.FieldDescriptorProto_TYPE_INT32, descriptor.FieldDescriptorProto_TYPE_SINT32, descriptor.FieldDescriptorProto_TYPE_SFIXED32:
+		typ.Name = "int32"
+
+	case descriptor.FieldDescriptorProto_TYPE_INT64, descriptor.FieldDescriptorProto_TYPE_SINT64, descriptor.FieldDescriptorProto_TYPE_SFIXED64:
+		typ.Name = "int64"
+
+	case descriptor.FieldDescriptorProto_TYPE_UINT32, descriptor.FieldDescriptorProto_TYPE_FIXED32:
+		typ.Name = "uint32"
+
+	case descriptor.FieldDescriptorProto_TYPE_UINT64, descriptor.FieldDescriptorProto_TYPE_FIXED64:
+		typ.Name = "uint64"
+
+	case descriptor.FieldDescriptorProto_TYPE_STRING:
+		typ.Name = "string"
+
+	case descriptor.FieldDescriptorProto_TYPE_BYTES:
+		typ.Name = "[]byte"
+
+	case descriptor.FieldDescriptorProto_TYPE_GROUP:
+		panic(unsupportedTypeError(fd.GetType().String()))
+
+	case descriptor.FieldDescriptorProto_TYPE_ENUM:
+		typ.Name = fd.GetTypeName()
+		if i := strings.LastIndex(typ.Name, "."); i > 0 {
+			typ.Name = typ.Name[i+1:]
+		}
+
+		protoType := fd.GetTypeName()[1:]
+
+		for parent := fd.GetMessage(); parent != nil; parent = parent.GetParent() {
+			for _, sed := range parent.GetEnums() {
+				if protoType == sed.GetFullName() {
+					typ.Name = fmt.Sprintf("%s_%s", parent.GetName(), typ.Name)
+					if i := strings.LastIndex(typ.Name, "."); i > 0 {
+						typ.Name = typ.Name[i+1:]
+					}
+					protoType = parent.GetFullName()
+				}
+			}
+		}
+
+	case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
+		typ.Name = fd.GetTypeName()
+		switch typ.Name {
+		case protoTimestampType:
+			if v, ok := fd.OptionExtensions["gogoproto.stdtime"].(*bool); ok && *v {
+				typ.Pkg = "time"
+				typ.Name = "Time"
+				break
+			}
+			panic(unsupportedTypeError(fd.GetTypeName()))
+
+		case protoDurationType:
+			if v, ok := fd.OptionExtensions["gogoproto.stdduration"].(*bool); ok && *v {
+				typ.Pkg = "time"
+				typ.Name = "Duration"
+				break
+			}
+			panic(unsupportedTypeError(fd.GetTypeName()))
+
+		case protoAnyType:
+			typ.Pkg = "github.com/gogo/protobuf/types"
+			typ.Name = "Any"
+
+		case protoStructType:
+			typ.Pkg = "github.com/gogo/protobuf/types"
+			typ.Name = "Struct"
+
+		case protoFieldMaskType:
+			typ.Pkg = "github.com/gogo/protobuf/types"
+			typ.Name = "FieldMask"
+
+		default:
+			typ.SetFielder = true
+			typ.Name = fd.GetTypeName()
+			if i := strings.LastIndex(typ.Name, "."); i > 0 {
+				typ.Name = typ.Name[i+1:]
+			}
+
+			protoType := fd.GetTypeName()[1:]
+
+			for parent := fd.GetMessage(); parent != nil; parent = parent.GetParent() {
+				for _, smd := range parent.GetMessages() {
+					if protoType == smd.GetFullName() {
+						typ.Name = fmt.Sprintf("%s_%s", parent.GetName(), typ.Name)
+						if i := strings.LastIndex(typ.Name, "."); i > 0 {
+							typ.Name = typ.Name[i+1:]
+						}
+						protoType = parent.GetFullName()
+					}
+				}
+			}
+		}
+
+	default:
+		panic(unsupportedTypeError(fd.GetType().String()))
 	}
 
-	fmt.Fprintf(buf, `
-func (dst *%s) %s(src *%s, paths ...string) error {`,
-		goType, methName, goType,
-	)
-
-	if isSet {
-		fmt.Fprintf(buf, `
-	if src == nil {
-		return fmt.Errorf("source is nil")
-	}`,
-		)
+	var isPtr bool
+	if v, ok := fd.OptionExtensions["gogoproto.customtype"].(*string); ok {
+		isPtr = true
+		typ = goType{}
+		if i := strings.LastIndex(*v, "."); i > 0 {
+			typ.Pkg = (*v)[:i]
+			typ.Name = (*v)[i+1:]
+		} else {
+			typ.Pkg = ""
+			typ.Name = *v
+		}
 	}
 
-	fmt.Fprintf(buf, `
-	for _, path := range _cleanPaths(paths) {
-		switch path {`,
-	)
+	isPtr = isPtr || fd.GetType() == descriptor.FieldDescriptorProto_TYPE_MESSAGE
+	if v, ok := fd.OptionExtensions["gogoproto.nullable"].(*bool); ok {
+		isPtr = *v
+	}
 
-	for _, p := range paths {
-		fmt.Fprintf(buf, `
-		case "%s":`,
-			p)
-
-		srcPath := "src"
-		dstPath := "dst"
-
-		if sp := strings.Split(p, "."); len(sp) > 1 {
-			fd := md.GetMessageField(sp[0])
-			if fd.GetLabel() == descriptor.FieldDescriptorProto_LABEL_REPEATED {
-				panic(errors.New("fieldmask for repeated field generated"))
-			}
-
-			goType := fieldTypeName(fd)
-
-			goName := generator.CamelCase(fd.GetName())
-			if v, ok := fd.OptionExtensions["gogoproto.customname"].(*string); ok {
-				goName = *v
-			}
-			if v, ok := fd.OptionExtensions["gogoproto.embed"].(*bool); ok && *v {
-				goName = goType
-			}
-
-			if fd.OneofIndex != nil {
-				oneOfType := fmt.Sprintf("%s_%s", md.GetName(), goName)
-				if md.GetMessage(goName) != nil {
-					oneOfType = fmt.Sprintf("%s_", oneOfType)
-				}
-				oneOfName := generator.CamelCase(md.GetOneofDecl()[fd.GetOneofIndex()].GetName())
-
-				dstPath = fmt.Sprintf("%s.%s", dstPath, oneOfName)
-
-				if !isSet {
-					fmt.Fprintf(buf, `
-			if src == nil {
-				%s = nil
-				continue
-			}`,
-						dstPath,
-					)
-				}
-				fmt.Fprintf(buf, `
-			if %s == nil {
-				%s = &%s{}
-			}`,
-					dstPath,
-					dstPath, oneOfType,
-				)
-
-				srcPath = fmt.Sprintf("%s.Get%s()", srcPath, goName)
-				dstPath = fmt.Sprintf("%s.(*%s).%s", dstPath, oneOfType, goName)
-			} else {
-				srcPath = fmt.Sprintf("%s.%s", srcPath, goName)
-				dstPath = fmt.Sprintf("%s.%s", dstPath, goName)
-			}
-
-			if v, ok := fd.OptionExtensions["gogoproto.nullable"].(*bool); ok && !*v {
-				fmt.Fprintf(buf, `
-			if err := %s.%s(&%s, _pathsWithoutPrefix("%s", paths)...); err != nil {
-				return fmt.Errorf("field mask '%s' could not be applied: %%s", err)
-			}`,
-					dstPath, methName, srcPath, sp[0],
-					p,
-				)
-
-			} else {
-				if !isSet && fd.OneofIndex == nil {
-					fmt.Fprintf(buf, `
-			if src == nil {
-				%s = nil
-				continue
-			}`,
-						dstPath,
-					)
-				}
-
-				fmt.Fprintf(buf, `
-			srcField := %s
-			if srcField == nil {`,
-					srcPath,
-				)
-
-				if isSet {
-					fmt.Fprintf(buf, `
-				return fmt.Errorf("field mask '%s' could not be applied: field '%s' is not set")`,
-						p, sp[0],
-					)
-				} else {
-					fmt.Fprintf(buf, `
-				srcField = &%s{}`,
-						goType,
-					)
-				}
-
-				fmt.Fprintf(buf, `
-			}
-			if %s == nil {
-				%s = &%s{}
-			}
-			if err := %s.%s(srcField, _pathsWithoutPrefix("%s", paths)...); err != nil {
-				return fmt.Errorf("field mask '%s' could not be applied: %%s", err)
-			}`,
-					dstPath,
-					dstPath, goType,
-					dstPath, methName, sp[0],
-					p,
-				)
-			}
-			continue
+	if isPtr {
+		elemType := typ
+		typ = goType{
+			IsNullable: true,
+			SetFielder: elemType.SetFielder,
+			Name:       fmt.Sprintf("*%s", elemType.String()),
+			Elem:       &elemType,
 		}
+	}
 
-		fd := md.GetMessageField(p)
-
-		goName := generator.CamelCase(fd.GetName())
-		if v, ok := fd.OptionExtensions["gogoproto.customname"].(*string); ok {
-			goName = *v
-		}
-		if v, ok := fd.OptionExtensions["gogoproto.embed"].(*bool); ok && *v {
-			var goType string
-			switch fd.GetType() {
-			case descriptor.FieldDescriptorProto_TYPE_BOOL,
-				descriptor.FieldDescriptorProto_TYPE_DOUBLE,
-				descriptor.FieldDescriptorProto_TYPE_FLOAT,
-				descriptor.FieldDescriptorProto_TYPE_INT32,
-				descriptor.FieldDescriptorProto_TYPE_SINT32,
-				descriptor.FieldDescriptorProto_TYPE_SFIXED32,
-				descriptor.FieldDescriptorProto_TYPE_INT64,
-				descriptor.FieldDescriptorProto_TYPE_SINT64,
-				descriptor.FieldDescriptorProto_TYPE_SFIXED64,
-				descriptor.FieldDescriptorProto_TYPE_UINT32,
-				descriptor.FieldDescriptorProto_TYPE_FIXED32,
-				descriptor.FieldDescriptorProto_TYPE_UINT64,
-				descriptor.FieldDescriptorProto_TYPE_FIXED64,
-				descriptor.FieldDescriptorProto_TYPE_STRING,
-				descriptor.FieldDescriptorProto_TYPE_BYTES:
-				return nil, fmt.Errorf("invalid type specifed for embedded field `%s`: %s", p, fd.GetType())
-
-			case descriptor.FieldDescriptorProto_TYPE_GROUP:
-				return nil, unsupportedTypeError(fd.GetType().String())
-
-			case descriptor.FieldDescriptorProto_TYPE_ENUM:
-				goType = enumTypeName(fd)
-
-			case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
-				goType = fd.GetTypeName()
-				switch goType {
-				case protoTimestampType:
-					if v, ok := fd.OptionExtensions["gogoproto.stdtime"].(*bool); ok && *v {
-						goType = "time.Time"
-						break
-					}
-					return nil, unsupportedTypeError(fd.GetTypeName())
-
-				case protoDurationType:
-					if v, ok := fd.OptionExtensions["gogoproto.stdduration"].(*bool); ok && *v {
-						goType = "time.Duration"
-						break
-					}
-					return nil, unsupportedTypeError(fd.GetTypeName())
-
-				case protoAnyType:
-					goType = "types.Any"
-
-				case protoStructType:
-					goType = "types.Struct"
-
-				case protoFieldMaskType:
-					goType = "types.FieldMask"
-
-				default:
-					goType = fieldTypeName(fd)
-				}
-
-			default:
-				return nil, unsupportedTypeError(fd.GetType().String())
+	if fd.GetLabel() == descriptor.FieldDescriptorProto_LABEL_REPEATED {
+		elemType := typ
+		if fd.GetType() == descriptor.FieldDescriptorProto_TYPE_MESSAGE &&
+			fd.GetMessage().GetMessage(fd.GetTypeName()[1:]) != nil &&
+			fd.GetMessage().GetMessage(fd.GetTypeName()[1:]).GetOptions().GetMapEntry() {
+			typ = goType{
+				IsNullable: true,
+				Name:       fmt.Sprintf("map[%s]%s", goFieldOf(fd.GetMessage().GetMessage(fd.GetTypeName()[1:]).GetMessageField("key")).Type.String(), elemType.String()),
+				Elem:       &elemType,
 			}
-
-			if v, ok := fd.OptionExtensions["gogoproto.customtype"].(*string); ok {
-				goType = *v
-			}
-
-			if i := strings.LastIndex(goType, "."); i >= 0 {
-				goName = goType[i+1:]
-			} else {
-				goName = goType
-			}
-		}
-
-		if fd.OneofIndex != nil {
-			oneOfType := fmt.Sprintf("%s_%s", md.GetName(), goName)
-			if md.GetMessage(goName) != nil {
-				oneOfType = fmt.Sprintf("%s_", oneOfType)
-			}
-			oneOfName := generator.CamelCase(md.GetOneofDecl()[fd.GetOneofIndex()].GetName())
-
-			srcPath = fmt.Sprintf("%s.Get%s()", srcPath, goName)
-			dstPath = fmt.Sprintf("%s.%s", dstPath, oneOfName)
-
-			fmt.Fprintf(buf, `
-			if %s == nil {
-				%s = &%s{}
-			}`,
-				dstPath,
-				dstPath, oneOfType,
-			)
-
-			dstPath = fmt.Sprintf("%s.(*%s).%s", dstPath, oneOfType, goName)
 
 		} else {
-			srcPath = fmt.Sprintf("%s.%s", srcPath, goName)
-			dstPath = fmt.Sprintf("%s.%s", dstPath, goName)
+			typ = goType{
+				IsNullable: true,
+				Name:       fmt.Sprintf("[]%s", elemType.String()),
+				Elem:       &elemType,
+			}
 		}
+	}
 
-		fmt.Fprintf(buf, `
-			%s = %s`,
-			dstPath, srcPath,
-		)
+	fieldName := generator.CamelCase(fd.GetName())
+	if v, ok := fd.OptionExtensions["gogoproto.customname"].(*string); ok {
+		fieldName = *v
 	}
-	fmt.Fprintf(buf, `
-		default:
-			return fmt.Errorf("invalid field path: '%%s'", path)
+
+	if v, ok := fd.OptionExtensions["gogoproto.embed"].(*bool); ok && *v {
+		return goField{
+			Type:      typ,
+			Anonymous: true,
 		}
 	}
-	return nil
+	return goField{
+		Name: fieldName,
+		Type: typ,
+	}
+}
+
+func buildIndented(buf *strings.Builder, tabCount uint, s string) {
+	for _, l := range strings.Split(s, "\n") {
+		fmt.Fprintln(buf, fmt.Sprintf("%s%s", strings.Repeat("	", int(tabCount)), l))
+	}
+}
+
+func buildSetFieldsCase(buf *strings.Builder, imports importMap, tabCount uint, subs string, fd *protokit.FieldDescriptor) error {
+	field := goFieldOf(fd)
+
+	buildIndented(buf, tabCount, fmt.Sprintf(`case "%s":`, fd.GetName()))
+
+	dstPath := "dst"
+	srcPath := "src"
+	if fd.OneofIndex != nil {
+		md := fd.GetMessage()
+
+		oneOfTypeName := fmt.Sprintf("%s_%s", md.GetName(), field.Name)
+		if md.GetMessage(field.Name) != nil {
+			oneOfTypeName = fmt.Sprintf("%s_", oneOfTypeName)
+		}
+		oneOfName := generator.CamelCase(md.GetOneofDecl()[fd.GetOneofIndex()].GetName())
+
+		dstPath = fmt.Sprintf("%s.%s", dstPath, oneOfName)
+
+		buildIndented(buf, tabCount+1, fmt.Sprintf(`if _, ok := %s.(*%s); !ok {
+	%s = &%s{}
 }`,
-	)
-	return map[string]string{"fmt": "fmt"}, nil
+			dstPath, oneOfTypeName,
+			dstPath, oneOfTypeName,
+		))
+
+		dstPath = fmt.Sprintf("%s.(*%s).%s", dstPath, oneOfTypeName, field.Name)
+		srcPath = fmt.Sprintf("%s.Get%s()", srcPath, field.Name)
+
+	} else {
+		name := field.Name
+		if field.Anonymous {
+			name = field.Type.Name
+		}
+		dstPath = fmt.Sprintf("%s.%s", dstPath, name)
+		srcPath = fmt.Sprintf("%s.%s", srcPath, name)
+	}
+
+	buildFinal := func(tabCount uint) error {
+		buildIndented(buf, tabCount, fmt.Sprintf(`if src != nil {
+	%s = %s
+} else {`,
+			dstPath, srcPath,
+		))
+
+		if field.Type.IsNullable {
+			buildIndented(buf, tabCount, fmt.Sprintf(`	%s = nil
+}`,
+				dstPath,
+			))
+		} else {
+			if err := imports.Add(field.Type.PkgAlias(), field.Type.Pkg); err != nil {
+				return err
+			}
+			buildIndented(buf, tabCount, fmt.Sprintf(`	var zero %s
+	%s = zero
+}`,
+				field.Type,
+				dstPath,
+			))
+		}
+		return nil
+	}
+
+	if !field.Type.SetFielder {
+		if err := imports.Add("fmt", "fmt"); err != nil {
+			return err
+		}
+		buildIndented(buf, tabCount+1, fmt.Sprintf(`if len(%s) > 0 {
+	return fmt.Errorf("'%s' has no subfields, but %%s were specified", %s)
+}`,
+			subs,
+			fd.GetName(), subs,
+		))
+		return buildFinal(tabCount + 1)
+	}
+
+	buildIndented(buf, tabCount+1, fmt.Sprintf(`if len(%s) > 0 {
+	newDst := %s`,
+		subs,
+		dstPath,
+	))
+
+	if field.Type.IsNullable {
+		buildIndented(buf, tabCount+2, fmt.Sprintf(`if newDst == nil {
+	newDst = &%s{}
+	%s = newDst
 }
-
-func buildMethods(buf *strings.Builder, md *protokit.Descriptor, mdMap map[string]*protokit.Descriptor) (map[string]string, error) {
-	paths, err := appendPaths(make([]string, 0, len(md.GetMessageFields())), "", md, mdMap, nil)
-	if err != nil {
-		// TODO: Return error here once https://github.com/TheThingsIndustries/protoc-gen-fieldmask/issues/5 is resolved.
-		log.Printf("Failed to traverse `%s`: %s, skipping...", md.GetFullName(), err)
-		return nil, nil
+var newSrc %s
+if src != nil {
+	newSrc = %s
+}`,
+			field.Type.Elem,
+			dstPath,
+			field.Type,
+			srcPath,
+		))
+	} else {
+		buildIndented(buf, tabCount+2, fmt.Sprintf(`var newSrc *%s
+if src != nil {
+	newSrc = &%s
+}`,
+			field.Type,
+			srcPath,
+		))
 	}
 
-	goType := md.GetName()
-	for parent := md.GetParent(); parent != nil; parent = parent.GetParent() {
-		goType = fmt.Sprintf("%s_%s", parent.GetName(), goType)
+	buildIndented(buf, tabCount+1, `	if err := newDst.SetFields(newSrc, subs...); err != nil {
+		return err
 	}
-
-	if len(paths) == 0 {
-		fmt.Fprintf(buf, `
-func (*%s) FieldMaskPaths() []string {
+} else {`)
+	if err := buildFinal(tabCount + 2); err != nil {
+		return err
+	}
+	buildIndented(buf, tabCount+1, `}`)
 	return nil
 }
 
-func (dst *%s) GetFields(src *%s, paths ...string) error {
-	if len(paths) != 0 {
-		return fmt.Errorf("message %s has no fields, but paths %%s were specified", paths)
+func buildPathProcessor(buf *strings.Builder, imports importMap, tabCount uint, paths, topLevel, pathMap string) error {
+	fmt.Fprintln(buf)
+	buildIndented(buf, tabCount, fmt.Sprintf(`%s := make(map[string]struct{}, len(%s))
+_%s := make(map[string]map[string]struct{}, len(%s))
+for _, p := range %s {
+	if !strings.Contains(p, ".") {
+		%s[p] = struct{}{}
+		continue
 	}
-	if src != nil {
-		*dst = *src
+	parts := strings.SplitN(p, ".", 2)
+	h, t := parts[0], parts[1]
+	if _%s[h] == nil {
+		_%s[h] = map[string]struct{}{t: {}}
+	} else {
+		_%s[h][t] = struct{}{}
 	}
+}
+for f := range %s {
+	_%s[f] = nil
+}
+%s := make(map[string][]string, len(_%s))
+for top, subs := range _%s {
+	%s[top] = make([]string, 0, len(subs))
+	for sub := range subs {
+		%s[top] = append(%s[top], sub)
+	}
+}`,
+		topLevel, paths,
+		pathMap, paths,
+		paths,
+		topLevel,
+		pathMap,
+		pathMap,
+		pathMap,
+		topLevel,
+		pathMap,
+		pathMap, pathMap,
+		pathMap,
+		pathMap,
+		pathMap, pathMap,
+	))
+	return imports.Add("strings", "strings")
+}
+
+func buildMethods(buf *strings.Builder, imports importMap, md *protokit.Descriptor, mdMap map[string]*protokit.Descriptor) error {
+	if err := imports.Add("fmt", "fmt"); err != nil {
+		return err
+	}
+
+	mType := md.GetName()
+	for parent := md.GetParent(); parent != nil; parent = parent.GetParent() {
+		mType = fmt.Sprintf("%s_%s", parent.GetName(), mType)
+	}
+
+	if len(md.GetMessageFields()) == 0 {
+		fmt.Fprintf(buf, `
+func (*%s) FieldMaskPaths(_ bool) []string {
 	return nil
 }
 
@@ -442,87 +561,139 @@ func (dst *%s) SetFields(src *%s, paths ...string) error {
 	if len(paths) != 0 {
 		return fmt.Errorf("message %s has no fields, but paths %%s were specified", paths)
 	}
-	if src == nil {
-		return errors.New("src is nil")
+	if src != nil {
+		*dst = *src
 	}
-	*dst = *src
 	return nil
 }`,
-			goType,
-			goType, goType,
-			goType,
-			goType, goType,
-			goType,
+			mType,
+			mType, mType,
+			mType,
 		)
-		return map[string]string{"errors": "errors"}, nil
+		return nil
 	}
 
-	sort.Strings(paths)
+	nestedPaths, err := appendPaths(make([]string, 0, len(md.GetMessageFields())), "", md, mdMap, nil)
+	if err != nil {
+		return err
+	}
+	sort.Strings(nestedPaths)
+
+	topLevelPaths := make([]string, 0, len(nestedPaths))
+	for _, p := range nestedPaths {
+		if strings.LastIndex(p, ".") > 0 {
+			continue
+		}
+		topLevelPaths = append(topLevelPaths, p)
+	}
+	sort.Strings(topLevelPaths)
+
 	fmt.Fprintf(buf, `
-var _%sFieldPaths = [...]string{
+var _%sFieldPathsNested = [...]string{
 	%s
 }
 
-func (*%s) FieldMaskPaths() []string {
-	ret := make([]string, len(_%sFieldPaths))
-	copy(ret, _%sFieldPaths[:])
-	return ret
-}`,
-		goType, `"`+strings.Join(paths, `",
-	"`)+`",`,
-		goType,
-		goType,
-		goType,
-	)
-
-	fmt.Fprintln(buf)
-
-	imports, err := buildMethod(buf, md, paths, goType, false)
-	if err != nil {
-		return nil, err
-	}
-
-	fmt.Fprintln(buf)
-
-	setImports, err := buildMethod(buf, md, paths, goType, true)
-	if err != nil {
-		return nil, err
-	}
-
-	for name, pkg := range setImports {
-		if v, ok := imports[name]; ok && v != pkg {
-			return nil, fmt.Errorf("import name clash at `%s`. Imported `%s` and `%s`", name, pkg, v)
-		}
-		imports[name] = pkg
-	}
-	return imports, nil
+var _%sFieldPathsTopLevel = [...]string{
+	%s
 }
 
-func walkMessage(md *protokit.Descriptor, f func(md *protokit.Descriptor) error) error {
-	if err := f(md); err != nil {
+func (*%s) FieldMaskPaths(nested bool) []string {
+	paths := _%sFieldPathsTopLevel[:]
+	if nested {
+		paths = _%sFieldPathsNested[:]
+	}
+	ret := make([]string, len(paths))
+	copy(ret, paths)
+	return ret
+}
+
+func (dst *%s) SetFields(src *%s, paths ...string) error {`,
+		mType, `"`+strings.Join(nestedPaths, `",
+	"`)+`",`,
+		mType, `"`+strings.Join(topLevelPaths, `",
+	"`)+`",`,
+		mType,
+		mType,
+		mType,
+		mType, mType,
+	)
+
+	if err := buildPathProcessor(buf, imports, 1, "paths", "topLevel", "pathMap"); err != nil {
 		return err
 	}
-	for _, smd := range md.GetMessages() {
-		if err := walkMessage(smd, f); err != nil {
+
+	fmt.Fprint(buf, `
+	for name, subs := range pathMap {
+		switch name {
+`,
+	)
+
+	oneOfs := make(map[int32][]*protokit.FieldDescriptor, len(md.GetMessageFields()))
+	for _, fd := range md.GetMessageFields() {
+		if fd.OneofIndex != nil {
+			i := fd.GetOneofIndex()
+			oneOfs[i] = append(oneOfs[i], fd)
+			continue
+		}
+
+		if err := buildSetFieldsCase(buf, imports, 2, "subs", fd); err != nil {
 			return err
+		}
+	}
+
+	for i, fds := range oneOfs {
+		declName := md.GetOneofDecl()[i].GetName()
+		goName := generator.CamelCase(declName)
+
+		fmt.Fprintln(buf)
+
+		buildIndented(buf, 2, fmt.Sprintf(`case "%s":
+	if len(subs) == 0 && src == nil {
+		dst.%s = nil
+		continue
+	} else if len(subs) == 0 {
+		dst.%s = src.%s
+		continue
+	}`,
+			declName,
+			goName,
+			goName, goName,
+		))
+
+		if err := buildPathProcessor(buf, imports, 3, "subs", "oneofTopLevel", "oneofPathMap"); err != nil {
+			return err
+		}
+
+		fmt.Fprintln(buf)
+
+		buildIndented(buf, 3, `if len(oneofPathMap) > 1 {
+	return fmt.Errorf("more than one field specified for oneof field '%s'", name)
+}
+for oneofName, oneofSubs := range oneofPathMap {
+	switch oneofName {`)
+
+		for _, fd := range fds {
+			if err := buildSetFieldsCase(buf, imports, 4, "oneofSubs", fd); err != nil {
+				return err
+			}
+		}
+
+		fmt.Fprintln(buf)
+
+		buildIndented(buf, 3, `	default:
+		return fmt.Errorf("invalid oneof field: '%s.%s'", name, oneofName)
+	}
+}`)
+	}
+
+	fmt.Fprintf(buf, `
+		default:
+			return fmt.Errorf("invalid field: '%%s'", name)
 		}
 	}
 	return nil
-}
-
-func registerMessages(mdMap map[string]*protokit.Descriptor, mds ...*protokit.Descriptor) error {
-	for _, md := range mds {
-		if err := walkMessage(md, func(md *protokit.Descriptor) error {
-			k := fmt.Sprintf(".%s", md.GetFullName())
-			if _, ok := mdMap[k]; ok {
-				return fmt.Errorf("message name clash at `%s`", k)
-			}
-			mdMap[k] = md
-			return nil
-		}); err != nil {
-			return err
-		}
-	}
+}`,
+	)
 	return nil
 }
 
@@ -540,7 +711,6 @@ func (p plugin) Generate(in *plugin_go.CodeGeneratorRequest) (*plugin_go.CodeGen
 		}
 	}
 
-	dirs := map[string]struct{}{}
 	for _, fd := range fds {
 		if len(fd.GetMessages()) == 0 {
 			continue
@@ -552,7 +722,7 @@ func (p plugin) Generate(in *plugin_go.CodeGeneratorRequest) (*plugin_go.CodeGen
 		}
 		fileName := filepath.Join(dirName, fmt.Sprintf("%s.pb.fm.go", strings.TrimSuffix(filepath.Base(fd.GetName()), filepath.Ext(fd.GetName()))))
 
-		imports := map[string]string{}
+		imports := importMap{}
 		buf := &strings.Builder{}
 		for _, md := range fd.GetMessages() {
 			if v, ok := md.OptionExtensions["fieldmask.enable"].(*bool); ok && !*v {
@@ -566,16 +736,8 @@ func (p plugin) Generate(in *plugin_go.CodeGeneratorRequest) (*plugin_go.CodeGen
 				}
 
 				mBuf := &strings.Builder{}
-				mImports, err := buildMethods(mBuf, md, mdMap)
-				if err != nil {
+				if err := buildMethods(mBuf, imports, md, mdMap); err != nil {
 					return err
-				}
-
-				for name, pkg := range mImports {
-					if v, ok := imports[name]; ok && v != pkg {
-						return fmt.Errorf("import name clash at `%s`. Imported `%s` and `%s`", name, pkg, v)
-					}
-					imports[name] = pkg
 				}
 
 				if mBuf.Len() == 0 {
@@ -597,8 +759,6 @@ func (p plugin) Generate(in *plugin_go.CodeGeneratorRequest) (*plugin_go.CodeGen
 		if buf.Len() == 0 {
 			continue
 		}
-
-		dirs[dirName] = struct{}{}
 
 		var importString string
 		switch len(imports) {
@@ -637,68 +797,6 @@ package %s
 			)),
 		})
 	}
-
-	for dirName := range dirs {
-		pkgName := filepath.Base(dirName)
-		resp.File = append(resp.File, &plugin_go.CodeGeneratorResponse_File{
-			Name: proto.String(filepath.Join(dirName, fmt.Sprintf("%s.pb.util.fm.go", pkgName))),
-			Content: proto.String(fmt.Sprintf(`%s
-
-package %s
-
-import (
-	"sort"
-	"strings"
-)
-
-// _cleanPaths cleans the given field mask paths. It returns a sorted slice of
-// unique paths without any child paths that are already covered by parent paths.
-func _cleanPaths(paths []string) []string {
-	unique := make(map[string]struct{}, len(paths))
-	for _, path := range paths {
-		unique[path] = struct{}{}
-	}
-	for path := range unique {
-		parts := strings.Split(path, ".")
-		if len(parts) == 1 {
-			continue
-		}
-		for i := 1; i < len(parts); i++ {
-			if _, ok := unique[strings.Join(parts[:1], ".")]; ok {
-				delete(unique, path)
-			}
-		}
-	}
-
-	out := make([]string, 0, len(unique))
-	for path := range unique {
-		out = append(out, path)
-	}
-	sort.Strings(out)
-	return out
-}
-
-// _pathsWithoutPrefix returns the paths that contain the given prefix, but
-// without that prefix.
-func _pathsWithoutPrefix(prefix string, paths []string) []string {
-	prefix += "."
-
-	out := make([]string, 0, len(paths))
-	for _, path := range paths {
-		if !strings.HasPrefix(path, prefix) {
-			continue
-		}
-		out = append(out, strings.TrimPrefix(path, prefix))
-	}
-	return out
-}
-`,
-				FileHeader,
-				pkgName,
-			)),
-		})
-	}
-
 	return resp, nil
 }
 
