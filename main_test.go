@@ -249,6 +249,101 @@ func TestSetFields(t *testing.T) {
 				},
 			},
 		},
+		{
+			Name: "a.b a.a.a a.b a.b b testOneof",
+			Destination: &testdata.Test{
+				TestOneof: &testdata.Test_E{},
+				G:         &testdata.Empty{},
+			},
+			Source: &testdata.Test{
+				A: &testdata.Test_TestNested{
+					B: []byte{1, 2, 3},
+				},
+				CustomName: &testdata.Test_TestNested{
+					B: []byte{1, 2, 4},
+				},
+				TestOneof: &testdata.Test_D{
+					D: 42,
+				},
+			},
+			Paths: []string{"a.b", "a.a.a", "a.b", "a.b", "b", "testOneof"},
+			Result: &testdata.Test{
+				A: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{},
+					B: []byte{1, 2, 3},
+				},
+				CustomName: &testdata.Test_TestNested{
+					B: []byte{1, 2, 4},
+				},
+				TestOneof: &testdata.Test_D{
+					D: 42,
+				},
+				G: &testdata.Empty{},
+			},
+		},
+		{
+			Name: "testOneof.d",
+			Destination: &testdata.Test{
+				TestOneof: &testdata.Test_D{
+					D: 42,
+				},
+				G: &testdata.Empty{},
+			},
+			Source: &testdata.Test{
+				TestOneof: &testdata.Test_E{
+					E: 42,
+				},
+			},
+			Paths: []string{"testOneof.d"},
+			Result: &testdata.Test{
+				TestOneof: &testdata.Test_D{},
+				G:         &testdata.Empty{},
+			},
+		},
+		{
+			Name: "testOneof.e",
+			Destination: &testdata.Test{
+				G: &testdata.Empty{},
+			},
+			Source: &testdata.Test{},
+			Paths:  []string{"testOneof.e"},
+			Result: &testdata.Test{
+				TestOneof: &testdata.Test_E{},
+				G:         &testdata.Empty{},
+			},
+		},
+		{
+			Name:           "non-existent top-level field",
+			Destination:    &testdata.Test{},
+			Source:         &testdata.Test{},
+			Paths:          []string{"42"},
+			Result:         &testdata.Test{},
+			ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
+		},
+		{
+			Name:           "non-existent sub-field",
+			Destination:    &testdata.Test{},
+			Source:         &testdata.Test{},
+			Paths:          []string{"41.42.43"},
+			Result:         &testdata.Test{},
+			ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
+		},
+		{
+			Name:           "non-existent oneof",
+			Destination:    &testdata.Test{},
+			Source:         &testdata.Test{},
+			Paths:          []string{"testOneof.42"},
+			Result:         &testdata.Test{},
+			ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
+		},
+		{
+			Name:           "double oneofs",
+			Destination:    &testdata.Test{},
+			Source:         &testdata.Test{},
+			Paths:          []string{"testOneof.d", "testOneof.e"},
+			Result:         &testdata.Test{},
+			ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
+		},
 	} {
 		t.Run(tc.Name, func(t *testing.T) {
 			a := assertions.New(t)
