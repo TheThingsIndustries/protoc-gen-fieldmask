@@ -22,6 +22,8 @@ package testdata;
 
 option go_package = "github.com/TheThingsIndustries/protoc-gen-fieldmask/testdata";
 
+message Empty {}
+
 message Test {
   message TestNested {
     message TestNestedNested {
@@ -37,11 +39,12 @@ message Test {
     string e = 5 [(gogoproto.customtype) = "CustomType"];
   }
   TestNested a = 1;
-  TestNested b = 2 [(gogoproto.customname) = "CustomName"];
-  TestNested c = 3 [(gogoproto.nullable) = false];
+  TestNested c = 2 [(gogoproto.nullable) = false];
+  TestNested b = 3 [(gogoproto.customname) = "CustomName"];
   oneof testOneof {
-    int32 d = 4;
-    uint32 e = 5;
+    uint32 e = 4;
+    int32 d = 5;
     bytes f = 6;
   }
+  Empty g = 7;
 }
