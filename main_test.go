@@ -313,6 +313,26 @@ func TestSetFields(t *testing.T) {
 			},
 		},
 		{
+			Name: "non-nullable c.a",
+			Destination: &testdata.Test{
+				C: testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{},
+				},
+			},
+			Source: &testdata.Test{
+				C: testdata.Test_TestNested{
+					B: []byte("42"),
+				},
+			},
+			Paths: []string{"c.b"},
+			Result: &testdata.Test{
+				C: testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{},
+					B: []byte("42"),
+				},
+			},
+		},
+		{
 			Name:           "non-existent top-level field",
 			Destination:    &testdata.Test{},
 			Source:         &testdata.Test{},

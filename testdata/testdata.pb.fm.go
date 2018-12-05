@@ -100,7 +100,7 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 			}
 		case "c":
 			if len(subs) > 0 {
-				newDst := dst.C
+				newDst := &dst.C
 				var newSrc *Test_TestNested
 				if src != nil {
 					newSrc = &src.C

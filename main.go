@@ -456,31 +456,33 @@ func buildSetFieldsCase(buf *strings.Builder, imports importMap, tabCount uint, 
 		return buildFinal(tabCount + 1)
 	}
 
-	buildIndented(buf, tabCount+1, fmt.Sprintf(`if len(%s) > 0 {
-	newDst := %s`,
-		subs,
-		dstPath,
-	))
-
 	if field.Type.IsNullable {
-		buildIndented(buf, tabCount+2, fmt.Sprintf(`if newDst == nil {
-	newDst = &%s{}
-	%s = newDst
-}
-var newSrc %s
-if src != nil {
-	newSrc = %s
-}`,
+		buildIndented(buf, tabCount+1, fmt.Sprintf(`if len(%s) > 0 {
+	newDst := %s
+	if newDst == nil {
+		newDst = &%s{}
+		%s = newDst
+	}
+	var newSrc %s
+	if src != nil {
+		newSrc = %s
+	}`,
+			subs,
+			dstPath,
 			field.Type.Elem,
 			dstPath,
 			field.Type,
 			srcPath,
 		))
 	} else {
-		buildIndented(buf, tabCount+2, fmt.Sprintf(`var newSrc *%s
-if src != nil {
-	newSrc = &%s
-}`,
+		buildIndented(buf, tabCount+1, fmt.Sprintf(`if len(%s) > 0 {
+	newDst := &%s
+	var newSrc *%s
+	if src != nil {
+		newSrc = &%s
+	}`,
+			subs,
+			dstPath,
 			field.Type,
 			srcPath,
 		))
