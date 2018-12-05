@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strings"
 )
+
 // _processPaths returns paths as a pathMap.
 func _processPaths(paths []string) map[string][]string {
 	sort.Strings(paths)
