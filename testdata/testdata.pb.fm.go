@@ -2,10 +2,7 @@
 
 package testdata
 
-import (
-	fmt "fmt"
-	strings "strings"
-)
+import fmt "fmt"
 
 func (*Empty) FieldMaskPaths(_ bool) []string {
 	return nil
@@ -78,33 +75,7 @@ func (*Test) FieldMaskPaths(nested bool) []string {
 }
 
 func (dst *Test) SetFields(src *Test, paths ...string) error {
-	topLevel := make(map[string]struct{}, len(paths))
-	_pathMap := make(map[string]map[string]struct{}, len(paths))
-	for _, p := range paths {
-		if !strings.Contains(p, ".") {
-			topLevel[p] = struct{}{}
-			continue
-		}
-		parts := strings.SplitN(p, ".", 2)
-		h, t := parts[0], parts[1]
-		if _pathMap[h] == nil {
-			_pathMap[h] = map[string]struct{}{t: {}}
-		} else {
-			_pathMap[h][t] = struct{}{}
-		}
-	}
-	for f := range topLevel {
-		_pathMap[f] = nil
-	}
-	pathMap := make(map[string][]string, len(_pathMap))
-	for top, subs := range _pathMap {
-		pathMap[top] = make([]string, 0, len(subs))
-		for sub := range subs {
-			pathMap[top] = append(pathMap[top], sub)
-		}
-	}
-
-	for name, subs := range pathMap {
+	for name, subs := range _processPaths(paths) {
 		switch name {
 		case "a":
 			if len(subs) > 0 {
@@ -197,36 +168,11 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 				continue
 			}
 
-			oneofTopLevel := make(map[string]struct{}, len(subs))
-			_oneofPathMap := make(map[string]map[string]struct{}, len(subs))
-			for _, p := range subs {
-				if !strings.Contains(p, ".") {
-					oneofTopLevel[p] = struct{}{}
-					continue
-				}
-				parts := strings.SplitN(p, ".", 2)
-				h, t := parts[0], parts[1]
-				if _oneofPathMap[h] == nil {
-					_oneofPathMap[h] = map[string]struct{}{t: {}}
-				} else {
-					_oneofPathMap[h][t] = struct{}{}
-				}
-			}
-			for f := range oneofTopLevel {
-				_oneofPathMap[f] = nil
-			}
-			oneofPathMap := make(map[string][]string, len(_oneofPathMap))
-			for top, subs := range _oneofPathMap {
-				oneofPathMap[top] = make([]string, 0, len(subs))
-				for sub := range subs {
-					oneofPathMap[top] = append(oneofPathMap[top], sub)
-				}
-			}
-
-			if len(oneofPathMap) > 1 {
+			subPathMap := _processPaths(subs)
+			if len(subPathMap) > 1 {
 				return fmt.Errorf("more than one field specified for oneof field '%s'", name)
 			}
-			for oneofName, oneofSubs := range oneofPathMap {
+			for oneofName, oneofSubs := range subPathMap {
 				switch oneofName {
 				case "e":
 					if _, ok := dst.TestOneof.(*Test_E); !ok {
@@ -311,33 +257,7 @@ func (*Test_TestNested) FieldMaskPaths(nested bool) []string {
 }
 
 func (dst *Test_TestNested) SetFields(src *Test_TestNested, paths ...string) error {
-	topLevel := make(map[string]struct{}, len(paths))
-	_pathMap := make(map[string]map[string]struct{}, len(paths))
-	for _, p := range paths {
-		if !strings.Contains(p, ".") {
-			topLevel[p] = struct{}{}
-			continue
-		}
-		parts := strings.SplitN(p, ".", 2)
-		h, t := parts[0], parts[1]
-		if _pathMap[h] == nil {
-			_pathMap[h] = map[string]struct{}{t: {}}
-		} else {
-			_pathMap[h][t] = struct{}{}
-		}
-	}
-	for f := range topLevel {
-		_pathMap[f] = nil
-	}
-	pathMap := make(map[string][]string, len(_pathMap))
-	for top, subs := range _pathMap {
-		pathMap[top] = make([]string, 0, len(subs))
-		for sub := range subs {
-			pathMap[top] = append(pathMap[top], sub)
-		}
-	}
-
-	for name, subs := range pathMap {
+	for name, subs := range _processPaths(paths) {
 		switch name {
 		case "a":
 			if len(subs) > 0 {
@@ -430,33 +350,7 @@ func (*Test_TestNested_TestNestedNested) FieldMaskPaths(nested bool) []string {
 }
 
 func (dst *Test_TestNested_TestNestedNested) SetFields(src *Test_TestNested_TestNestedNested, paths ...string) error {
-	topLevel := make(map[string]struct{}, len(paths))
-	_pathMap := make(map[string]map[string]struct{}, len(paths))
-	for _, p := range paths {
-		if !strings.Contains(p, ".") {
-			topLevel[p] = struct{}{}
-			continue
-		}
-		parts := strings.SplitN(p, ".", 2)
-		h, t := parts[0], parts[1]
-		if _pathMap[h] == nil {
-			_pathMap[h] = map[string]struct{}{t: {}}
-		} else {
-			_pathMap[h][t] = struct{}{}
-		}
-	}
-	for f := range topLevel {
-		_pathMap[f] = nil
-	}
-	pathMap := make(map[string][]string, len(_pathMap))
-	for top, subs := range _pathMap {
-		pathMap[top] = make([]string, 0, len(subs))
-		for sub := range subs {
-			pathMap[top] = append(pathMap[top], sub)
-		}
-	}
-
-	for name, subs := range pathMap {
+	for name, subs := range _processPaths(paths) {
 		switch name {
 		case "a":
 			if len(subs) > 0 {

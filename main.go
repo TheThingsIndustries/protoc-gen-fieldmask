@@ -497,50 +497,6 @@ if src != nil {
 	return nil
 }
 
-func buildPathProcessor(buf *strings.Builder, imports importMap, tabCount uint, paths, topLevel, pathMap string) error {
-	fmt.Fprintln(buf)
-	buildIndented(buf, tabCount, fmt.Sprintf(`%s := make(map[string]struct{}, len(%s))
-_%s := make(map[string]map[string]struct{}, len(%s))
-for _, p := range %s {
-	if !strings.Contains(p, ".") {
-		%s[p] = struct{}{}
-		continue
-	}
-	parts := strings.SplitN(p, ".", 2)
-	h, t := parts[0], parts[1]
-	if _%s[h] == nil {
-		_%s[h] = map[string]struct{}{t: {}}
-	} else {
-		_%s[h][t] = struct{}{}
-	}
-}
-for f := range %s {
-	_%s[f] = nil
-}
-%s := make(map[string][]string, len(_%s))
-for top, subs := range _%s {
-	%s[top] = make([]string, 0, len(subs))
-	for sub := range subs {
-		%s[top] = append(%s[top], sub)
-	}
-}`,
-		topLevel, paths,
-		pathMap, paths,
-		paths,
-		topLevel,
-		pathMap,
-		pathMap,
-		pathMap,
-		topLevel,
-		pathMap,
-		pathMap, pathMap,
-		pathMap,
-		pathMap,
-		pathMap, pathMap,
-	))
-	return imports.Add("strings", "strings")
-}
-
 func buildMethods(buf *strings.Builder, imports importMap, md *protokit.Descriptor, mdMap map[string]*protokit.Descriptor) error {
 	if err := imports.Add("fmt", "fmt"); err != nil {
 		return err
@@ -618,12 +574,8 @@ func (dst *%s) SetFields(src *%s, paths ...string) error {`,
 		mType, mType,
 	)
 
-	if err := buildPathProcessor(buf, imports, 1, "paths", "topLevel", "pathMap"); err != nil {
-		return err
-	}
-
 	fmt.Fprint(buf, `
-	for name, subs := range pathMap {
+	for name, subs := range _processPaths(paths) {
 		switch name {
 `,
 	)
@@ -660,16 +612,13 @@ func (dst *%s) SetFields(src *%s, paths ...string) error {`,
 			goName, goName,
 		))
 
-		if err := buildPathProcessor(buf, imports, 3, "subs", "oneofTopLevel", "oneofPathMap"); err != nil {
-			return err
-		}
-
 		fmt.Fprintln(buf)
 
-		buildIndented(buf, 3, `if len(oneofPathMap) > 1 {
+		buildIndented(buf, 3, `subPathMap := _processPaths(subs)
+if len(subPathMap) > 1 {
 	return fmt.Errorf("more than one field specified for oneof field '%s'", name)
 }
-for oneofName, oneofSubs := range oneofPathMap {
+for oneofName, oneofSubs := range subPathMap {
 	switch oneofName {`)
 
 		for _, fd := range fds {
@@ -711,6 +660,7 @@ func (p plugin) Generate(in *plugin_go.CodeGeneratorRequest) (*plugin_go.CodeGen
 		}
 	}
 
+	dirs := map[string]struct{}{}
 	for _, fd := range fds {
 		if len(fd.GetMessages()) == 0 {
 			continue
@@ -760,6 +710,8 @@ func (p plugin) Generate(in *plugin_go.CodeGeneratorRequest) (*plugin_go.CodeGen
 			continue
 		}
 
+		dirs[dirName] = struct{}{}
+
 		var importString string
 		switch len(imports) {
 		case 0:
@@ -797,6 +749,58 @@ package %s
 			)),
 		})
 	}
+
+	for dirName := range dirs {
+		pkgName := filepath.Base(dirName)
+		resp.File = append(resp.File, &plugin_go.CodeGeneratorResponse_File{
+			Name: proto.String(filepath.Join(dirName, fmt.Sprintf("%s.pb.util.fm.go", pkgName))),
+			Content: proto.String(fmt.Sprintf(`%s
+package %s
+
+import (
+	"sort"
+	"strings"
+)
+// _processPaths returns paths as a pathMap.
+func _processPaths(paths []string) map[string][]string {
+	sort.Strings(paths)
+
+	topLevel := make(map[string]struct{}, len(paths))
+	_pathMap := make(map[string]map[string]struct{}, len(paths))
+	for _, p := range paths {
+		if !strings.Contains(p, ".") {
+			topLevel[p] = struct{}{}
+			continue
+		}
+		parts := strings.SplitN(p, ".", 2)
+		h, t := parts[0], parts[1]
+		if _pathMap[h] == nil {
+			_pathMap[h] = map[string]struct{}{t: {}}
+		} else {
+			_pathMap[h][t] = struct{}{}
+		}
+	}
+
+	for f := range topLevel {
+		_pathMap[f] = nil
+	}
+
+	pathMap := make(map[string][]string, len(_pathMap))
+	for top, subs := range _pathMap {
+		pathMap[top] = make([]string, 0, len(subs))
+		for sub := range subs {
+			pathMap[top] = append(pathMap[top], sub)
+		}
+	}
+	return pathMap
+}
+`,
+				FileHeader,
+				pkgName,
+			)),
+		})
+	}
+
 	return resp, nil
 }
 
