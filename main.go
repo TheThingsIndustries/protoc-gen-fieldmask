@@ -547,22 +547,12 @@ func (dst *%s) SetFields(src *%s, paths ...string) error {
 	sort.Strings(topLevelPaths)
 
 	fmt.Fprintf(buf, `
-var _%sFieldPathsNested = [...]string{
+var %sFieldPathsNested = []string{
 	%s
 }
 
-var _%sFieldPathsTopLevel = [...]string{
+var %sFieldPathsTopLevel = []string{
 	%s
-}
-
-func (*%s) FieldMaskPaths(nested bool) []string {
-	paths := _%sFieldPathsTopLevel[:]
-	if nested {
-		paths = _%sFieldPathsNested[:]
-	}
-	ret := make([]string, len(paths))
-	copy(ret, paths)
-	return ret
 }
 
 func (dst *%s) SetFields(src *%s, paths ...string) error {`,
@@ -570,9 +560,6 @@ func (dst *%s) SetFields(src *%s, paths ...string) error {`,
 	"`)+`",`,
 		mType, `"`+strings.Join(topLevelPaths, `",
 	"`)+`",`,
-		mType,
-		mType,
-		mType,
 		mType, mType,
 	)
 

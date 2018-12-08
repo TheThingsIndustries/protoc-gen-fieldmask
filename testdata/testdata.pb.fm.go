@@ -18,7 +18,7 @@ func (dst *Empty) SetFields(src *Empty, paths ...string) error {
 	return nil
 }
 
-var _TestFieldPathsNested = [...]string{
+var TestFieldPathsNested = []string{
 	"a",
 	"a.a",
 	"a.a.a",
@@ -56,22 +56,12 @@ var _TestFieldPathsNested = [...]string{
 	"testOneof.f",
 }
 
-var _TestFieldPathsTopLevel = [...]string{
+var TestFieldPathsTopLevel = []string{
 	"a",
 	"b",
 	"c",
 	"g",
 	"testOneof",
-}
-
-func (*Test) FieldMaskPaths(nested bool) []string {
-	paths := _TestFieldPathsTopLevel[:]
-	if nested {
-		paths = _TestFieldPathsNested[:]
-	}
-	ret := make([]string, len(paths))
-	copy(ret, paths)
-	return ret
 }
 
 func (dst *Test) SetFields(src *Test, paths ...string) error {
@@ -226,7 +216,7 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 	return nil
 }
 
-var _Test_TestNestedFieldPathsNested = [...]string{
+var Test_TestNestedFieldPathsNested = []string{
 	"a",
 	"a.a",
 	"a.b",
@@ -238,22 +228,12 @@ var _Test_TestNestedFieldPathsNested = [...]string{
 	"e",
 }
 
-var _Test_TestNestedFieldPathsTopLevel = [...]string{
+var Test_TestNestedFieldPathsTopLevel = []string{
 	"a",
 	"b",
 	"c",
 	"d",
 	"e",
-}
-
-func (*Test_TestNested) FieldMaskPaths(nested bool) []string {
-	paths := _Test_TestNestedFieldPathsTopLevel[:]
-	if nested {
-		paths = _Test_TestNestedFieldPathsNested[:]
-	}
-	ret := make([]string, len(paths))
-	copy(ret, paths)
-	return ret
 }
 
 func (dst *Test_TestNested) SetFields(src *Test_TestNested, paths ...string) error {
@@ -325,28 +305,18 @@ func (dst *Test_TestNested) SetFields(src *Test_TestNested, paths ...string) err
 	return nil
 }
 
-var _Test_TestNested_TestNestedNestedFieldPathsNested = [...]string{
+var Test_TestNested_TestNestedNestedFieldPathsNested = []string{
 	"a",
 	"b",
 	"c",
 	"d",
 }
 
-var _Test_TestNested_TestNestedNestedFieldPathsTopLevel = [...]string{
+var Test_TestNested_TestNestedNestedFieldPathsTopLevel = []string{
 	"a",
 	"b",
 	"c",
 	"d",
-}
-
-func (*Test_TestNested_TestNestedNested) FieldMaskPaths(nested bool) []string {
-	paths := _Test_TestNested_TestNestedNestedFieldPathsTopLevel[:]
-	if nested {
-		paths = _Test_TestNested_TestNestedNestedFieldPathsNested[:]
-	}
-	ret := make([]string, len(paths))
-	copy(ret, paths)
-	return ret
 }
 
 func (dst *Test_TestNested_TestNestedNested) SetFields(src *Test_TestNested_TestNestedNested, paths ...string) error {
