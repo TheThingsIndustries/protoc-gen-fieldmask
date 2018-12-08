@@ -132,14 +132,14 @@ func TestGolden(t *testing.T) {
 
 func TestFieldMaskPaths(t *testing.T) {
 	a := assertions.New(t)
-	a.So(((*testdata.Test)(nil)).FieldMaskPaths(false), should.Resemble, []string{
+	a.So(testdata.TestFieldPathsTopLevel, should.Resemble, []string{
 		"a",
 		"b",
 		"c",
 		"g",
 		"testOneof",
 	})
-	a.So(((*testdata.Test)(nil)).FieldMaskPaths(true), should.Resemble, []string{
+	a.So(testdata.TestFieldPathsNested, should.Resemble, []string{
 		"a",
 		"a.a",
 		"a.a.a",
