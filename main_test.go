@@ -360,7 +360,7 @@ func TestSetFields(t *testing.T) {
 			Name:           "double oneofs",
 			Destination:    &testdata.Test{},
 			Source:         &testdata.Test{},
-			Paths:          []string{"testOneof.d", "testOneof.e"},
+			Paths:          []string{"testOneof.e", "testOneof.d"},
 			Result:         &testdata.Test{},
 			ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
 		},
@@ -370,8 +370,9 @@ func TestSetFields(t *testing.T) {
 
 			src := deepcopy.Copy(tc.Source).(*testdata.Test)
 			dst := deepcopy.Copy(tc.Destination).(*testdata.Test)
+			paths := deepcopy.Copy(tc.Paths).([]string)
 
-			err := dst.SetFields(src, tc.Paths...)
+			err := dst.SetFields(src, paths...)
 			if tc.ErrorAssertion != nil {
 				a.So(tc.ErrorAssertion(t, err), should.BeTrue)
 			} else {
@@ -379,6 +380,7 @@ func TestSetFields(t *testing.T) {
 			}
 			a.So(src, should.Resemble, tc.Source)
 			a.So(dst, should.Resemble, tc.Result)
+			a.So(paths, should.Resemble, tc.Paths)
 		})
 	}
 }

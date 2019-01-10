@@ -569,7 +569,7 @@ func (dst *%s) SetFields(src *%s, paths ...string) error {`,
 	)
 
 	fmt.Fprint(buf, `
-	for name, subs := range _processPaths(paths) {
+	for name, subs := range _processPaths(append(paths[:0:0], paths...)) {
 		switch name {
 `,
 	)
