@@ -55,15 +55,15 @@ func (m *Empty) XXX_DiscardUnknown() {
 var xxx_messageInfo_Empty proto.InternalMessageInfo
 
 type Test struct {
-	A          *Test_TestNested `protobuf:"bytes,1,opt,name=a" json:"a,omitempty"`
-	C          Test_TestNested  `protobuf:"bytes,2,opt,name=c" json:"c"`
-	CustomName *Test_TestNested `protobuf:"bytes,3,opt,name=b" json:"b,omitempty"`
+	A          *Test_TestNested `protobuf:"bytes,1,opt,name=a,proto3" json:"a,omitempty"`
+	C          Test_TestNested  `protobuf:"bytes,2,opt,name=c,proto3" json:"c"`
+	CustomName *Test_TestNested `protobuf:"bytes,3,opt,name=b,proto3" json:"b,omitempty"`
 	// Types that are valid to be assigned to TestOneof:
 	//	*Test_E
 	//	*Test_D
 	//	*Test_F
 	TestOneof            isTest_TestOneof `protobuf_oneof:"testOneof"`
-	G                    *Empty           `protobuf:"bytes,7,opt,name=g" json:"g,omitempty"`
+	G                    *Empty           `protobuf:"bytes,7,opt,name=g,proto3" json:"g,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}         `json:"-"`
 	XXX_unrecognized     []byte           `json:"-"`
 	XXX_sizecache        int32            `json:"-"`
@@ -247,10 +247,10 @@ func _Test_OneofSizer(msg proto.Message) (n int) {
 }
 
 type Test_TestNested struct {
-	A                    *Test_TestNested_TestNestedNested `protobuf:"bytes,1,opt,name=a" json:"a,omitempty"`
+	A                    *Test_TestNested_TestNestedNested `protobuf:"bytes,1,opt,name=a,proto3" json:"a,omitempty"`
 	B                    []byte                            `protobuf:"bytes,2,opt,name=b,proto3" json:"b,omitempty"`
-	C                    *time.Duration                    `protobuf:"bytes,3,opt,name=c,stdduration" json:"c,omitempty"`
-	D                    *time.Time                        `protobuf:"bytes,4,opt,name=d,stdtime" json:"d,omitempty"`
+	C                    *time.Duration                    `protobuf:"bytes,3,opt,name=c,proto3,stdduration" json:"c,omitempty"`
+	D                    *time.Time                        `protobuf:"bytes,4,opt,name=d,proto3,stdtime" json:"d,omitempty"`
 	E                    *CustomType                       `protobuf:"bytes,5,opt,name=e,proto3,customtype=CustomType" json:"e,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}                          `json:"-"`
 	XXX_unrecognized     []byte                            `json:"-"`
@@ -312,8 +312,8 @@ func (m *Test_TestNested) GetD() *time.Time {
 type Test_TestNested_TestNestedNested struct {
 	A                    int32            `protobuf:"varint,1,opt,name=a,proto3" json:"a,omitempty"`
 	B                    int64            `protobuf:"fixed64,2,opt,name=b,proto3" json:"b,omitempty"`
-	C                    [][]byte         `protobuf:"bytes,3,rep,name=c" json:"c,omitempty"`
-	D                    map[int32]uint32 `protobuf:"bytes,4,rep,name=d" json:"d,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
+	C                    [][]byte         `protobuf:"bytes,3,rep,name=c,proto3" json:"c,omitempty"`
+	D                    map[int32]uint32 `protobuf:"bytes,4,rep,name=d,proto3" json:"d,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
 	XXX_NoUnkeyedLiteral struct{}         `json:"-"`
 	XXX_unrecognized     []byte           `json:"-"`
 	XXX_sizecache        int32            `json:"-"`
