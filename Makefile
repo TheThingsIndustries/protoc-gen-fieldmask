@@ -15,7 +15,7 @@
 WORKDIR := $(shell mkdir -p $(PWD)/.work && mktemp -d "$(PWD)/.work/tmp.XXX")
 
 DOCKER ?= docker
-PROTOC_DOCKER_IMAGE ?= thethingsindustries/protoc:3.0.15
+PROTOC_DOCKER_IMAGE ?= thethingsindustries/protoc:3.0.23
 PROTOC_DOCKER_ARGS := run --user `id -u` --rm \
 										 --mount type=bind,src=$(PWD),dst=$(PWD) \
 										 -e IN_TEST \

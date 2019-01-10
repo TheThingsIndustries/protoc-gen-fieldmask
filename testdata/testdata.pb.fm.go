@@ -65,7 +65,7 @@ var TestFieldPathsTopLevel = []string{
 }
 
 func (dst *Test) SetFields(src *Test, paths ...string) error {
-	for name, subs := range _processPaths(paths) {
+	for name, subs := range _processPaths(append(paths[:0:0], paths...)) {
 		switch name {
 		case "a":
 			if len(subs) > 0 {
@@ -237,7 +237,7 @@ var Test_TestNestedFieldPathsTopLevel = []string{
 }
 
 func (dst *Test_TestNested) SetFields(src *Test_TestNested, paths ...string) error {
-	for name, subs := range _processPaths(paths) {
+	for name, subs := range _processPaths(append(paths[:0:0], paths...)) {
 		switch name {
 		case "a":
 			if len(subs) > 0 {
@@ -320,7 +320,7 @@ var Test_TestNested_TestNestedNestedFieldPathsTopLevel = []string{
 }
 
 func (dst *Test_TestNested_TestNestedNested) SetFields(src *Test_TestNested_TestNestedNested, paths ...string) error {
-	for name, subs := range _processPaths(paths) {
+	for name, subs := range _processPaths(append(paths[:0:0], paths...)) {
 		switch name {
 		case "a":
 			if len(subs) > 0 {
