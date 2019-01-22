@@ -25,6 +25,9 @@ var TestFieldPathsNested = []string{
 	"a.a.b",
 	"a.a.c",
 	"a.a.d",
+	"a.a.testNestedNestedOneOf",
+	"a.a.testNestedNestedOneOf.e",
+	"a.a.testNestedNestedOneOf.f",
 	"a.b",
 	"a.c",
 	"a.d",
@@ -35,6 +38,9 @@ var TestFieldPathsNested = []string{
 	"b.a.b",
 	"b.a.c",
 	"b.a.d",
+	"b.a.testNestedNestedOneOf",
+	"b.a.testNestedNestedOneOf.e",
+	"b.a.testNestedNestedOneOf.f",
 	"b.b",
 	"b.c",
 	"b.d",
@@ -45,6 +51,9 @@ var TestFieldPathsNested = []string{
 	"c.a.b",
 	"c.a.c",
 	"c.a.d",
+	"c.a.testNestedNestedOneOf",
+	"c.a.testNestedNestedOneOf.e",
+	"c.a.testNestedNestedOneOf.f",
 	"c.b",
 	"c.c",
 	"c.d",
@@ -222,6 +231,9 @@ var Test_TestNestedFieldPathsNested = []string{
 	"a.b",
 	"a.c",
 	"a.d",
+	"a.testNestedNestedOneOf",
+	"a.testNestedNestedOneOf.e",
+	"a.testNestedNestedOneOf.f",
 	"b",
 	"c",
 	"d",
@@ -310,6 +322,9 @@ var Test_TestNested_TestNestedNestedFieldPathsNested = []string{
 	"b",
 	"c",
 	"d",
+	"testNestedNestedOneOf",
+	"testNestedNestedOneOf.e",
+	"testNestedNestedOneOf.f",
 }
 
 var Test_TestNested_TestNestedNestedFieldPathsTopLevel = []string{
@@ -317,6 +332,7 @@ var Test_TestNested_TestNestedNestedFieldPathsTopLevel = []string{
 	"b",
 	"c",
 	"d",
+	"testNestedNestedOneOf",
 }
 
 func (dst *Test_TestNested_TestNestedNested) SetFields(src *Test_TestNested_TestNestedNested, paths ...string) error {
@@ -359,6 +375,64 @@ func (dst *Test_TestNested_TestNestedNested) SetFields(src *Test_TestNested_Test
 				dst.D = src.D
 			} else {
 				dst.D = nil
+			}
+
+		case "testNestedNestedOneOf":
+			if len(subs) == 0 && src == nil {
+				dst.TestNestedNestedOneOf = nil
+				continue
+			} else if len(subs) == 0 {
+				dst.TestNestedNestedOneOf = src.TestNestedNestedOneOf
+				continue
+			}
+
+			subPathMap := _processPaths(subs)
+			if len(subPathMap) > 1 {
+				return fmt.Errorf("more than one field specified for oneof field '%s'", name)
+			}
+			for oneofName, oneofSubs := range subPathMap {
+				switch oneofName {
+				case "e":
+					if _, ok := dst.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_E); !ok {
+						dst.TestNestedNestedOneOf = &Test_TestNested_TestNestedNested_E{}
+					}
+					if len(oneofSubs) > 0 {
+						newDst := dst.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_E).E
+						if newDst == nil {
+							newDst = &Empty{}
+							dst.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_E).E = newDst
+						}
+						var newSrc *Empty
+						if src != nil {
+							newSrc = src.GetE()
+						}
+						if err := newDst.SetFields(newSrc, subs...); err != nil {
+							return err
+						}
+					} else {
+						if src != nil {
+							dst.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_E).E = src.GetE()
+						} else {
+							dst.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_E).E = nil
+						}
+					}
+				case "f":
+					if _, ok := dst.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_F); !ok {
+						dst.TestNestedNestedOneOf = &Test_TestNested_TestNestedNested_F{}
+					}
+					if len(oneofSubs) > 0 {
+						return fmt.Errorf("'f' has no subfields, but %s were specified", oneofSubs)
+					}
+					if src != nil {
+						dst.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_F).F = src.GetF()
+					} else {
+						var zero uint32
+						dst.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_F).F = zero
+					}
+
+				default:
+					return fmt.Errorf("invalid oneof field: '%s.%s'", name, oneofName)
+				}
 			}
 
 		default:
