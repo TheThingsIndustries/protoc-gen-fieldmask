@@ -163,7 +163,11 @@ func appendPaths(paths []string, prefix string, md *protokit.Descriptor, mdMap m
 		delete(seen, fd.GetFullName())
 	}
 	for _, od := range md.GetOneofDecl() {
-		paths = append(paths, od.GetName())
+		fp := od.GetName()
+		if prefix != "" {
+			fp = fmt.Sprintf("%s.%s", prefix, fp)
+		}
+		paths = append(paths, fp)
 	}
 	return paths, nil
 }
@@ -395,7 +399,11 @@ func buildSetFieldsCase(buf *strings.Builder, imports importMap, tabCount uint, 
 	if fd.OneofIndex != nil {
 		md := fd.GetMessage()
 
-		oneOfTypeName := fmt.Sprintf("%s_%s", md.GetName(), field.Name)
+		mType := md.GetName()
+		for parent := md.GetParent(); parent != nil; parent = parent.GetParent() {
+			mType = fmt.Sprintf("%s_%s", parent.GetName(), mType)
+		}
+		oneOfTypeName := fmt.Sprintf("%s_%s", mType, field.Name)
 		if md.GetMessage(field.Name) != nil {
 			oneOfTypeName = fmt.Sprintf("%s_", oneOfTypeName)
 		}

@@ -132,13 +132,7 @@ func TestGolden(t *testing.T) {
 
 func TestFieldMaskPaths(t *testing.T) {
 	a := assertions.New(t)
-	a.So(testdata.TestFieldPathsTopLevel, should.Resemble, []string{
-		"a",
-		"b",
-		"c",
-		"g",
-		"testOneof",
-	})
+
 	a.So(testdata.TestFieldPathsNested, should.Resemble, []string{
 		"a",
 		"a.a",
@@ -146,6 +140,9 @@ func TestFieldMaskPaths(t *testing.T) {
 		"a.a.b",
 		"a.a.c",
 		"a.a.d",
+		"a.a.testNestedNestedOneOf",
+		"a.a.testNestedNestedOneOf.e",
+		"a.a.testNestedNestedOneOf.f",
 		"a.b",
 		"a.c",
 		"a.d",
@@ -156,6 +153,9 @@ func TestFieldMaskPaths(t *testing.T) {
 		"b.a.b",
 		"b.a.c",
 		"b.a.d",
+		"b.a.testNestedNestedOneOf",
+		"b.a.testNestedNestedOneOf.e",
+		"b.a.testNestedNestedOneOf.f",
 		"b.b",
 		"b.c",
 		"b.d",
@@ -166,6 +166,9 @@ func TestFieldMaskPaths(t *testing.T) {
 		"c.a.b",
 		"c.a.c",
 		"c.a.d",
+		"c.a.testNestedNestedOneOf",
+		"c.a.testNestedNestedOneOf.e",
+		"c.a.testNestedNestedOneOf.f",
 		"c.b",
 		"c.c",
 		"c.d",
@@ -175,6 +178,52 @@ func TestFieldMaskPaths(t *testing.T) {
 		"testOneof.d",
 		"testOneof.e",
 		"testOneof.f",
+	})
+	a.So(testdata.TestFieldPathsTopLevel, should.Resemble, []string{
+		"a",
+		"b",
+		"c",
+		"g",
+		"testOneof",
+	})
+
+	a.So(testdata.Test_TestNestedFieldPathsNested, should.Resemble, []string{
+		"a",
+		"a.a",
+		"a.b",
+		"a.c",
+		"a.d",
+		"a.testNestedNestedOneOf",
+		"a.testNestedNestedOneOf.e",
+		"a.testNestedNestedOneOf.f",
+		"b",
+		"c",
+		"d",
+		"e",
+	})
+	a.So(testdata.Test_TestNestedFieldPathsTopLevel, should.Resemble, []string{
+		"a",
+		"b",
+		"c",
+		"d",
+		"e",
+	})
+
+	a.So(testdata.Test_TestNested_TestNestedNestedFieldPathsNested, should.Resemble, []string{
+		"a",
+		"b",
+		"c",
+		"d",
+		"testNestedNestedOneOf",
+		"testNestedNestedOneOf.e",
+		"testNestedNestedOneOf.f",
+	})
+	a.So(testdata.Test_TestNested_TestNestedNestedFieldPathsTopLevel, should.Resemble, []string{
+		"a",
+		"b",
+		"c",
+		"d",
+		"testNestedNestedOneOf",
 	})
 }
 

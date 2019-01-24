@@ -31,6 +31,10 @@ message Test {
       sfixed64 b = 2;
       repeated bytes c = 3;
       map<int32,uint32> d = 4;
+      oneof testNestedNestedOneOf{
+        Empty e = 5;
+        uint32 f = 6;
+      };
     }
     TestNestedNested a = 1;
     bytes b = 2;
