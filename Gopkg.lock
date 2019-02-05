@@ -14,7 +14,7 @@
   version = "v1.2.0"
 
 [[projects]]
-  digest = "1:09f717ac42036a8351ec9f9a19d1eb2bc7fc37608e1a5e53bd5d7fef091b4f35"
+  digest = "1:84c2676fe71e5c01d6b49e905270dc683f344ae0e18c8d029905dac7e15a494a"
   name = "github.com/golang/protobuf"
   packages = [
     "proto",
@@ -24,6 +24,7 @@
     "protoc-gen-go/plugin",
     "ptypes/duration",
     "ptypes/timestamp",
+    "ptypes/wrappers",
   ]
   pruneopts = "NUT"
   revision = "aa810b61a9c79d51363740d207bb46cf8e620ed5"
@@ -86,6 +87,7 @@
     "github.com/golang/protobuf/protoc-gen-go/plugin",
     "github.com/golang/protobuf/ptypes/duration",
     "github.com/golang/protobuf/ptypes/timestamp",
+    "github.com/golang/protobuf/ptypes/wrappers",
     "github.com/kr/pretty",
     "github.com/mohae/deepcopy",
     "github.com/pseudomuto/protokit",
