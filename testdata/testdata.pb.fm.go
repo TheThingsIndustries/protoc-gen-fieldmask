@@ -28,6 +28,7 @@ var TestFieldPathsNested = []string{
 	"a.a.testNestedNestedOneOf",
 	"a.a.testNestedNestedOneOf.e",
 	"a.a.testNestedNestedOneOf.f",
+	"a.a.testNestedNestedOneOf.g",
 	"a.b",
 	"a.c",
 	"a.d",
@@ -41,6 +42,7 @@ var TestFieldPathsNested = []string{
 	"b.a.testNestedNestedOneOf",
 	"b.a.testNestedNestedOneOf.e",
 	"b.a.testNestedNestedOneOf.f",
+	"b.a.testNestedNestedOneOf.g",
 	"b.b",
 	"b.c",
 	"b.d",
@@ -54,11 +56,13 @@ var TestFieldPathsNested = []string{
 	"c.a.testNestedNestedOneOf",
 	"c.a.testNestedNestedOneOf.e",
 	"c.a.testNestedNestedOneOf.f",
+	"c.a.testNestedNestedOneOf.g",
 	"c.b",
 	"c.c",
 	"c.d",
 	"c.e",
 	"g",
+	"h",
 	"testOneof",
 	"testOneof.d",
 	"testOneof.e",
@@ -70,6 +74,7 @@ var TestFieldPathsTopLevel = []string{
 	"b",
 	"c",
 	"g",
+	"h",
 	"testOneof",
 }
 
@@ -157,6 +162,15 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 					dst.G = nil
 				}
 			}
+		case "h":
+			if len(subs) > 0 {
+				return fmt.Errorf("'h' has no subfields, but %s were specified", subs)
+			}
+			if src != nil {
+				dst.H = src.H
+			} else {
+				dst.H = nil
+			}
 
 		case "testOneof":
 			if len(subs) == 0 && src == nil {
@@ -234,6 +248,7 @@ var Test_TestNestedFieldPathsNested = []string{
 	"a.testNestedNestedOneOf",
 	"a.testNestedNestedOneOf.e",
 	"a.testNestedNestedOneOf.f",
+	"a.testNestedNestedOneOf.g",
 	"b",
 	"c",
 	"d",
@@ -325,6 +340,7 @@ var Test_TestNested_TestNestedNestedFieldPathsNested = []string{
 	"testNestedNestedOneOf",
 	"testNestedNestedOneOf.e",
 	"testNestedNestedOneOf.f",
+	"testNestedNestedOneOf.g",
 }
 
 var Test_TestNested_TestNestedNestedFieldPathsTopLevel = []string{
@@ -428,6 +444,18 @@ func (dst *Test_TestNested_TestNestedNested) SetFields(src *Test_TestNested_Test
 					} else {
 						var zero uint32
 						dst.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_F).F = zero
+					}
+				case "g":
+					if _, ok := dst.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_G); !ok {
+						dst.TestNestedNestedOneOf = &Test_TestNested_TestNestedNested_G{}
+					}
+					if len(oneofSubs) > 0 {
+						return fmt.Errorf("'g' has no subfields, but %s were specified", oneofSubs)
+					}
+					if src != nil {
+						dst.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_G).G = src.GetG()
+					} else {
+						dst.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_G).G = nil
 					}
 
 				default:
