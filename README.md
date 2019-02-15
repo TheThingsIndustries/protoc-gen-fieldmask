@@ -5,7 +5,6 @@ A protoc plug-in, which generates fieldmask utilities. Compatible with gogoproto
 ## Installation:
 
 ```sh
-dep ensure # If not using Go 1.11 modules
 go install .
 ```
 

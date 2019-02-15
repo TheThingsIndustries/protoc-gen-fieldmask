@@ -28,8 +28,8 @@ PROTOC ?= $(DOCKER) $(PROTOC_DOCKER_ARGS) $(PROTOC_DOCKER_IMAGE)
 
 all: build
 
-vendor/github.com/gogo/protobuf/gogoproto/gogo.proto:
-	dep ensure
+vendor/github.com/gogo/protobuf/gogoproto/gogo.proto: go.mod go.sum
+	go mod vendor
 
 internal/extensions/gogoproto/gogo.pb.go: vendor/github.com/gogo/protobuf/gogoproto/gogo.proto
 	perl \
