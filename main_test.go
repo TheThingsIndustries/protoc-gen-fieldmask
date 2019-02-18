@@ -68,7 +68,7 @@ func runProtoc(t *testing.T, args ...string) {
 }
 
 func TestGolden(t *testing.T) {
-	workDir, err := ioutil.TempDir(os.Getenv("WORKDIR"), "fieldmask-test")
+	workDir, err := ioutil.TempDir("", "fieldmask-test")
 	if err != nil {
 		t.Fatal(err)
 	}
