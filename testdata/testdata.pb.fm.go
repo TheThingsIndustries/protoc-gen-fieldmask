@@ -32,6 +32,7 @@ var TestFieldPathsNested = []string{
 	"a.c",
 	"a.d",
 	"a.e",
+	"a.f",
 	"b",
 	"b.a",
 	"b.a.a",
@@ -46,6 +47,7 @@ var TestFieldPathsNested = []string{
 	"b.c",
 	"b.d",
 	"b.e",
+	"b.f",
 	"c",
 	"c.a",
 	"c.a.a",
@@ -60,6 +62,7 @@ var TestFieldPathsNested = []string{
 	"c.c",
 	"c.d",
 	"c.e",
+	"c.f",
 	"g",
 	"h",
 	"testOneof",
@@ -251,6 +254,7 @@ var Test_TestNestedFieldPathsNested = []string{
 	"c",
 	"d",
 	"e",
+	"f",
 }
 
 var Test_TestNestedFieldPathsTopLevel = []string{
@@ -259,6 +263,7 @@ var Test_TestNestedFieldPathsTopLevel = []string{
 	"c",
 	"d",
 	"e",
+	"f",
 }
 
 func (dst *Test_TestNested) SetFields(src *Test_TestNested, paths ...string) error {
@@ -320,6 +325,16 @@ func (dst *Test_TestNested) SetFields(src *Test_TestNested, paths ...string) err
 				dst.E = src.E
 			} else {
 				dst.E = nil
+			}
+		case "f":
+			if len(subs) > 0 {
+				return fmt.Errorf("'f' has no subfields, but %s were specified", subs)
+			}
+			if src != nil {
+				dst.F = src.F
+			} else {
+				var zero CustomType
+				dst.F = zero
 			}
 
 		default:

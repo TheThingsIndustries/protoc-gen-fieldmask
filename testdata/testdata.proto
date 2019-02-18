@@ -43,6 +43,7 @@ message Test {
     google.protobuf.Duration c = 3 [(gogoproto.stdduration) = true];
     google.protobuf.Timestamp d = 4 [(gogoproto.stdtime) = true];
     string e = 5 [(gogoproto.customtype) = "CustomType"];
+    string f = 6 [(gogoproto.customtype) = "CustomType", (gogoproto.nullable) = false];
   }
   TestNested a = 1;
   TestNested c = 2 [(gogoproto.nullable) = false];
