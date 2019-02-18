@@ -12,15 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-WORKDIR := $(shell mkdir -p $(PWD)/.work && mktemp -d "$(PWD)/.work/tmp.XXX")
-
-DOCKER ?= docker
-PROTOC_DOCKER_IMAGE ?= thethingsindustries/protoc:3.0.24
-PROTOC_DOCKER_ARGS := run --user `id -u` --rm \
-										 --mount type=bind,src=$(PWD),dst=$(PWD) \
-										 -e IN_TEST \
-										 -w $(PWD)
-PROTOC ?= $(DOCKER) $(PROTOC_DOCKER_ARGS) $(PROTOC_DOCKER_IMAGE)
+PROTOC ?= protoc
+PROTOC = $(PROTOC) --plugin=protoc-gen-gogo=.tools/protoc-gen-gogo
 
 .DEFAULT_GOAL=build
 
@@ -36,13 +29,18 @@ build:
 .PHONY: clean
 
 clean:
-	rm -rf .work dist
-	find ./testdata -name '*.pb.go' -delete -or -name '*.pb.fm.go' -delete
+	rm -rf dist .tools
+
+.tools/protoc-gen-gogo: go.mod go.sum
+	go build -o $@ github.com/gogo/protobuf/protoc-gen-gogo
+
+vendor/github.com/gogo/protobuf/gogoproto/gogo.proto: go.mod go.sum
+	go mod vendor
 
 .PHONY: test
 
-test:
+test: .tools/protoc-gen-gogo vendor/github.com/gogo/protobuf/gogoproto/gogo.proto
 	$(info Regenerating golden files...)
-	@TMPDIR="$(WORKDIR)" WORKDIR="$(WORKDIR)" PROTOC="$(PROTOC)" go test -regenerate
+	@go test -regenerate
 	$(info Running tests...)
-	@TMPDIR="$(WORKDIR)" WORKDIR="$(WORKDIR)" PROTOC="$(PROTOC)" go test -coverprofile=coverage.out ./...
+	@go test -coverprofile=coverage.out ./...
