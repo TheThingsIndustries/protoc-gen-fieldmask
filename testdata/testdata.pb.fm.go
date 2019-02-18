@@ -4,9 +4,8 @@ package testdata
 
 import fmt "fmt"
 
-func (*Empty) FieldMaskPaths(_ bool) []string {
-	return nil
-}
+var EmptyFieldPathsNested []string
+var EmptyFieldPathsTopLevel []string
 
 func (dst *Empty) SetFields(src *Empty, paths ...string) error {
 	if len(paths) != 0 {
@@ -223,8 +222,7 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 					if src != nil {
 						dst.TestOneof.(*Test_F).F = src.GetF()
 					} else {
-						var zero []byte
-						dst.TestOneof.(*Test_F).F = zero
+						dst.TestOneof.(*Test_F).F = nil
 					}
 
 				default:
@@ -294,8 +292,7 @@ func (dst *Test_TestNested) SetFields(src *Test_TestNested, paths ...string) err
 			if src != nil {
 				dst.B = src.B
 			} else {
-				var zero []byte
-				dst.B = zero
+				dst.B = nil
 			}
 		case "c":
 			if len(subs) > 0 {

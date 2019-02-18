@@ -53,7 +53,7 @@ func runProtoc(t *testing.T, args ...string) {
 		strings.Fields(protocBin)[0],
 		append(append(strings.Fields(protocBin)[1:], fmt.Sprintf("--plugin=protoc-gen-fieldmask=%s", os.Args[0])), args...)...,
 	)
-	cmd.Env = append(os.Environ(), "IN_TEST=1")
+	cmd.Env = append(os.Environ(), "IN_TEST=1", "DEBUG=1")
 	t.Logf(`Running '%s'...`, strings.Join(cmd.Args, " "))
 
 	out, err := cmd.CombinedOutput()
