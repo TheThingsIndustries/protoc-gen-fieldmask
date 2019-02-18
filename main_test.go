@@ -33,7 +33,7 @@ import (
 
 var regenerate = flag.Bool("regenerate", false, "regenerate golden files")
 
-// When the environment variable RUN_AS_PROTOC_GEN_GO is set, we skip running
+// When the environment variable IN_TEST is set, we skip running
 // tests and instead act as protoc-gen-fieldmask. This allows the test binary to
 // pass itself to protoc.
 func init() {
