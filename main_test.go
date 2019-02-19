@@ -90,7 +90,7 @@ func TestGolden(t *testing.T) {
 		"-Ivendor",
 		"-Itestdata",
 		fmt.Sprintf("--fieldmask_out=%s", workDir),
-		fmt.Sprintf("--gogo_out=%s", workDir),
+		fmt.Sprintf("--gogo_out=Mgoogle/protobuf/wrappers.proto=github.com/gogo/protobuf/types:%s", workDir),
 	}, paths...)...)
 
 	if err := filepath.Walk(workDir, func(path string, info os.FileInfo, err error) error {
