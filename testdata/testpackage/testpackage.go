@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package testdata contains data used by tests.
-package testdata
+// Package testpackage is used by generated code in testdata.
+package testpackage
 
 import "errors"
 

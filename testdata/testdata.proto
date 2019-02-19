@@ -37,13 +37,17 @@ message Test {
         uint32 f = 6;
         google.protobuf.UInt64Value g = 7;
       };
+      message TestNestedNestedEmbed {
+        int32 nested_field = 1;
+      }
+      TestNestedNestedEmbed h = 8 [(gogoproto.embed) = true];
     }
     TestNestedNested a = 1;
     bytes b = 2;
     google.protobuf.Duration c = 3 [(gogoproto.stdduration) = true];
     google.protobuf.Timestamp d = 4 [(gogoproto.stdtime) = true];
-    string e = 5 [(gogoproto.customtype) = "CustomType"];
-    string f = 6 [(gogoproto.customtype) = "CustomType", (gogoproto.nullable) = false];
+    string e = 5 [(gogoproto.customtype) = "github.com/TheThingsIndustries/protoc-gen-fieldmask/testdata/testpackage.CustomType"];
+    string f = 6 [(gogoproto.customtype) = "github.com/TheThingsIndustries/protoc-gen-fieldmask/testdata/testpackage.CustomType", (gogoproto.nullable) = false];
   }
   TestNested a = 1;
   TestNested c = 2 [(gogoproto.nullable) = false];
