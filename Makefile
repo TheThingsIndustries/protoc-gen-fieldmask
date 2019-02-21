@@ -13,7 +13,7 @@
 # limitations under the License.
 
 PROTOC ?= protoc
-PROTOC = $(PROTOC) --plugin=protoc-gen-gogo=.tools/protoc-gen-gogo
+PROTOC += --plugin=protoc-gen-gogo=.tools/protoc-gen-gogo
 
 .DEFAULT_GOAL=build
 
@@ -41,6 +41,6 @@ vendor/github.com/gogo/protobuf/gogoproto/gogo.proto: go.mod go.sum
 
 test: .tools/protoc-gen-gogo vendor/github.com/gogo/protobuf/gogoproto/gogo.proto
 	$(info Regenerating golden files...)
-	@go test -regenerate
+	@PROTOC="$(PROTOC)" go test -regenerate
 	$(info Running tests...)
-	@go test -coverprofile=coverage.out ./...
+	@PROTOC="$(PROTOC)" go test -coverprofile=coverage.out ./...
