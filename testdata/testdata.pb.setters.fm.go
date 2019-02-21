@@ -8,9 +8,6 @@ import (
 	types "github.com/gogo/protobuf/types"
 )
 
-var EmptyFieldPathsNested []string
-var EmptyFieldPathsTopLevel []string
-
 func (dst *Empty) SetFields(src *Empty, paths ...string) error {
 	if len(paths) != 0 {
 		return fmt.Errorf("message Empty has no fields, but paths %s were specified", paths)
@@ -19,77 +16,6 @@ func (dst *Empty) SetFields(src *Empty, paths ...string) error {
 		*dst = *src
 	}
 	return nil
-}
-
-var TestFieldPathsNested = []string{
-	"a",
-	"a.a",
-	"a.a.a",
-	"a.a.b",
-	"a.a.c",
-	"a.a.d",
-	"a.a.h",
-	"a.a.h.nested_field",
-	"a.a.testNestedNestedOneOf",
-	"a.a.testNestedNestedOneOf.e",
-	"a.a.testNestedNestedOneOf.f",
-	"a.a.testNestedNestedOneOf.g",
-	"a.b",
-	"a.c",
-	"a.d",
-	"a.e",
-	"a.f",
-	"b",
-	"b.a",
-	"b.a.a",
-	"b.a.b",
-	"b.a.c",
-	"b.a.d",
-	"b.a.h",
-	"b.a.h.nested_field",
-	"b.a.testNestedNestedOneOf",
-	"b.a.testNestedNestedOneOf.e",
-	"b.a.testNestedNestedOneOf.f",
-	"b.a.testNestedNestedOneOf.g",
-	"b.b",
-	"b.c",
-	"b.d",
-	"b.e",
-	"b.f",
-	"c",
-	"c.a",
-	"c.a.a",
-	"c.a.b",
-	"c.a.c",
-	"c.a.d",
-	"c.a.h",
-	"c.a.h.nested_field",
-	"c.a.testNestedNestedOneOf",
-	"c.a.testNestedNestedOneOf.e",
-	"c.a.testNestedNestedOneOf.f",
-	"c.a.testNestedNestedOneOf.g",
-	"c.b",
-	"c.c",
-	"c.d",
-	"c.e",
-	"c.f",
-	"g",
-	"h",
-	"i",
-	"testOneof",
-	"testOneof.d",
-	"testOneof.e",
-	"testOneof.f",
-}
-
-var TestFieldPathsTopLevel = []string{
-	"a",
-	"b",
-	"c",
-	"g",
-	"h",
-	"i",
-	"testOneof",
 }
 
 func (dst *Test) SetFields(src *Test, paths ...string) error {
@@ -262,34 +188,6 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 	return nil
 }
 
-var Test_TestNestedFieldPathsNested = []string{
-	"a",
-	"a.a",
-	"a.b",
-	"a.c",
-	"a.d",
-	"a.h",
-	"a.h.nested_field",
-	"a.testNestedNestedOneOf",
-	"a.testNestedNestedOneOf.e",
-	"a.testNestedNestedOneOf.f",
-	"a.testNestedNestedOneOf.g",
-	"b",
-	"c",
-	"d",
-	"e",
-	"f",
-}
-
-var Test_TestNestedFieldPathsTopLevel = []string{
-	"a",
-	"b",
-	"c",
-	"d",
-	"e",
-	"f",
-}
-
 func (dst *Test_TestNested) SetFields(src *Test_TestNested, paths ...string) error {
 	for name, subs := range _processPaths(append(paths[:0:0], paths...)) {
 		switch name {
@@ -366,28 +264,6 @@ func (dst *Test_TestNested) SetFields(src *Test_TestNested, paths ...string) err
 		}
 	}
 	return nil
-}
-
-var Test_TestNested_TestNestedNestedFieldPathsNested = []string{
-	"a",
-	"b",
-	"c",
-	"d",
-	"h",
-	"h.nested_field",
-	"testNestedNestedOneOf",
-	"testNestedNestedOneOf.e",
-	"testNestedNestedOneOf.f",
-	"testNestedNestedOneOf.g",
-}
-
-var Test_TestNested_TestNestedNestedFieldPathsTopLevel = []string{
-	"a",
-	"b",
-	"c",
-	"d",
-	"h",
-	"testNestedNestedOneOf",
 }
 
 func (dst *Test_TestNested_TestNestedNested) SetFields(src *Test_TestNested_TestNestedNested, paths ...string) error {
@@ -528,14 +404,6 @@ func (dst *Test_TestNested_TestNestedNested) SetFields(src *Test_TestNested_Test
 		}
 	}
 	return nil
-}
-
-var Test_TestNested_TestNestedNested_TestNestedNestedEmbedFieldPathsNested = []string{
-	"nested_field",
-}
-
-var Test_TestNested_TestNestedNested_TestNestedNestedEmbedFieldPathsTopLevel = []string{
-	"nested_field",
 }
 
 func (dst *Test_TestNested_TestNestedNested_TestNestedNestedEmbed) SetFields(src *Test_TestNested_TestNestedNested_TestNestedNestedEmbed, paths ...string) error {
