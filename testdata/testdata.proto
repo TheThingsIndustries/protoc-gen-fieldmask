@@ -59,4 +59,5 @@ message Test {
   }
   Empty g = 7;
   google.protobuf.StringValue h = 8;
+  google.protobuf.StringValue i = 9 [(gogoproto.nullable) = false];
 }

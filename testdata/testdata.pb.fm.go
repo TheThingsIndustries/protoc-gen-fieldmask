@@ -5,6 +5,7 @@ package testdata
 import (
 	fmt "fmt"
 	github_com_TheThingsIndustries_protoc_gen_fieldmask_testdata_testpackage "github.com/TheThingsIndustries/protoc-gen-fieldmask/testdata/testpackage"
+	types "github.com/gogo/protobuf/types"
 )
 
 var EmptyFieldPathsNested []string
@@ -74,6 +75,7 @@ var TestFieldPathsNested = []string{
 	"c.f",
 	"g",
 	"h",
+	"i",
 	"testOneof",
 	"testOneof.d",
 	"testOneof.e",
@@ -86,6 +88,7 @@ var TestFieldPathsTopLevel = []string{
 	"c",
 	"g",
 	"h",
+	"i",
 	"testOneof",
 }
 
@@ -181,6 +184,16 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 				dst.H = src.H
 			} else {
 				dst.H = nil
+			}
+		case "i":
+			if len(subs) > 0 {
+				return fmt.Errorf("'i' has no subfields, but %s were specified", subs)
+			}
+			if src != nil {
+				dst.I = src.I
+			} else {
+				var zero types.StringValue
+				dst.I = zero
 			}
 
 		case "testOneof":

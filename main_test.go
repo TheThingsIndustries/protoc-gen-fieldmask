@@ -187,6 +187,7 @@ func TestFieldMaskPaths(t *testing.T) {
 		"c.f",
 		"g",
 		"h",
+		"i",
 		"testOneof",
 		"testOneof.d",
 		"testOneof.e",
@@ -198,6 +199,7 @@ func TestFieldMaskPaths(t *testing.T) {
 		"c",
 		"g",
 		"h",
+		"i",
 		"testOneof",
 	})
 
