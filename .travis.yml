@@ -1,37 +1,27 @@
 language: go
-go:
-  - "1.11"
+go: "1.11.x"
 
 cache:
   directories:
-    - $GOPATH/pkg
+  - $GOPATH/pkg
 
-install:
-  - curl https://raw.githubusercontent.com/golang/dep/v0.5.0/install.sh | sh
+env:
+  global:
+  - GO111MODULE=on
+  - GOARCH=amd64
+  - PROTOC_VER="3.6.1"
+  matrix:
+  - GOOS=linux
+  - GOOS=darwin
+  - GOOS=windows
 
-jobs:
-  include:
-    - stage: test
-      env: GO111MODULE=on
-      script:
-        - make test
-        - go fmt ./...
-        - git diff --exit-code
+before_install:
+- curl -o /tmp/protoc.zip -sL "https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VER}/protoc-${PROTOC_VER}-linux-x86_64.zip"
+- unzip /tmp/protoc.zip -d /tmp
+- sudo mv /tmp/bin/protoc /usr/local/bin/protoc
+- sudo mv /tmp/include/google /usr/local/include/google
 
-    - stage: build
-      env: GO111MODULE=on GOOS=linux GOARCH=amd64
-      script:
-        - make -B build
-        - git diff --exit-code
-
-    - stage: build
-      env: GO111MODULE=on GOOS=darwin GOARCH=amd64
-      script:
-        - make -B build
-        - git diff --exit-code
-
-    - stage: build
-      env: GO111MODULE=on GOOS=windows GOARCH=amd64
-      script:
-        - make -B build
-        - git diff --exit-code
+script:
+- make -B clean test build
+- gofmt -w -s .
+- git diff --exit-code
