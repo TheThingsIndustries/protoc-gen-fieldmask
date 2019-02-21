@@ -27,6 +27,6 @@ func main() {
 	).RegisterModule(
 		Setter(initGoContext),
 	).RegisterPostProcessor(
-	//pgsgo.GoFmt(),
+		pgsgo.GoFmt(),
 	).Render()
 }
