@@ -89,7 +89,7 @@ func TestGolden(t *testing.T) {
 	runProtoc(t, append([]string{
 		"-Ivendor",
 		"-Itestdata",
-		fmt.Sprintf("--fieldmask_out=%s", workDir),
+		fmt.Sprintf("--fieldmask_out=Mgoogle/protobuf/wrappers.proto=github.com/gogo/protobuf/types:%s", workDir),
 		fmt.Sprintf("--gogo_out=Mgoogle/protobuf/wrappers.proto=github.com/gogo/protobuf/types:%s", workDir),
 	}, paths...)...)
 
