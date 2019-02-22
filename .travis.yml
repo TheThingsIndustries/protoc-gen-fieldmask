@@ -23,5 +23,5 @@ before_install:
 
 script:
 - make -B clean test build
-- gofmt -w -s .
+- gofmt -w -s $(go list -f '{{ .Dir }}' ./...)
 - git diff --exit-code
