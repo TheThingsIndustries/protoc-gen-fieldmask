@@ -31,6 +31,7 @@ func main() {
 	).RegisterModule(
 		module.Pather(initGoContext),
 		module.Setter(initGoContext),
+		module.Validator(initGoContext),
 	).RegisterPostProcessor(
 		processor.HeaderPrepender(FileHeader),
 		pgsgo.GoFmt(),
