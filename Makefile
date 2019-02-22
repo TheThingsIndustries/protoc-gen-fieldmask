@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-PROTOC ?= protoc
-PROTOC += --plugin=protoc-gen-gogo=.tools/protoc-gen-gogo
+export GO111MODULE=on
 
 .DEFAULT_GOAL=build
 
@@ -38,6 +37,9 @@ vendor/github.com/gogo/protobuf/gogoproto/gogo.proto: go.mod go.sum
 	go mod vendor
 
 .PHONY: test
+
+PROTOC ?= protoc
+PROTOC += --plugin=protoc-gen-gogo=.tools/protoc-gen-gogo
 
 test: .tools/protoc-gen-gogo vendor/github.com/gogo/protobuf/gogoproto/gogo.proto
 	$(info Regenerating golden files...)
