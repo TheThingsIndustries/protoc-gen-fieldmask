@@ -88,8 +88,7 @@ func (m *patherModule) buildPaths(buf *strings.Builder, msg pgs.Message) error {
 
 	mType := m.ctx.Name(msg)
 	if len(msg.Fields()) == 0 {
-		fmt.Fprintf(buf, `
-var %sFieldPathsNested []string
+		fmt.Fprintf(buf, `var %sFieldPathsNested []string
 var %sFieldPathsTopLevel []string`,
 			mType,
 			mType,
@@ -112,15 +111,13 @@ var %sFieldPathsTopLevel []string`,
 	}
 	sort.Strings(topLevelPaths)
 
-	fmt.Fprintf(buf, `
-var %sFieldPathsNested = []string{
+	fmt.Fprintf(buf, `var %sFieldPathsNested = []string{
 	%s
 }
 
 var %sFieldPathsTopLevel = []string{
 	%s
-}
-`,
+}`,
 		mType, `"`+strings.Join(nestedPaths, `",
 	"`)+`",`,
 		mType, `"`+strings.Join(topLevelPaths, `",

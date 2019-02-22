@@ -4,7 +4,6 @@ package testdata
 
 var EmptyFieldPathsNested []string
 var EmptyFieldPathsTopLevel []string
-
 var TestFieldPathsNested = []string{
 	"a",
 	"a.a",
@@ -75,7 +74,6 @@ var TestFieldPathsTopLevel = []string{
 	"i",
 	"testOneof",
 }
-
 var Test_TestNestedFieldPathsNested = []string{
 	"a",
 	"a.a",
@@ -103,7 +101,6 @@ var Test_TestNestedFieldPathsTopLevel = []string{
 	"e",
 	"f",
 }
-
 var Test_TestNested_TestNestedNestedFieldPathsNested = []string{
 	"a",
 	"b",
@@ -125,7 +122,6 @@ var Test_TestNested_TestNestedNestedFieldPathsTopLevel = []string{
 	"h",
 	"testNestedNestedOneOf",
 }
-
 var Test_TestNested_TestNestedNested_TestNestedNestedEmbedFieldPathsNested = []string{
 	"nested_field",
 }
