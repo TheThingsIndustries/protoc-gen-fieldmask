@@ -42,24 +42,6 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 					dst.A = nil
 				}
 			}
-		case "c":
-			if len(subs) > 0 {
-				newDst := &dst.C
-				var newSrc *Test_TestNested
-				if src != nil {
-					newSrc = &src.C
-				}
-				if err := newDst.SetFields(newSrc, subs...); err != nil {
-					return err
-				}
-			} else {
-				if src != nil {
-					dst.C = src.C
-				} else {
-					var zero Test_TestNested
-					dst.C = zero
-				}
-			}
 		case "b":
 			if len(subs) > 0 {
 				newDst := dst.CustomName
@@ -79,6 +61,24 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 					dst.CustomName = src.CustomName
 				} else {
 					dst.CustomName = nil
+				}
+			}
+		case "c":
+			if len(subs) > 0 {
+				newDst := &dst.C
+				var newSrc *Test_TestNested
+				if src != nil {
+					newSrc = &src.C
+				}
+				if err := newDst.SetFields(newSrc, subs...); err != nil {
+					return err
+				}
+			} else {
+				if src != nil {
+					dst.C = src.C
+				} else {
+					var zero Test_TestNested
+					dst.C = zero
 				}
 			}
 		case "g":
@@ -137,19 +137,6 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 			}
 			for oneofName, oneofSubs := range subPathMap {
 				switch oneofName {
-				case "e":
-					if _, ok := dst.TestOneof.(*Test_E); !ok {
-						dst.TestOneof = &Test_E{}
-					}
-					if len(oneofSubs) > 0 {
-						return fmt.Errorf("'e' has no subfields, but %s were specified", oneofSubs)
-					}
-					if src != nil {
-						dst.TestOneof.(*Test_E).E = src.GetE()
-					} else {
-						var zero uint32
-						dst.TestOneof.(*Test_E).E = zero
-					}
 				case "d":
 					if _, ok := dst.TestOneof.(*Test_D); !ok {
 						dst.TestOneof = &Test_D{}
@@ -162,6 +149,19 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 					} else {
 						var zero int32
 						dst.TestOneof.(*Test_D).D = zero
+					}
+				case "e":
+					if _, ok := dst.TestOneof.(*Test_E); !ok {
+						dst.TestOneof = &Test_E{}
+					}
+					if len(oneofSubs) > 0 {
+						return fmt.Errorf("'e' has no subfields, but %s were specified", oneofSubs)
+					}
+					if src != nil {
+						dst.TestOneof.(*Test_E).E = src.GetE()
+					} else {
+						var zero uint32
+						dst.TestOneof.(*Test_E).E = zero
 					}
 				case "f":
 					if _, ok := dst.TestOneof.(*Test_F); !ok {

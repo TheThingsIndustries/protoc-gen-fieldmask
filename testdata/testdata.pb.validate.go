@@ -123,24 +123,24 @@ func (m *Test) ValidateFields(paths ...string) error {
 				}
 			}
 
-		case "c":
-
-			if v, ok := interface{}(m.GetC()).(interface{ ValidateFields(...string) error }); ok {
-				if err := v.ValidateFields(subs...); err != nil {
-					return TestValidationError{
-						field:  "C",
-						reason: "embedded message failed validation",
-						cause:  err,
-					}
-				}
-			}
-
 		case "b":
 
 			if v, ok := interface{}(m.GetCustomName()).(interface{ ValidateFields(...string) error }); ok {
 				if err := v.ValidateFields(subs...); err != nil {
 					return TestValidationError{
 						field:  "CustomName",
+						reason: "embedded message failed validation",
+						cause:  err,
+					}
+				}
+			}
+
+		case "c":
+
+			if v, ok := interface{}(m.GetC()).(interface{ ValidateFields(...string) error }); ok {
+				if err := v.ValidateFields(subs...); err != nil {
+					return TestValidationError{
+						field:  "C",
 						reason: "embedded message failed validation",
 						cause:  err,
 					}
@@ -187,9 +187,9 @@ func (m *Test) ValidateFields(paths ...string) error {
 			if len(subs) == 0 {
 				subs = []string{
 
-					"e",
-
 					"d",
+
+					"e",
 
 					"f",
 				}
@@ -198,11 +198,11 @@ func (m *Test) ValidateFields(paths ...string) error {
 				_ = subs
 				switch name {
 
-				case "e":
-					// no validation rules for E
-
 				case "d":
 					// no validation rules for D
+
+				case "e":
+					// no validation rules for E
 
 				case "f":
 					// no validation rules for F
@@ -307,14 +307,18 @@ func (m *Test_TestNested) ValidateFields(paths ...string) error {
 
 		case "c":
 
-			if v, ok := interface{}(m.GetC()).(interface{ ValidateFields(...string) error }); ok {
-				if err := v.ValidateFields(subs...); err != nil {
+			if d := m.GetC(); d != nil {
+				dur := *d
+
+				gte := time.Duration(42*time.Second + 0*time.Nanosecond)
+
+				if dur < gte {
 					return Test_TestNestedValidationError{
 						field:  "C",
-						reason: "embedded message failed validation",
-						cause:  err,
+						reason: "value must be greater than or equal to 42s",
 					}
 				}
+
 			}
 
 		case "d":

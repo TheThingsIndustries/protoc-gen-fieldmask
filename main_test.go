@@ -23,6 +23,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/TheThingsIndustries/protoc-gen-fieldmask/testdata"
 	"github.com/kr/pretty"
@@ -454,6 +455,82 @@ func TestSetFields(t *testing.T) {
 			}
 			a.So(src, should.Resemble, tc.Source)
 			a.So(dst, should.Resemble, tc.Result)
+			a.So(paths, should.Resemble, tc.Paths)
+		})
+	}
+}
+
+func TestValidateFields(t *testing.T) {
+	for _, tc := range []struct {
+		Name           string
+		Message        *testdata.Test
+		Paths          []string
+		ErrorAssertion func(t *testing.T, err error) bool
+	}{
+		{
+			Name:  "nil message",
+			Paths: []string{"a.b", "b.c"},
+		},
+		{
+			Name: "a.a.a",
+			Message: &testdata.Test{
+				A: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{
+						A: 42,
+					},
+				},
+				CustomName: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{},
+				},
+			},
+			Paths: []string{"a.a.a"},
+		},
+		{
+			Name:    "a.g",
+			Message: &testdata.Test{},
+			Paths:   []string{"a.g"},
+		},
+		{
+			Name: "nil paths/valid",
+			Message: &testdata.Test{
+				A: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{
+						A: 42,
+					},
+					C: func(v time.Duration) *time.Duration { return &v }(43 * time.Second),
+				},
+			},
+		},
+		{
+			Name: "nil paths/invalid",
+			Message: &testdata.Test{
+				A: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{
+						A: 43,
+					},
+				},
+			},
+			ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
+		},
+		{
+			Name:           "non-existent sub-field",
+			Message:        &testdata.Test{},
+			Paths:          []string{"41.42.43"},
+			ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
+		},
+	} {
+		t.Run(tc.Name, func(t *testing.T) {
+			a := assertions.New(t)
+
+			msg := deepcopy.Copy(tc.Message).(*testdata.Test)
+			paths := deepcopy.Copy(tc.Paths).([]string)
+
+			err := msg.ValidateFields(paths...)
+			if tc.ErrorAssertion != nil {
+				a.So(tc.ErrorAssertion(t, err), should.BeTrue)
+			} else {
+				a.So(err, should.BeNil)
+			}
 			a.So(paths, should.Resemble, tc.Paths)
 		})
 	}

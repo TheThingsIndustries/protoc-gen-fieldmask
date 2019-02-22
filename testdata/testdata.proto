@@ -45,17 +45,17 @@ message Test {
     }
     TestNestedNested a = 1;
     bytes b = 2;
-    google.protobuf.Duration c = 3 [(gogoproto.stdduration) = true];
+    google.protobuf.Duration c = 3 [(gogoproto.stdduration) = true, (validate.rules).duration.gte.seconds = 42];
     google.protobuf.Timestamp d = 4 [(gogoproto.stdtime) = true];
     string e = 5 [(gogoproto.customtype) = "github.com/TheThingsIndustries/protoc-gen-fieldmask/testdata/testpackage.CustomType"];
     string f = 6 [(gogoproto.customtype) = "github.com/TheThingsIndustries/protoc-gen-fieldmask/testdata/testpackage.CustomType", (gogoproto.nullable) = false];
   }
   TestNested a = 1;
-  TestNested c = 2 [(gogoproto.nullable) = false];
-  TestNested b = 3 [(gogoproto.customname) = "CustomName"];
+  TestNested b = 2 [(gogoproto.customname) = "CustomName"];
+  TestNested c = 3 [(gogoproto.nullable) = false];
   oneof testOneof {
-    uint32 e = 4;
-    int32 d = 5;
+    int32 d = 4;
+    uint32 e = 5;
     bytes f = 6;
   }
   Empty g = 7;
