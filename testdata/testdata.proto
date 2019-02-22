@@ -15,6 +15,7 @@
 syntax = "proto3";
 
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/lyft/protoc-gen-validate/validate/validate.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/wrappers.proto";
@@ -28,7 +29,7 @@ message Empty {}
 message Test {
   message TestNested {
     message TestNestedNested {
-      int32 a = 1;
+      int32 a = 1 [(validate.rules).int32 = { gt: 24, lte: 42 }];
       sfixed64 b = 2;
       repeated bytes c = 3;
       map<int32,uint32> d = 4;
