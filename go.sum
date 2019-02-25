@@ -1,7 +1,7 @@
-github.com/TheThingsIndustries/protoc-gen-star v0.4.7-gogo h1:Bjjv2KCtlLZ/K8KH211WiJGFRD1ghq13Bq1PnwczMic=
+github.com/TheThingsIndustries/protoc-gen-star v0.4.7-gogo h1:vtoerBb3MHbzeUM0+w/bBpIhzT+yCaD1QrDN1/p7F2A=
 github.com/TheThingsIndustries/protoc-gen-star v0.4.7-gogo/go.mod h1:lIqzPBz4CG/TSsK9fPQvo7iVfbxEWc+76AVxeiHMcT4=
-github.com/TheThingsIndustries/protoc-gen-validate v0.0.13-fieldmask h1:gk/5N2GRnts1X2HAliGEaLomip0aU4iL0cdIDxcxtcs=
-github.com/TheThingsIndustries/protoc-gen-validate v0.0.13-fieldmask/go.mod h1:js5HBdlHfqWVPxc0gE1dAddp6or13IFhjfLjtamoCts=
+github.com/TheThingsIndustries/protoc-gen-validate v0.0.13-fieldmask h1:f9Of0TRMdB+A2mZVJFUadESOOx0RfvBXR2FBFz/9hyI=
+github.com/TheThingsIndustries/protoc-gen-validate v0.0.13-fieldmask/go.mod h1:65OEzdQPsbLDokGIF3GQjCTWOuuVuHqxh7a08yYe0tw=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
@@ -42,7 +42,6 @@ golang.org/x/sync v0.0.0-20181221193216-37e7f081c4d4/go.mod h1:RxMgew5VJxzue5/jJ
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
 golang.org/x/text v0.3.1-0.20180807135948-17ff2d5776d2 h1:z99zHgr7hKfrUcX/KsoJk5FJfjTceCKIp96+biqP4To=
 golang.org/x/text v0.3.1-0.20180807135948-17ff2d5776d2/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
-golang.org/x/tools v0.0.0-20180221164845-07fd8470d635 h1:2eB4G6bDQDeP69ZXbOKC00S2Kf6TIiRS+DzfKsKeQU0=
 golang.org/x/tools v0.0.0-20180221164845-07fd8470d635/go.mod h1:n7NCudcB/nEzxVGmLbDWY5pfWTLqBcC2KZ6jyYvM4mQ=
 golang.org/x/tools v0.0.0-20190221204921-83362c3779f5 h1:ev5exjGDsOo0NPTB0qdCcE53BfWl1IICJlhgXgfT9fM=
 golang.org/x/tools v0.0.0-20190221204921-83362c3779f5/go.mod h1:9Yl7xja0Znq3iFh3HoIrodX9oNMXvdceNzlUR8zjMvY=
