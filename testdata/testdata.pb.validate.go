@@ -202,7 +202,7 @@ func (m *Test) ValidateFields(paths ...string) error {
 					// no validation rules for D
 
 				case "e":
-					// no validation rules for E
+					// no validation rules for CustomNameOneof
 
 				case "f":
 					// no validation rules for F

@@ -55,7 +55,7 @@ message Test {
   TestNested c = 3 [(gogoproto.nullable) = false];
   oneof testOneof {
     int32 d = 4;
-    uint32 e = 5;
+    uint32 e = 5 [(gogoproto.customname) = "CustomNameOneof"];
     bytes f = 6;
   }
   Empty g = 7;

@@ -151,17 +151,17 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 						dst.TestOneof.(*Test_D).D = zero
 					}
 				case "e":
-					if _, ok := dst.TestOneof.(*Test_E); !ok {
-						dst.TestOneof = &Test_E{}
+					if _, ok := dst.TestOneof.(*Test_CustomNameOneof); !ok {
+						dst.TestOneof = &Test_CustomNameOneof{}
 					}
 					if len(oneofSubs) > 0 {
 						return fmt.Errorf("'e' has no subfields, but %s were specified", oneofSubs)
 					}
 					if src != nil {
-						dst.TestOneof.(*Test_E).E = src.GetE()
+						dst.TestOneof.(*Test_CustomNameOneof).CustomNameOneof = src.GetCustomNameOneof()
 					} else {
 						var zero uint32
-						dst.TestOneof.(*Test_E).E = zero
+						dst.TestOneof.(*Test_CustomNameOneof).CustomNameOneof = zero
 					}
 				case "f":
 					if _, ok := dst.TestOneof.(*Test_F); !ok {
