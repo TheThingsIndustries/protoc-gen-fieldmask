@@ -126,7 +126,7 @@ var %sFieldPathsTopLevel = []string{
 	return nil
 }
 
-func (m *pathHelperModule) Name() string { return "pather" }
+func (m *pathHelperModule) Name() string { return "paths" }
 
 func (m *pathHelperModule) InitContext(ctx pgs.BuildContext) {
 	m.ModuleBase.InitContext(ctx)
