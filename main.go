@@ -30,7 +30,7 @@ func main() {
 	pgs.Init(
 		pgs.DebugEnv("DEBUG"),
 	).RegisterModule(
-		module.Pather(initGoContext),
+		module.PathHelper(initGoContext),
 		module.Setter(initGoContext),
 		pgvmodule.Validator(),
 	).RegisterPostProcessor(

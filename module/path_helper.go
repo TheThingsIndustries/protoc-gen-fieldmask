@@ -24,13 +24,13 @@ import (
 	pgsgo "github.com/lyft/protoc-gen-star/lang/go"
 )
 
-type patherModule struct {
+type pathHelperModule struct {
 	*pgs.ModuleBase
 	initGoContext func(ctx pgs.Parameters) pgsgo.Context
 	ctx           pgsgo.Context
 }
 
-func (m *patherModule) appendPaths(ctx pgsgo.Context, paths []string, prefix string, msg pgs.Message, seen map[string]struct{}) ([]string, error) {
+func (m *pathHelperModule) appendPaths(ctx pgsgo.Context, paths []string, prefix string, msg pgs.Message, seen map[string]struct{}) ([]string, error) {
 	if seen == nil {
 		seen = map[string]struct{}{}
 	}
@@ -82,7 +82,7 @@ func (m *patherModule) appendPaths(ctx pgsgo.Context, paths []string, prefix str
 	return paths, nil
 }
 
-func (m *patherModule) buildPaths(buf *strings.Builder, msg pgs.Message) error {
+func (m *pathHelperModule) buildPaths(buf *strings.Builder, msg pgs.Message) error {
 	m.Push(msg.FullyQualifiedName())
 	defer m.Pop()
 
@@ -126,14 +126,14 @@ var %sFieldPathsTopLevel = []string{
 	return nil
 }
 
-func (m *patherModule) Name() string { return "pather" }
+func (m *pathHelperModule) Name() string { return "pather" }
 
-func (m *patherModule) InitContext(ctx pgs.BuildContext) {
+func (m *pathHelperModule) InitContext(ctx pgs.BuildContext) {
 	m.ModuleBase.InitContext(ctx)
 	m.ctx = m.initGoContext(ctx.Parameters())
 }
 
-func (m *patherModule) Execute(files map[string]pgs.File, pkgs map[string]pgs.Package) []pgs.Artifact {
+func (m *pathHelperModule) Execute(files map[string]pgs.File, pkgs map[string]pgs.Package) []pgs.Artifact {
 	dirs := map[pgs.FilePath]pgs.Name{}
 	for _, f := range files {
 		m.Push(f.Name().String())
@@ -224,9 +224,9 @@ func _processPaths(paths []string) map[string][]string {
 	return m.Artifacts()
 }
 
-// Pather generates various fieldmask-related utilities and variables.
-func Pather(initGoContext func(ctx pgs.Parameters) pgsgo.Context) pgs.Module {
-	return &patherModule{
+// PathHelper generates various fieldmask-related utilities and variables.
+func PathHelper(initGoContext func(ctx pgs.Parameters) pgsgo.Context) pgs.Module {
+	return &pathHelperModule{
 		ModuleBase:    &pgs.ModuleBase{},
 		initGoContext: initGoContext,
 	}
