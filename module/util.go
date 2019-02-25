@@ -1,4 +1,4 @@
-// Copyright © 2018 The Things Network Foundation, The Things Industries B.V.
+// Copyright © 2019 The Things Network Foundation, The Things Industries B.V.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package extensions registers all extensions used by protoc-gen-fieldmask.
-package extensions
+package module
 
-import _ "github.com/TheThingsIndustries/protoc-gen-fieldmask/internal/extensions/gogoproto" // Register gogoproto extensions
+import (
+	"fmt"
+	"strings"
+)
+
+func buildIndented(buf *strings.Builder, tabCount uint, s string) {
+	for _, l := range strings.Split(s, "\n") {
+		fmt.Fprintln(buf, fmt.Sprintf("%s%s", strings.Repeat("	", int(tabCount)), l))
+	}
+}

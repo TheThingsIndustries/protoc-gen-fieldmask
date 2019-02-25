@@ -2,11 +2,11 @@
 
 package testdata
 
-import fmt "fmt"
-
-func (*Empty) FieldMaskPaths(_ bool) []string {
-	return nil
-}
+import (
+	fmt "fmt"
+	github_com_TheThingsIndustries_protoc_gen_fieldmask_testdata_testpackage "github.com/TheThingsIndustries/protoc-gen-fieldmask/testdata/testpackage"
+	types "github.com/gogo/protobuf/types"
+)
 
 func (dst *Empty) SetFields(src *Empty, paths ...string) error {
 	if len(paths) != 0 {
@@ -16,66 +16,6 @@ func (dst *Empty) SetFields(src *Empty, paths ...string) error {
 		*dst = *src
 	}
 	return nil
-}
-
-var TestFieldPathsNested = []string{
-	"a",
-	"a.a",
-	"a.a.a",
-	"a.a.b",
-	"a.a.c",
-	"a.a.d",
-	"a.a.testNestedNestedOneOf",
-	"a.a.testNestedNestedOneOf.e",
-	"a.a.testNestedNestedOneOf.f",
-	"a.a.testNestedNestedOneOf.g",
-	"a.b",
-	"a.c",
-	"a.d",
-	"a.e",
-	"b",
-	"b.a",
-	"b.a.a",
-	"b.a.b",
-	"b.a.c",
-	"b.a.d",
-	"b.a.testNestedNestedOneOf",
-	"b.a.testNestedNestedOneOf.e",
-	"b.a.testNestedNestedOneOf.f",
-	"b.a.testNestedNestedOneOf.g",
-	"b.b",
-	"b.c",
-	"b.d",
-	"b.e",
-	"c",
-	"c.a",
-	"c.a.a",
-	"c.a.b",
-	"c.a.c",
-	"c.a.d",
-	"c.a.testNestedNestedOneOf",
-	"c.a.testNestedNestedOneOf.e",
-	"c.a.testNestedNestedOneOf.f",
-	"c.a.testNestedNestedOneOf.g",
-	"c.b",
-	"c.c",
-	"c.d",
-	"c.e",
-	"g",
-	"h",
-	"testOneof",
-	"testOneof.d",
-	"testOneof.e",
-	"testOneof.f",
-}
-
-var TestFieldPathsTopLevel = []string{
-	"a",
-	"b",
-	"c",
-	"g",
-	"h",
-	"testOneof",
 }
 
 func (dst *Test) SetFields(src *Test, paths ...string) error {
@@ -102,24 +42,6 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 					dst.A = nil
 				}
 			}
-		case "c":
-			if len(subs) > 0 {
-				newDst := &dst.C
-				var newSrc *Test_TestNested
-				if src != nil {
-					newSrc = &src.C
-				}
-				if err := newDst.SetFields(newSrc, subs...); err != nil {
-					return err
-				}
-			} else {
-				if src != nil {
-					dst.C = src.C
-				} else {
-					var zero Test_TestNested
-					dst.C = zero
-				}
-			}
 		case "b":
 			if len(subs) > 0 {
 				newDst := dst.CustomName
@@ -139,6 +61,24 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 					dst.CustomName = src.CustomName
 				} else {
 					dst.CustomName = nil
+				}
+			}
+		case "c":
+			if len(subs) > 0 {
+				newDst := &dst.C
+				var newSrc *Test_TestNested
+				if src != nil {
+					newSrc = &src.C
+				}
+				if err := newDst.SetFields(newSrc, subs...); err != nil {
+					return err
+				}
+			} else {
+				if src != nil {
+					dst.C = src.C
+				} else {
+					var zero Test_TestNested
+					dst.C = zero
 				}
 			}
 		case "g":
@@ -171,6 +111,16 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 			} else {
 				dst.H = nil
 			}
+		case "i":
+			if len(subs) > 0 {
+				return fmt.Errorf("'i' has no subfields, but %s were specified", subs)
+			}
+			if src != nil {
+				dst.I = src.I
+			} else {
+				var zero types.StringValue
+				dst.I = zero
+			}
 
 		case "testOneof":
 			if len(subs) == 0 && src == nil {
@@ -187,19 +137,6 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 			}
 			for oneofName, oneofSubs := range subPathMap {
 				switch oneofName {
-				case "e":
-					if _, ok := dst.TestOneof.(*Test_E); !ok {
-						dst.TestOneof = &Test_E{}
-					}
-					if len(oneofSubs) > 0 {
-						return fmt.Errorf("'e' has no subfields, but %s were specified", oneofSubs)
-					}
-					if src != nil {
-						dst.TestOneof.(*Test_E).E = src.GetE()
-					} else {
-						var zero uint32
-						dst.TestOneof.(*Test_E).E = zero
-					}
 				case "d":
 					if _, ok := dst.TestOneof.(*Test_D); !ok {
 						dst.TestOneof = &Test_D{}
@@ -213,6 +150,19 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 						var zero int32
 						dst.TestOneof.(*Test_D).D = zero
 					}
+				case "e":
+					if _, ok := dst.TestOneof.(*Test_CustomNameOneof); !ok {
+						dst.TestOneof = &Test_CustomNameOneof{}
+					}
+					if len(oneofSubs) > 0 {
+						return fmt.Errorf("'e' has no subfields, but %s were specified", oneofSubs)
+					}
+					if src != nil {
+						dst.TestOneof.(*Test_CustomNameOneof).CustomNameOneof = src.GetCustomNameOneof()
+					} else {
+						var zero uint32
+						dst.TestOneof.(*Test_CustomNameOneof).CustomNameOneof = zero
+					}
 				case "f":
 					if _, ok := dst.TestOneof.(*Test_F); !ok {
 						dst.TestOneof = &Test_F{}
@@ -223,8 +173,7 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 					if src != nil {
 						dst.TestOneof.(*Test_F).F = src.GetF()
 					} else {
-						var zero []byte
-						dst.TestOneof.(*Test_F).F = zero
+						dst.TestOneof.(*Test_F).F = nil
 					}
 
 				default:
@@ -237,30 +186,6 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 		}
 	}
 	return nil
-}
-
-var Test_TestNestedFieldPathsNested = []string{
-	"a",
-	"a.a",
-	"a.b",
-	"a.c",
-	"a.d",
-	"a.testNestedNestedOneOf",
-	"a.testNestedNestedOneOf.e",
-	"a.testNestedNestedOneOf.f",
-	"a.testNestedNestedOneOf.g",
-	"b",
-	"c",
-	"d",
-	"e",
-}
-
-var Test_TestNestedFieldPathsTopLevel = []string{
-	"a",
-	"b",
-	"c",
-	"d",
-	"e",
 }
 
 func (dst *Test_TestNested) SetFields(src *Test_TestNested, paths ...string) error {
@@ -294,8 +219,7 @@ func (dst *Test_TestNested) SetFields(src *Test_TestNested, paths ...string) err
 			if src != nil {
 				dst.B = src.B
 			} else {
-				var zero []byte
-				dst.B = zero
+				dst.B = nil
 			}
 		case "c":
 			if len(subs) > 0 {
@@ -324,31 +248,22 @@ func (dst *Test_TestNested) SetFields(src *Test_TestNested, paths ...string) err
 			} else {
 				dst.E = nil
 			}
+		case "f":
+			if len(subs) > 0 {
+				return fmt.Errorf("'f' has no subfields, but %s were specified", subs)
+			}
+			if src != nil {
+				dst.F = src.F
+			} else {
+				var zero github_com_TheThingsIndustries_protoc_gen_fieldmask_testdata_testpackage.CustomType
+				dst.F = zero
+			}
 
 		default:
 			return fmt.Errorf("invalid field: '%s'", name)
 		}
 	}
 	return nil
-}
-
-var Test_TestNested_TestNestedNestedFieldPathsNested = []string{
-	"a",
-	"b",
-	"c",
-	"d",
-	"testNestedNestedOneOf",
-	"testNestedNestedOneOf.e",
-	"testNestedNestedOneOf.f",
-	"testNestedNestedOneOf.g",
-}
-
-var Test_TestNested_TestNestedNestedFieldPathsTopLevel = []string{
-	"a",
-	"b",
-	"c",
-	"d",
-	"testNestedNestedOneOf",
 }
 
 func (dst *Test_TestNested_TestNestedNested) SetFields(src *Test_TestNested_TestNestedNested, paths ...string) error {
@@ -391,6 +306,27 @@ func (dst *Test_TestNested_TestNestedNested) SetFields(src *Test_TestNested_Test
 				dst.D = src.D
 			} else {
 				dst.D = nil
+			}
+		case "h":
+			if len(subs) > 0 {
+				newDst := dst.Test_TestNested_TestNestedNested_TestNestedNestedEmbed
+				if newDst == nil {
+					newDst = &Test_TestNested_TestNestedNested_TestNestedNestedEmbed{}
+					dst.Test_TestNested_TestNestedNested_TestNestedNestedEmbed = newDst
+				}
+				var newSrc *Test_TestNested_TestNestedNested_TestNestedNestedEmbed
+				if src != nil {
+					newSrc = src.Test_TestNested_TestNestedNested_TestNestedNestedEmbed
+				}
+				if err := newDst.SetFields(newSrc, subs...); err != nil {
+					return err
+				}
+			} else {
+				if src != nil {
+					dst.Test_TestNested_TestNestedNested_TestNestedNestedEmbed = src.Test_TestNested_TestNestedNested_TestNestedNestedEmbed
+				} else {
+					dst.Test_TestNested_TestNestedNested_TestNestedNestedEmbed = nil
+				}
 			}
 
 		case "testNestedNestedOneOf":
@@ -461,6 +397,27 @@ func (dst *Test_TestNested_TestNestedNested) SetFields(src *Test_TestNested_Test
 				default:
 					return fmt.Errorf("invalid oneof field: '%s.%s'", name, oneofName)
 				}
+			}
+
+		default:
+			return fmt.Errorf("invalid field: '%s'", name)
+		}
+	}
+	return nil
+}
+
+func (dst *Test_TestNested_TestNestedNested_TestNestedNestedEmbed) SetFields(src *Test_TestNested_TestNestedNested_TestNestedNestedEmbed, paths ...string) error {
+	for name, subs := range _processPaths(append(paths[:0:0], paths...)) {
+		switch name {
+		case "nested_field":
+			if len(subs) > 0 {
+				return fmt.Errorf("'nested_field' has no subfields, but %s were specified", subs)
+			}
+			if src != nil {
+				dst.NestedField = src.NestedField
+			} else {
+				var zero int32
+				dst.NestedField = zero
 			}
 
 		default:

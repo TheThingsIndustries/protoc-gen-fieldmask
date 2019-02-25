@@ -1,4 +1,4 @@
-# Copyright © 2018 The Things Network Foundation, The Things Industries B.V.
+# Copyright © 2019 The Things Network Foundation, The Things Industries B.V.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,15 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-WORKDIR := $(shell mkdir -p $(PWD)/.work && mktemp -d "$(PWD)/.work/tmp.XXX")
-
-DOCKER ?= docker
-PROTOC_DOCKER_IMAGE ?= thethingsindustries/protoc:3.0.24
-PROTOC_DOCKER_ARGS := run --user `id -u` --rm \
-										 --mount type=bind,src=$(PWD),dst=$(PWD) \
-										 -e IN_TEST \
-										 -w $(PWD)
-PROTOC ?= $(DOCKER) $(PROTOC_DOCKER_ARGS) $(PROTOC_DOCKER_IMAGE)
+export GO111MODULE=on
 
 .DEFAULT_GOAL=build
 
@@ -28,35 +20,29 @@ PROTOC ?= $(DOCKER) $(PROTOC_DOCKER_ARGS) $(PROTOC_DOCKER_IMAGE)
 
 all: build
 
-vendor/github.com/gogo/protobuf/gogoproto/gogo.proto:
-	dep ensure
-
-internal/extensions/gogoproto/gogo.pb.go: vendor/github.com/gogo/protobuf/gogoproto/gogo.proto
-	perl \
-		-pe 's!(.*option[[:space:]]+.*go_package.*=.*"github.com/)gogo/protobuf(/gogoproto".*)!\1TheThingsIndustries/protoc-gen-fieldmask/internal/extensions\2!' \
-		$< > $(WORKDIR)/gogo.proto
-	$(PROTOC) -I$(WORKDIR) -I$(PWD)/vendor --go_out=$(WORKDIR) $(WORKDIR)/gogo.proto
-	mv $(WORKDIR)/github.com/TheThingsIndustries/protoc-gen-fieldmask/internal/extensions/gogoproto/gogo.pb.go $@
-
-.PHONY: extensions
-
-extensions: internal/extensions/gogoproto/gogo.pb.go
-
 .PHONY: build
 
-build: extensions
-	CGO_ENABLED=0 go build -ldflags "-w -s" -o dist/protoc-gen-fieldmask-$(shell go env GOOS)-$(shell go env GOARCH)$(shell go env GOEXE) .
+build:
+	CGO_ENABLED=0 go build -ldflags "-w -s" -o dist/protoc-gen-fieldmask .
 
 .PHONY: clean
 
 clean:
-	rm -rf .work dist
-	find ./testdata -name '*.pb.go' -delete -or -name '*.pb.fm.go' -delete
+	rm -rf dist .tools
+
+.tools/protoc-gen-gogo: go.mod go.sum
+	go build -o $@ github.com/gogo/protobuf/protoc-gen-gogo
+
+vendor/github.com/gogo/protobuf/gogoproto/gogo.proto: go.mod go.sum
+	go mod vendor
 
 .PHONY: test
 
-test:
+PROTOC ?= protoc
+PROTOC += --plugin=protoc-gen-gogo=.tools/protoc-gen-gogo
+
+test: .tools/protoc-gen-gogo vendor/github.com/gogo/protobuf/gogoproto/gogo.proto
 	$(info Regenerating golden files...)
-	@TMPDIR="$(WORKDIR)" WORKDIR="$(WORKDIR)" PROTOC="$(PROTOC)" go test -regenerate
+	@PROTOC="$(PROTOC)" go test -regenerate
 	$(info Running tests...)
-	@TMPDIR="$(WORKDIR)" WORKDIR="$(WORKDIR)" PROTOC="$(PROTOC)" go test -coverprofile=coverage.out ./...
+	@PROTOC="$(PROTOC)" go test -coverprofile=coverage.out ./...

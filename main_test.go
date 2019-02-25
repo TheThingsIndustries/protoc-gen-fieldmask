@@ -1,4 +1,4 @@
-// Copyright © 2018 The Things Network Foundation, The Things Industries B.V.
+// Copyright © 2019 The Things Network Foundation, The Things Industries B.V.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/TheThingsIndustries/protoc-gen-fieldmask/testdata"
 	"github.com/kr/pretty"
@@ -33,7 +34,7 @@ import (
 
 var regenerate = flag.Bool("regenerate", false, "regenerate golden files")
 
-// When the environment variable RUN_AS_PROTOC_GEN_GO is set, we skip running
+// When the environment variable IN_TEST is set, we skip running
 // tests and instead act as protoc-gen-fieldmask. This allows the test binary to
 // pass itself to protoc.
 func init() {
@@ -53,7 +54,7 @@ func runProtoc(t *testing.T, args ...string) {
 		strings.Fields(protocBin)[0],
 		append(append(strings.Fields(protocBin)[1:], fmt.Sprintf("--plugin=protoc-gen-fieldmask=%s", os.Args[0])), args...)...,
 	)
-	cmd.Env = append(os.Environ(), "IN_TEST=1")
+	cmd.Env = append(os.Environ(), "IN_TEST=1", "DEBUG=1")
 	t.Logf(`Running '%s'...`, strings.Join(cmd.Args, " "))
 
 	out, err := cmd.CombinedOutput()
@@ -68,7 +69,7 @@ func runProtoc(t *testing.T, args ...string) {
 }
 
 func TestGolden(t *testing.T) {
-	workDir, err := ioutil.TempDir(os.Getenv("WORKDIR"), "fieldmask-test")
+	workDir, err := ioutil.TempDir("", "fieldmask-test")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -89,8 +90,8 @@ func TestGolden(t *testing.T) {
 	runProtoc(t, append([]string{
 		"-Ivendor",
 		"-Itestdata",
-		fmt.Sprintf("--fieldmask_out=%s", workDir),
-		fmt.Sprintf("--gogo_out=%s", workDir),
+		fmt.Sprintf("--fieldmask_out=lang=gogo,Mgoogle/protobuf/wrappers.proto=github.com/gogo/protobuf/types:%s", workDir),
+		fmt.Sprintf("--gogo_out=Mgoogle/protobuf/wrappers.proto=github.com/gogo/protobuf/types:%s", workDir),
 	}, paths...)...)
 
 	if err := filepath.Walk(workDir, func(path string, info os.FileInfo, err error) error {
@@ -140,6 +141,8 @@ func TestFieldMaskPaths(t *testing.T) {
 		"a.a.b",
 		"a.a.c",
 		"a.a.d",
+		"a.a.h",
+		"a.a.h.nested_field",
 		"a.a.testNestedNestedOneOf",
 		"a.a.testNestedNestedOneOf.e",
 		"a.a.testNestedNestedOneOf.f",
@@ -148,12 +151,15 @@ func TestFieldMaskPaths(t *testing.T) {
 		"a.c",
 		"a.d",
 		"a.e",
+		"a.f",
 		"b",
 		"b.a",
 		"b.a.a",
 		"b.a.b",
 		"b.a.c",
 		"b.a.d",
+		"b.a.h",
+		"b.a.h.nested_field",
 		"b.a.testNestedNestedOneOf",
 		"b.a.testNestedNestedOneOf.e",
 		"b.a.testNestedNestedOneOf.f",
@@ -162,12 +168,15 @@ func TestFieldMaskPaths(t *testing.T) {
 		"b.c",
 		"b.d",
 		"b.e",
+		"b.f",
 		"c",
 		"c.a",
 		"c.a.a",
 		"c.a.b",
 		"c.a.c",
 		"c.a.d",
+		"c.a.h",
+		"c.a.h.nested_field",
 		"c.a.testNestedNestedOneOf",
 		"c.a.testNestedNestedOneOf.e",
 		"c.a.testNestedNestedOneOf.f",
@@ -176,8 +185,10 @@ func TestFieldMaskPaths(t *testing.T) {
 		"c.c",
 		"c.d",
 		"c.e",
+		"c.f",
 		"g",
 		"h",
+		"i",
 		"testOneof",
 		"testOneof.d",
 		"testOneof.e",
@@ -189,6 +200,7 @@ func TestFieldMaskPaths(t *testing.T) {
 		"c",
 		"g",
 		"h",
+		"i",
 		"testOneof",
 	})
 
@@ -198,6 +210,8 @@ func TestFieldMaskPaths(t *testing.T) {
 		"a.b",
 		"a.c",
 		"a.d",
+		"a.h",
+		"a.h.nested_field",
 		"a.testNestedNestedOneOf",
 		"a.testNestedNestedOneOf.e",
 		"a.testNestedNestedOneOf.f",
@@ -206,6 +220,7 @@ func TestFieldMaskPaths(t *testing.T) {
 		"c",
 		"d",
 		"e",
+		"f",
 	})
 	a.So(testdata.Test_TestNestedFieldPathsTopLevel, should.Resemble, []string{
 		"a",
@@ -213,6 +228,7 @@ func TestFieldMaskPaths(t *testing.T) {
 		"c",
 		"d",
 		"e",
+		"f",
 	})
 
 	a.So(testdata.Test_TestNested_TestNestedNestedFieldPathsNested, should.Resemble, []string{
@@ -220,6 +236,8 @@ func TestFieldMaskPaths(t *testing.T) {
 		"b",
 		"c",
 		"d",
+		"h",
+		"h.nested_field",
 		"testNestedNestedOneOf",
 		"testNestedNestedOneOf.e",
 		"testNestedNestedOneOf.f",
@@ -230,6 +248,7 @@ func TestFieldMaskPaths(t *testing.T) {
 		"b",
 		"c",
 		"d",
+		"h",
 		"testNestedNestedOneOf",
 	})
 }
@@ -308,7 +327,7 @@ func TestSetFields(t *testing.T) {
 		{
 			Name: "a.b a.a.a a.b a.b b testOneof",
 			Destination: &testdata.Test{
-				TestOneof: &testdata.Test_E{},
+				TestOneof: &testdata.Test_CustomNameOneof{},
 				G:         &testdata.Empty{},
 			},
 			Source: &testdata.Test{
@@ -346,8 +365,8 @@ func TestSetFields(t *testing.T) {
 				G: &testdata.Empty{},
 			},
 			Source: &testdata.Test{
-				TestOneof: &testdata.Test_E{
-					E: 42,
+				TestOneof: &testdata.Test_CustomNameOneof{
+					CustomNameOneof: 42,
 				},
 			},
 			Paths: []string{"testOneof.d"},
@@ -364,7 +383,7 @@ func TestSetFields(t *testing.T) {
 			Source: &testdata.Test{},
 			Paths:  []string{"testOneof.e"},
 			Result: &testdata.Test{
-				TestOneof: &testdata.Test_E{},
+				TestOneof: &testdata.Test_CustomNameOneof{},
 				G:         &testdata.Empty{},
 			},
 		},
@@ -436,6 +455,82 @@ func TestSetFields(t *testing.T) {
 			}
 			a.So(src, should.Resemble, tc.Source)
 			a.So(dst, should.Resemble, tc.Result)
+			a.So(paths, should.Resemble, tc.Paths)
+		})
+	}
+}
+
+func TestValidateFields(t *testing.T) {
+	for _, tc := range []struct {
+		Name           string
+		Message        *testdata.Test
+		Paths          []string
+		ErrorAssertion func(t *testing.T, err error) bool
+	}{
+		{
+			Name:  "nil message",
+			Paths: []string{"a.b", "b.c"},
+		},
+		{
+			Name: "a.a.a",
+			Message: &testdata.Test{
+				A: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{
+						A: 42,
+					},
+				},
+				CustomName: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{},
+				},
+			},
+			Paths: []string{"a.a.a"},
+		},
+		{
+			Name:    "a.g",
+			Message: &testdata.Test{},
+			Paths:   []string{"a.g"},
+		},
+		{
+			Name: "nil paths/valid",
+			Message: &testdata.Test{
+				A: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{
+						A: 42,
+					},
+					C: func(v time.Duration) *time.Duration { return &v }(43 * time.Second),
+				},
+			},
+		},
+		{
+			Name: "nil paths/invalid",
+			Message: &testdata.Test{
+				A: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{
+						A: 43,
+					},
+				},
+			},
+			ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
+		},
+		{
+			Name:           "non-existent sub-field",
+			Message:        &testdata.Test{},
+			Paths:          []string{"41.42.43"},
+			ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
+		},
+	} {
+		t.Run(tc.Name, func(t *testing.T) {
+			a := assertions.New(t)
+
+			msg := deepcopy.Copy(tc.Message).(*testdata.Test)
+			paths := deepcopy.Copy(tc.Paths).([]string)
+
+			err := msg.ValidateFields(paths...)
+			if tc.ErrorAssertion != nil {
+				a.So(tc.ErrorAssertion(t, err), should.BeTrue)
+			} else {
+				a.So(err, should.BeNil)
+			}
 			a.So(paths, should.Resemble, tc.Paths)
 		})
 	}

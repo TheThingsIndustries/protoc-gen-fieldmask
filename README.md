@@ -5,8 +5,7 @@ A protoc plug-in, which generates fieldmask utilities. Compatible with gogoproto
 ## Installation:
 
 ```sh
-dep ensure # If not using Go 1.11 modules
-go install .
+GO111MODULE=on go install .
 ```
 
 ## Usage:
@@ -14,5 +13,6 @@ go install .
 For example, in `TheThingsIndustries/lorawan-stack`:
 
 ```sh
-protoc -I $(dirname $PWD) -I $GOPATH/src -I /usr/local/include --fieldmask_out=$GOPATH/src $PWD/api/*.proto
+protoc -Itestdata -Ivendor --fieldmask_out=lang=gogo:$GOPATH/src testdata/testdata.proto
 ```
+Note, you will need to run `GO111MODULE=on go mod vendor` before running the command above in this repository.
