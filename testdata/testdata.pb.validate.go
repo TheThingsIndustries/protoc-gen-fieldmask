@@ -110,13 +110,12 @@ func (m *Test) ValidateFields(paths ...string) error {
 	for name, subs := range _processPaths(append(paths[:0:0], paths...)) {
 		_ = subs
 		switch name {
-
 		case "a":
 
 			if v, ok := interface{}(m.GetA()).(interface{ ValidateFields(...string) error }); ok {
 				if err := v.ValidateFields(subs...); err != nil {
 					return TestValidationError{
-						field:  "A",
+						field:  "a",
 						reason: "embedded message failed validation",
 						cause:  err,
 					}
@@ -128,7 +127,7 @@ func (m *Test) ValidateFields(paths ...string) error {
 			if v, ok := interface{}(m.GetCustomName()).(interface{ ValidateFields(...string) error }); ok {
 				if err := v.ValidateFields(subs...); err != nil {
 					return TestValidationError{
-						field:  "CustomName",
+						field:  "b",
 						reason: "embedded message failed validation",
 						cause:  err,
 					}
@@ -140,7 +139,7 @@ func (m *Test) ValidateFields(paths ...string) error {
 			if v, ok := interface{}(m.GetC()).(interface{ ValidateFields(...string) error }); ok {
 				if err := v.ValidateFields(subs...); err != nil {
 					return TestValidationError{
-						field:  "C",
+						field:  "c",
 						reason: "embedded message failed validation",
 						cause:  err,
 					}
@@ -152,7 +151,7 @@ func (m *Test) ValidateFields(paths ...string) error {
 			if v, ok := interface{}(m.GetG()).(interface{ ValidateFields(...string) error }); ok {
 				if err := v.ValidateFields(subs...); err != nil {
 					return TestValidationError{
-						field:  "G",
+						field:  "g",
 						reason: "embedded message failed validation",
 						cause:  err,
 					}
@@ -164,7 +163,7 @@ func (m *Test) ValidateFields(paths ...string) error {
 			if v, ok := interface{}(m.GetH()).(interface{ ValidateFields(...string) error }); ok {
 				if err := v.ValidateFields(subs...); err != nil {
 					return TestValidationError{
-						field:  "H",
+						field:  "h",
 						reason: "embedded message failed validation",
 						cause:  err,
 					}
@@ -176,7 +175,7 @@ func (m *Test) ValidateFields(paths ...string) error {
 			if v, ok := interface{}(m.GetI()).(interface{ ValidateFields(...string) error }); ok {
 				if err := v.ValidateFields(subs...); err != nil {
 					return TestValidationError{
-						field:  "I",
+						field:  "i",
 						reason: "embedded message failed validation",
 						cause:  err,
 					}
@@ -186,30 +185,20 @@ func (m *Test) ValidateFields(paths ...string) error {
 		case "testOneof":
 			if len(subs) == 0 {
 				subs = []string{
-
-					"d",
-
-					"e",
-
-					"f",
+					"d", "e", "f",
 				}
 			}
 			for name, subs := range _processPaths(subs) {
 				_ = subs
 				switch name {
-
 				case "d":
 					// no validation rules for D
-
 				case "e":
 					// no validation rules for CustomNameOneof
-
 				case "f":
 					// no validation rules for F
-
 				}
 			}
-
 		default:
 			return TestValidationError{
 				field:  name,
@@ -289,13 +278,12 @@ func (m *Test_TestNested) ValidateFields(paths ...string) error {
 	for name, subs := range _processPaths(append(paths[:0:0], paths...)) {
 		_ = subs
 		switch name {
-
 		case "a":
 
 			if v, ok := interface{}(m.GetA()).(interface{ ValidateFields(...string) error }); ok {
 				if err := v.ValidateFields(subs...); err != nil {
 					return Test_TestNestedValidationError{
-						field:  "A",
+						field:  "a",
 						reason: "embedded message failed validation",
 						cause:  err,
 					}
@@ -304,7 +292,6 @@ func (m *Test_TestNested) ValidateFields(paths ...string) error {
 
 		case "b":
 			// no validation rules for B
-
 		case "c":
 
 			if d := m.GetC(); d != nil {
@@ -314,7 +301,7 @@ func (m *Test_TestNested) ValidateFields(paths ...string) error {
 
 				if dur < gte {
 					return Test_TestNestedValidationError{
-						field:  "C",
+						field:  "c",
 						reason: "value must be greater than or equal to 42s",
 					}
 				}
@@ -326,7 +313,7 @@ func (m *Test_TestNested) ValidateFields(paths ...string) error {
 			if v, ok := interface{}(m.GetD()).(interface{ ValidateFields(...string) error }); ok {
 				if err := v.ValidateFields(subs...); err != nil {
 					return Test_TestNestedValidationError{
-						field:  "D",
+						field:  "d",
 						reason: "embedded message failed validation",
 						cause:  err,
 					}
@@ -335,10 +322,8 @@ func (m *Test_TestNested) ValidateFields(paths ...string) error {
 
 		case "e":
 			// no validation rules for E
-
 		case "f":
 			// no validation rules for F
-
 		default:
 			return Test_TestNestedValidationError{
 				field:  name,
@@ -418,30 +403,27 @@ func (m *Test_TestNested_TestNestedNested) ValidateFields(paths ...string) error
 	for name, subs := range _processPaths(append(paths[:0:0], paths...)) {
 		_ = subs
 		switch name {
-
 		case "a":
 
 			if val := m.GetA(); val <= 24 || val > 42 {
 				return Test_TestNested_TestNestedNestedValidationError{
-					field:  "A",
+					field:  "a",
 					reason: "value must be inside range (24, 42]",
 				}
 			}
 
 		case "b":
 			// no validation rules for B
-
 		case "c":
 
 		case "d":
 			// no validation rules for D
-
 		case "h":
 
 			if v, ok := interface{}(m.Test_TestNested_TestNestedNested_TestNestedNestedEmbed).(interface{ ValidateFields(...string) error }); ok {
 				if err := v.ValidateFields(subs...); err != nil {
 					return Test_TestNested_TestNestedNestedValidationError{
-						field:  "",
+						field:  "h",
 						reason: "embedded message failed validation",
 						cause:  err,
 					}
@@ -451,24 +433,18 @@ func (m *Test_TestNested_TestNestedNested) ValidateFields(paths ...string) error
 		case "testNestedNestedOneOf":
 			if len(subs) == 0 {
 				subs = []string{
-
-					"e",
-
-					"f",
-
-					"g",
+					"e", "f", "g",
 				}
 			}
 			for name, subs := range _processPaths(subs) {
 				_ = subs
 				switch name {
-
 				case "e":
 
 					if v, ok := interface{}(m.GetE()).(interface{ ValidateFields(...string) error }); ok {
 						if err := v.ValidateFields(subs...); err != nil {
 							return Test_TestNested_TestNestedNestedValidationError{
-								field:  "E",
+								field:  "e",
 								reason: "embedded message failed validation",
 								cause:  err,
 							}
@@ -477,13 +453,12 @@ func (m *Test_TestNested_TestNestedNested) ValidateFields(paths ...string) error
 
 				case "f":
 					// no validation rules for F
-
 				case "g":
 
 					if v, ok := interface{}(m.GetG()).(interface{ ValidateFields(...string) error }); ok {
 						if err := v.ValidateFields(subs...); err != nil {
 							return Test_TestNested_TestNestedNestedValidationError{
-								field:  "G",
+								field:  "g",
 								reason: "embedded message failed validation",
 								cause:  err,
 							}
@@ -492,7 +467,6 @@ func (m *Test_TestNested_TestNestedNested) ValidateFields(paths ...string) error
 
 				}
 			}
-
 		default:
 			return Test_TestNested_TestNestedNestedValidationError{
 				field:  name,
@@ -576,10 +550,8 @@ func (m *Test_TestNested_TestNestedNested_TestNestedNestedEmbed) ValidateFields(
 	for name, subs := range _processPaths(append(paths[:0:0], paths...)) {
 		_ = subs
 		switch name {
-
 		case "nested_field":
 			// no validation rules for NestedField
-
 		default:
 			return Test_TestNested_TestNestedNested_TestNestedNestedEmbedValidationError{
 				field:  name,
