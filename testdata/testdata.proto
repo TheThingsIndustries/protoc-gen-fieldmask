@@ -54,6 +54,7 @@ message Test {
     google.protobuf.Timestamp d = 4 [(gogoproto.stdtime) = true];
     string e = 5 [(gogoproto.customtype) = "github.com/TheThingsIndustries/protoc-gen-fieldmask/testdata/testpackage.CustomType"];
     string f = 6 [(gogoproto.customtype) = "github.com/TheThingsIndustries/protoc-gen-fieldmask/testdata/testpackage.CustomType", (gogoproto.nullable) = false];
+    repeated TestNestedNested g = 7;
   }
   TestNested a = 1;
   TestNested b = 2 [(gogoproto.customname) = "CustomName"];

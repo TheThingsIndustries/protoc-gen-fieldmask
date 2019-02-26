@@ -324,6 +324,23 @@ func (m *Test_TestNested) ValidateFields(paths ...string) error {
 			// no validation rules for E
 		case "f":
 			// no validation rules for F
+		case "g":
+
+			for idx, item := range m.GetG() {
+				_, _ = idx, item
+
+				if v, ok := interface{}(item).(interface{ ValidateFields(...string) error }); ok {
+					if err := v.ValidateFields(subs...); err != nil {
+						return Test_TestNestedValidationError{
+							field:  fmt.Sprintf("g[%v]", idx),
+							reason: "embedded message failed validation",
+							cause:  err,
+						}
+					}
+				}
+
+			}
+
 		default:
 			return Test_TestNestedValidationError{
 				field:  name,
