@@ -136,7 +136,7 @@ func (m *Test) ValidateFields(paths ...string) error {
 
 		case "c":
 
-			if v, ok := interface{}(m.GetC()).(interface{ ValidateFields(...string) error }); ok {
+			if v, ok := interface{}(&m.C).(interface{ ValidateFields(...string) error }); ok {
 				if err := v.ValidateFields(subs...); err != nil {
 					return TestValidationError{
 						field:  "c",
@@ -172,7 +172,7 @@ func (m *Test) ValidateFields(paths ...string) error {
 
 		case "i":
 
-			if v, ok := interface{}(m.GetI()).(interface{ ValidateFields(...string) error }); ok {
+			if v, ok := interface{}(&m.I).(interface{ ValidateFields(...string) error }); ok {
 				if err := v.ValidateFields(subs...); err != nil {
 					return TestValidationError{
 						field:  "i",
@@ -430,6 +430,18 @@ func (m *Test_TestNested_TestNestedNested) ValidateFields(paths ...string) error
 				}
 			}
 
+		case "i":
+
+			if v, ok := interface{}(&m.Test_TestNested_TestNestedNested_TestNestedNestedEmbed2).(interface{ ValidateFields(...string) error }); ok {
+				if err := v.ValidateFields(subs...); err != nil {
+					return Test_TestNested_TestNestedNestedValidationError{
+						field:  "i",
+						reason: "embedded message failed validation",
+						cause:  err,
+					}
+				}
+			}
+
 		case "testNestedNestedOneOf":
 			if len(subs) == 0 {
 				subs = []string{
@@ -627,3 +639,104 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = Test_TestNested_TestNestedNested_TestNestedNestedEmbedValidationError{}
+
+// ValidateFields checks the field values on
+// Test_TestNested_TestNestedNested_TestNestedNestedEmbed2 with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *Test_TestNested_TestNestedNested_TestNestedNestedEmbed2) ValidateFields(paths ...string) error {
+	if m == nil {
+		return nil
+	}
+
+	if len(paths) == 0 {
+		paths = Test_TestNested_TestNestedNested_TestNestedNestedEmbed2FieldPathsNested
+	}
+
+	for name, subs := range _processPaths(append(paths[:0:0], paths...)) {
+		_ = subs
+		switch name {
+		case "nested_field_2":
+
+			if m.GetNestedField_2() != 2 {
+				return Test_TestNested_TestNestedNested_TestNestedNestedEmbed2ValidationError{
+					field:  "nested_field_2",
+					reason: "value must equal 2",
+				}
+			}
+
+		default:
+			return Test_TestNested_TestNestedNested_TestNestedNestedEmbed2ValidationError{
+				field:  name,
+				reason: "invalid field path",
+			}
+		}
+	}
+	return nil
+}
+
+// Test_TestNested_TestNestedNested_TestNestedNestedEmbed2ValidationError is
+// the validation error returned by
+// Test_TestNested_TestNestedNested_TestNestedNestedEmbed2.ValidateFields if
+// the designated constraints aren't met.
+type Test_TestNested_TestNestedNested_TestNestedNestedEmbed2ValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e Test_TestNested_TestNestedNested_TestNestedNestedEmbed2ValidationError) Field() string {
+	return e.field
+}
+
+// Reason function returns reason value.
+func (e Test_TestNested_TestNestedNested_TestNestedNestedEmbed2ValidationError) Reason() string {
+	return e.reason
+}
+
+// Cause function returns cause value.
+func (e Test_TestNested_TestNestedNested_TestNestedNestedEmbed2ValidationError) Cause() error {
+	return e.cause
+}
+
+// Key function returns key value.
+func (e Test_TestNested_TestNestedNested_TestNestedNestedEmbed2ValidationError) Key() bool {
+	return e.key
+}
+
+// ErrorName returns error name.
+func (e Test_TestNested_TestNestedNested_TestNestedNestedEmbed2ValidationError) ErrorName() string {
+	return "Test_TestNested_TestNestedNested_TestNestedNestedEmbed2ValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e Test_TestNested_TestNestedNested_TestNestedNestedEmbed2ValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sTest_TestNested_TestNestedNested_TestNestedNestedEmbed2.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = Test_TestNested_TestNestedNested_TestNestedNestedEmbed2ValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = Test_TestNested_TestNestedNested_TestNestedNestedEmbed2ValidationError{}

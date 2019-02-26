@@ -143,6 +143,8 @@ func TestFieldMaskPaths(t *testing.T) {
 		"a.a.d",
 		"a.a.h",
 		"a.a.h.nested_field",
+		"a.a.i",
+		"a.a.i.nested_field_2",
 		"a.a.testNestedNestedOneOf",
 		"a.a.testNestedNestedOneOf.e",
 		"a.a.testNestedNestedOneOf.f",
@@ -160,6 +162,8 @@ func TestFieldMaskPaths(t *testing.T) {
 		"b.a.d",
 		"b.a.h",
 		"b.a.h.nested_field",
+		"b.a.i",
+		"b.a.i.nested_field_2",
 		"b.a.testNestedNestedOneOf",
 		"b.a.testNestedNestedOneOf.e",
 		"b.a.testNestedNestedOneOf.f",
@@ -177,6 +181,8 @@ func TestFieldMaskPaths(t *testing.T) {
 		"c.a.d",
 		"c.a.h",
 		"c.a.h.nested_field",
+		"c.a.i",
+		"c.a.i.nested_field_2",
 		"c.a.testNestedNestedOneOf",
 		"c.a.testNestedNestedOneOf.e",
 		"c.a.testNestedNestedOneOf.f",
@@ -212,6 +218,8 @@ func TestFieldMaskPaths(t *testing.T) {
 		"a.d",
 		"a.h",
 		"a.h.nested_field",
+		"a.i",
+		"a.i.nested_field_2",
 		"a.testNestedNestedOneOf",
 		"a.testNestedNestedOneOf.e",
 		"a.testNestedNestedOneOf.f",
@@ -238,6 +246,8 @@ func TestFieldMaskPaths(t *testing.T) {
 		"d",
 		"h",
 		"h.nested_field",
+		"i",
+		"i.nested_field_2",
 		"testNestedNestedOneOf",
 		"testNestedNestedOneOf.e",
 		"testNestedNestedOneOf.f",
@@ -249,6 +259,7 @@ func TestFieldMaskPaths(t *testing.T) {
 		"c",
 		"d",
 		"h",
+		"i",
 		"testNestedNestedOneOf",
 	})
 }
@@ -496,13 +507,16 @@ func TestValidateFields(t *testing.T) {
 				A: &testdata.Test_TestNested{
 					A: &testdata.Test_TestNested_TestNestedNested{
 						A: 42,
+						Test_TestNested_TestNestedNested_TestNestedNestedEmbed2: testdata.Test_TestNested_TestNestedNested_TestNestedNestedEmbed2{
+							NestedField_2: 2,
+						},
 					},
 					C: func(v time.Duration) *time.Duration { return &v }(43 * time.Second),
 				},
 			},
 		},
 		{
-			Name: "nil paths/invalid",
+			Name: "nil paths/invalid a.a.a",
 			Message: &testdata.Test{
 				A: &testdata.Test_TestNested{
 					A: &testdata.Test_TestNested_TestNestedNested{
@@ -510,6 +524,29 @@ func TestValidateFields(t *testing.T) {
 					},
 				},
 			},
+			ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
+		},
+		{
+			Name: "a.a.i/valid a.a.i.nested_field_2",
+			Message: &testdata.Test{
+				A: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{
+						Test_TestNested_TestNestedNested_TestNestedNestedEmbed2: testdata.Test_TestNested_TestNestedNested_TestNestedNestedEmbed2{
+							NestedField_2: 2,
+						},
+					},
+				},
+			},
+			Paths: []string{"a.a.i"},
+		},
+		{
+			Name: "a.a.i/invalid a.a.i.nested_field_2",
+			Message: &testdata.Test{
+				A: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{},
+				},
+			},
+			Paths:          []string{"a.a.i"},
 			ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
 		},
 		{

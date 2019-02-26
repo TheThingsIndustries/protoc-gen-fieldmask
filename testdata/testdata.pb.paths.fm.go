@@ -13,6 +13,8 @@ var TestFieldPathsNested = []string{
 	"a.a.d",
 	"a.a.h",
 	"a.a.h.nested_field",
+	"a.a.i",
+	"a.a.i.nested_field_2",
 	"a.a.testNestedNestedOneOf",
 	"a.a.testNestedNestedOneOf.e",
 	"a.a.testNestedNestedOneOf.f",
@@ -30,6 +32,8 @@ var TestFieldPathsNested = []string{
 	"b.a.d",
 	"b.a.h",
 	"b.a.h.nested_field",
+	"b.a.i",
+	"b.a.i.nested_field_2",
 	"b.a.testNestedNestedOneOf",
 	"b.a.testNestedNestedOneOf.e",
 	"b.a.testNestedNestedOneOf.f",
@@ -47,6 +51,8 @@ var TestFieldPathsNested = []string{
 	"c.a.d",
 	"c.a.h",
 	"c.a.h.nested_field",
+	"c.a.i",
+	"c.a.i.nested_field_2",
 	"c.a.testNestedNestedOneOf",
 	"c.a.testNestedNestedOneOf.e",
 	"c.a.testNestedNestedOneOf.f",
@@ -82,6 +88,8 @@ var Test_TestNestedFieldPathsNested = []string{
 	"a.d",
 	"a.h",
 	"a.h.nested_field",
+	"a.i",
+	"a.i.nested_field_2",
 	"a.testNestedNestedOneOf",
 	"a.testNestedNestedOneOf.e",
 	"a.testNestedNestedOneOf.f",
@@ -108,6 +116,8 @@ var Test_TestNested_TestNestedNestedFieldPathsNested = []string{
 	"d",
 	"h",
 	"h.nested_field",
+	"i",
+	"i.nested_field_2",
 	"testNestedNestedOneOf",
 	"testNestedNestedOneOf.e",
 	"testNestedNestedOneOf.f",
@@ -120,6 +130,7 @@ var Test_TestNested_TestNestedNestedFieldPathsTopLevel = []string{
 	"c",
 	"d",
 	"h",
+	"i",
 	"testNestedNestedOneOf",
 }
 var Test_TestNested_TestNestedNested_TestNestedNestedEmbedFieldPathsNested = []string{
@@ -128,4 +139,11 @@ var Test_TestNested_TestNestedNested_TestNestedNestedEmbedFieldPathsNested = []s
 
 var Test_TestNested_TestNestedNested_TestNestedNestedEmbedFieldPathsTopLevel = []string{
 	"nested_field",
+}
+var Test_TestNested_TestNestedNested_TestNestedNestedEmbed2FieldPathsNested = []string{
+	"nested_field_2",
+}
+
+var Test_TestNested_TestNestedNested_TestNestedNestedEmbed2FieldPathsTopLevel = []string{
+	"nested_field_2",
 }

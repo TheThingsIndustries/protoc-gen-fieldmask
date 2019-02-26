@@ -42,6 +42,11 @@ message Test {
         int32 nested_field = 1;
       }
       TestNestedNestedEmbed h = 8 [(gogoproto.embed) = true];
+
+      message TestNestedNestedEmbed2 {
+        int32 nested_field_2 = 1 [(validate.rules).int32.const = 2];
+      }
+      TestNestedNestedEmbed2 i = 9 [(gogoproto.embed) = true, (gogoproto.nullable) = false];
     }
     TestNestedNested a = 1;
     bytes b = 2;

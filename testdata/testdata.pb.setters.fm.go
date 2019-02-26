@@ -328,6 +328,24 @@ func (dst *Test_TestNested_TestNestedNested) SetFields(src *Test_TestNested_Test
 					dst.Test_TestNested_TestNestedNested_TestNestedNestedEmbed = nil
 				}
 			}
+		case "i":
+			if len(subs) > 0 {
+				newDst := &dst.Test_TestNested_TestNestedNested_TestNestedNestedEmbed2
+				var newSrc *Test_TestNested_TestNestedNested_TestNestedNestedEmbed2
+				if src != nil {
+					newSrc = &src.Test_TestNested_TestNestedNested_TestNestedNestedEmbed2
+				}
+				if err := newDst.SetFields(newSrc, subs...); err != nil {
+					return err
+				}
+			} else {
+				if src != nil {
+					dst.Test_TestNested_TestNestedNested_TestNestedNestedEmbed2 = src.Test_TestNested_TestNestedNested_TestNestedNestedEmbed2
+				} else {
+					var zero Test_TestNested_TestNestedNested_TestNestedNestedEmbed2
+					dst.Test_TestNested_TestNestedNested_TestNestedNestedEmbed2 = zero
+				}
+			}
 
 		case "testNestedNestedOneOf":
 			if len(subs) == 0 && src == nil {
@@ -418,6 +436,27 @@ func (dst *Test_TestNested_TestNestedNested_TestNestedNestedEmbed) SetFields(src
 			} else {
 				var zero int32
 				dst.NestedField = zero
+			}
+
+		default:
+			return fmt.Errorf("invalid field: '%s'", name)
+		}
+	}
+	return nil
+}
+
+func (dst *Test_TestNested_TestNestedNested_TestNestedNestedEmbed2) SetFields(src *Test_TestNested_TestNestedNested_TestNestedNestedEmbed2, paths ...string) error {
+	for name, subs := range _processPaths(append(paths[:0:0], paths...)) {
+		switch name {
+		case "nested_field_2":
+			if len(subs) > 0 {
+				return fmt.Errorf("'nested_field_2' has no subfields, but %s were specified", subs)
+			}
+			if src != nil {
+				dst.NestedField_2 = src.NestedField_2
+			} else {
+				var zero int32
+				dst.NestedField_2 = zero
 			}
 
 		default:
