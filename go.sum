@@ -1,6 +1,6 @@
 github.com/TheThingsIndustries/protoc-gen-star v0.4.7-gogo h1:vtoerBb3MHbzeUM0+w/bBpIhzT+yCaD1QrDN1/p7F2A=
 github.com/TheThingsIndustries/protoc-gen-star v0.4.7-gogo/go.mod h1:lIqzPBz4CG/TSsK9fPQvo7iVfbxEWc+76AVxeiHMcT4=
-github.com/TheThingsIndustries/protoc-gen-validate v0.0.13-fieldmask h1:f9Of0TRMdB+A2mZVJFUadESOOx0RfvBXR2FBFz/9hyI=
+github.com/TheThingsIndustries/protoc-gen-validate v0.0.13-fieldmask h1:vIdGpbSKd0SJJoC+BEZc/17W+N3CKh6qjfpXKbyCw7g=
 github.com/TheThingsIndustries/protoc-gen-validate v0.0.13-fieldmask/go.mod h1:65OEzdQPsbLDokGIF3GQjCTWOuuVuHqxh7a08yYe0tw=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
