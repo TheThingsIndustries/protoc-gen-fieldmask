@@ -258,6 +258,15 @@ func (dst *Test_TestNested) SetFields(src *Test_TestNested, paths ...string) err
 				var zero github_com_TheThingsIndustries_protoc_gen_fieldmask_testdata_testpackage.CustomType
 				dst.F = zero
 			}
+		case "g":
+			if len(subs) > 0 {
+				return fmt.Errorf("'g' has no subfields, but %s were specified", subs)
+			}
+			if src != nil {
+				dst.G = src.G
+			} else {
+				dst.G = nil
+			}
 
 		default:
 			return fmt.Errorf("invalid field: '%s'", name)

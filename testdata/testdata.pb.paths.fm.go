@@ -24,6 +24,7 @@ var TestFieldPathsNested = []string{
 	"a.d",
 	"a.e",
 	"a.f",
+	"a.g",
 	"b",
 	"b.a",
 	"b.a.a",
@@ -43,6 +44,7 @@ var TestFieldPathsNested = []string{
 	"b.d",
 	"b.e",
 	"b.f",
+	"b.g",
 	"c",
 	"c.a",
 	"c.a.a",
@@ -62,6 +64,7 @@ var TestFieldPathsNested = []string{
 	"c.d",
 	"c.e",
 	"c.f",
+	"c.g",
 	"g",
 	"h",
 	"i",
@@ -99,6 +102,7 @@ var Test_TestNestedFieldPathsNested = []string{
 	"d",
 	"e",
 	"f",
+	"g",
 }
 
 var Test_TestNestedFieldPathsTopLevel = []string{
@@ -108,6 +112,7 @@ var Test_TestNestedFieldPathsTopLevel = []string{
 	"d",
 	"e",
 	"f",
+	"g",
 }
 var Test_TestNested_TestNestedNestedFieldPathsNested = []string{
 	"a",

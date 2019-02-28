@@ -154,6 +154,7 @@ func TestFieldMaskPaths(t *testing.T) {
 		"a.d",
 		"a.e",
 		"a.f",
+		"a.g",
 		"b",
 		"b.a",
 		"b.a.a",
@@ -173,6 +174,7 @@ func TestFieldMaskPaths(t *testing.T) {
 		"b.d",
 		"b.e",
 		"b.f",
+		"b.g",
 		"c",
 		"c.a",
 		"c.a.a",
@@ -192,6 +194,7 @@ func TestFieldMaskPaths(t *testing.T) {
 		"c.d",
 		"c.e",
 		"c.f",
+		"c.g",
 		"g",
 		"h",
 		"i",
@@ -229,6 +232,7 @@ func TestFieldMaskPaths(t *testing.T) {
 		"d",
 		"e",
 		"f",
+		"g",
 	})
 	a.So(testdata.Test_TestNestedFieldPathsTopLevel, should.Resemble, []string{
 		"a",
@@ -237,6 +241,7 @@ func TestFieldMaskPaths(t *testing.T) {
 		"d",
 		"e",
 		"f",
+		"g",
 	})
 
 	a.So(testdata.Test_TestNested_TestNestedNestedFieldPathsNested, should.Resemble, []string{
