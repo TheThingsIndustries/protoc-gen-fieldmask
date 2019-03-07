@@ -197,6 +197,12 @@ func (m *Test) ValidateFields(paths ...string) error {
 					// no validation rules for CustomNameOneof
 				case "f":
 					// no validation rules for F
+
+				default:
+					return TestValidationError{
+						field:  "testOneof",
+						reason: "value is required",
+					}
 				}
 			}
 		default:
