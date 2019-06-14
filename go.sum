@@ -1,5 +1,5 @@
-github.com/TheThingsIndustries/protoc-gen-star v0.4.9-gogo h1:FL35xp5CA9nuY1iS8qOZSK20P6/gkIPGKBgtFZz2SAg=
-github.com/TheThingsIndustries/protoc-gen-star v0.4.9-gogo/go.mod h1:mjtUUovG3Woy4VxLeQ2tKq4FCcq0R8c7ZU8P0BrSoqw=
+github.com/TheThingsIndustries/protoc-gen-star v0.4.10-gogo h1:vH4m0byETBzBVJ/ViJF7KU0iFwjPDtFr58xLn3O7k0k=
+github.com/TheThingsIndustries/protoc-gen-star v0.4.10-gogo/go.mod h1:mjtUUovG3Woy4VxLeQ2tKq4FCcq0R8c7ZU8P0BrSoqw=
 github.com/TheThingsIndustries/protoc-gen-validate v0.0.14-fieldmask h1:mDbHXciWMcxvNBfe45SYSzH3jY3t64uDm0jC3hNrVrQ=
 github.com/TheThingsIndustries/protoc-gen-validate v0.0.14-fieldmask/go.mod h1:65OEzdQPsbLDokGIF3GQjCTWOuuVuHqxh7a08yYe0tw=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
@@ -26,8 +26,8 @@ github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 h1:RWengNIwukTxcDr9
 github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826/go.mod h1:TaXosZuwdSHYgviHp1DAtfrULt5eUgsSMsZf+YrPgl8=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
-github.com/smartystreets/assertions v0.0.0-20190401211740-f487f9de1cd3 h1:hBSHahWMEgzwRyS6dRpxY0XyjZsHyQ61s084wo5PJe0=
-github.com/smartystreets/assertions v0.0.0-20190401211740-f487f9de1cd3/go.mod h1:OnSkiWE9lh6wB0YB77sQom3nweQdgAjqCqsofrRNTgc=
+github.com/smartystreets/assertions v1.0.0 h1:UVQPSSmc3qtTi+zPPkCXvZX9VvW/xT/NsRvKfwY81a8=
+github.com/smartystreets/assertions v1.0.0/go.mod h1:kHHU4qYBaI3q23Pp3VPrmWhuIUrLW/7eUrw0BU5VaoM=
 github.com/spf13/afero v1.1.2/go.mod h1:j4pytiNVoe2o6bmDsKpLACNPDBIoEAkihy7loJ1B0CQ=
 github.com/spf13/afero v1.2.2 h1:5jhuqJyZCZf2JRofRvN/nIFgIWNzPa3/Vz8mYylgbWc=
 github.com/spf13/afero v1.2.2/go.mod h1:9ZxEEn6pIJ8Rxe320qSDBk6AsU0r9pR7Q4OcevTdifk=
@@ -51,3 +51,5 @@ golang.org/x/tools v0.0.0-20180917221912-90fa682c2a6e/go.mod h1:n7NCudcB/nEzxVGm
 golang.org/x/tools v0.0.0-20190311212946-11955173bddd/go.mod h1:LCzVGOaR6xXOjkQ3onu1FJEFr0SW1gC7cKk1uF8kGRs=
 golang.org/x/tools v0.0.0-20190501045030-23463209683d h1:D7DVZUZEUgsSIDTivnUtVeGfN5AvhDIKtdIZAqx0ieE=
 golang.org/x/tools v0.0.0-20190501045030-23463209683d/go.mod h1:RgjU9mgBXZiqYHBnxXauZ1Gv1EHHAz9KjViQ78xBX0Q=
+golang.org/x/tools v0.0.0-20190614192758-9a3b5d688fe6 h1:ZUPiB0jRGiwwDTAyOvFWzRQNCYI3OAXop+hpz6ChrkQ=
+golang.org/x/tools v0.0.0-20190614192758-9a3b5d688fe6/go.mod h1:/rFqwRUd4F7ZHNgwSSTFct+R/Kf4OFW1sUzUTQQTgfc=
