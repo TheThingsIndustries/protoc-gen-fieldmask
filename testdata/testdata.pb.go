@@ -26,7 +26,7 @@ var _ = time.Kitchen
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.GoGoProtoPackageIsVersion2 // please upgrade the proto package
+const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 type Empty struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -187,83 +187,13 @@ func (m *Test) GetI() types.StringValue {
 	return types.StringValue{}
 }
 
-// XXX_OneofFuncs is for the internal use of the proto package.
-func (*Test) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
-	return _Test_OneofMarshaler, _Test_OneofUnmarshaler, _Test_OneofSizer, []interface{}{
+// XXX_OneofWrappers is for the internal use of the proto package.
+func (*Test) XXX_OneofWrappers() []interface{} {
+	return []interface{}{
 		(*Test_D)(nil),
 		(*Test_CustomNameOneof)(nil),
 		(*Test_F)(nil),
 	}
-}
-
-func _Test_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
-	m := msg.(*Test)
-	// testOneof
-	switch x := m.TestOneof.(type) {
-	case *Test_D:
-		_ = b.EncodeVarint(4<<3 | proto.WireVarint)
-		_ = b.EncodeVarint(uint64(x.D))
-	case *Test_CustomNameOneof:
-		_ = b.EncodeVarint(5<<3 | proto.WireVarint)
-		_ = b.EncodeVarint(uint64(x.CustomNameOneof))
-	case *Test_F:
-		_ = b.EncodeVarint(6<<3 | proto.WireBytes)
-		_ = b.EncodeRawBytes(x.F)
-	case nil:
-	default:
-		return fmt.Errorf("Test.TestOneof has unexpected type %T", x)
-	}
-	return nil
-}
-
-func _Test_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
-	m := msg.(*Test)
-	switch tag {
-	case 4: // testOneof.d
-		if wire != proto.WireVarint {
-			return true, proto.ErrInternalBadWireType
-		}
-		x, err := b.DecodeVarint()
-		m.TestOneof = &Test_D{int32(x)}
-		return true, err
-	case 5: // testOneof.e
-		if wire != proto.WireVarint {
-			return true, proto.ErrInternalBadWireType
-		}
-		x, err := b.DecodeVarint()
-		m.TestOneof = &Test_CustomNameOneof{uint32(x)}
-		return true, err
-	case 6: // testOneof.f
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		x, err := b.DecodeRawBytes(true)
-		m.TestOneof = &Test_F{x}
-		return true, err
-	default:
-		return false, nil
-	}
-}
-
-func _Test_OneofSizer(msg proto.Message) (n int) {
-	m := msg.(*Test)
-	// testOneof
-	switch x := m.TestOneof.(type) {
-	case *Test_D:
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(x.D))
-	case *Test_CustomNameOneof:
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(x.CustomNameOneof))
-	case *Test_F:
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(len(x.F)))
-		n += len(x.F)
-	case nil:
-	default:
-		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
-	}
-	return n
 }
 
 type Test_TestNested struct {
@@ -456,92 +386,13 @@ func (m *Test_TestNested_TestNestedNested) GetG() *types.UInt64Value {
 	return nil
 }
 
-// XXX_OneofFuncs is for the internal use of the proto package.
-func (*Test_TestNested_TestNestedNested) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
-	return _Test_TestNested_TestNestedNested_OneofMarshaler, _Test_TestNested_TestNestedNested_OneofUnmarshaler, _Test_TestNested_TestNestedNested_OneofSizer, []interface{}{
+// XXX_OneofWrappers is for the internal use of the proto package.
+func (*Test_TestNested_TestNestedNested) XXX_OneofWrappers() []interface{} {
+	return []interface{}{
 		(*Test_TestNested_TestNestedNested_E)(nil),
 		(*Test_TestNested_TestNestedNested_F)(nil),
 		(*Test_TestNested_TestNestedNested_G)(nil),
 	}
-}
-
-func _Test_TestNested_TestNestedNested_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
-	m := msg.(*Test_TestNested_TestNestedNested)
-	// testNestedNestedOneOf
-	switch x := m.TestNestedNestedOneOf.(type) {
-	case *Test_TestNested_TestNestedNested_E:
-		_ = b.EncodeVarint(5<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.E); err != nil {
-			return err
-		}
-	case *Test_TestNested_TestNestedNested_F:
-		_ = b.EncodeVarint(6<<3 | proto.WireVarint)
-		_ = b.EncodeVarint(uint64(x.F))
-	case *Test_TestNested_TestNestedNested_G:
-		_ = b.EncodeVarint(7<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.G); err != nil {
-			return err
-		}
-	case nil:
-	default:
-		return fmt.Errorf("Test_TestNested_TestNestedNested.TestNestedNestedOneOf has unexpected type %T", x)
-	}
-	return nil
-}
-
-func _Test_TestNested_TestNestedNested_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
-	m := msg.(*Test_TestNested_TestNestedNested)
-	switch tag {
-	case 5: // testNestedNestedOneOf.e
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(Empty)
-		err := b.DecodeMessage(msg)
-		m.TestNestedNestedOneOf = &Test_TestNested_TestNestedNested_E{msg}
-		return true, err
-	case 6: // testNestedNestedOneOf.f
-		if wire != proto.WireVarint {
-			return true, proto.ErrInternalBadWireType
-		}
-		x, err := b.DecodeVarint()
-		m.TestNestedNestedOneOf = &Test_TestNested_TestNestedNested_F{uint32(x)}
-		return true, err
-	case 7: // testNestedNestedOneOf.g
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(types.UInt64Value)
-		err := b.DecodeMessage(msg)
-		m.TestNestedNestedOneOf = &Test_TestNested_TestNestedNested_G{msg}
-		return true, err
-	default:
-		return false, nil
-	}
-}
-
-func _Test_TestNested_TestNestedNested_OneofSizer(msg proto.Message) (n int) {
-	m := msg.(*Test_TestNested_TestNestedNested)
-	// testNestedNestedOneOf
-	switch x := m.TestNestedNestedOneOf.(type) {
-	case *Test_TestNested_TestNestedNested_E:
-		s := proto.Size(x.E)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *Test_TestNested_TestNestedNested_F:
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(x.F))
-	case *Test_TestNested_TestNestedNested_G:
-		s := proto.Size(x.G)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case nil:
-	default:
-		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
-	}
-	return n
 }
 
 type Test_TestNested_TestNestedNested_TestNestedNestedEmbed struct {
