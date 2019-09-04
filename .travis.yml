@@ -9,7 +9,7 @@ env:
   global:
   - GO111MODULE=on
   - GOARCH=amd64
-  - PROTOC_VER="3.6.1"
+  - PROTOC_VER="3.7.1"
   matrix:
   - GOOS=linux
   - GOOS=darwin
