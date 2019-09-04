@@ -12,8 +12,6 @@ env:
   - PROTOC_VER="3.7.1"
   matrix:
   - GOOS=linux
-  - GOOS=darwin
-  - GOOS=windows
 
 before_install:
 - curl -o /tmp/protoc.zip -sL "https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VER}/protoc-${PROTOC_VER}-linux-x86_64.zip"
@@ -24,4 +22,5 @@ before_install:
 script:
 - make -B clean test build
 - gofmt -w -s $(go list -f '{{ .Dir }}' ./...)
+- go mod tidy
 - git diff --exit-code
