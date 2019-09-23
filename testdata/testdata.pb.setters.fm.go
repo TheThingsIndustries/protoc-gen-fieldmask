@@ -175,6 +175,30 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 					} else {
 						dst.TestOneof.(*Test_F).F = nil
 					}
+				case "k":
+					if _, ok := dst.TestOneof.(*Test_K); !ok {
+						dst.TestOneof = &Test_K{}
+					}
+					if len(oneofSubs) > 0 {
+						newDst := dst.TestOneof.(*Test_K).K
+						if newDst == nil {
+							newDst = &Test_TestNested{}
+							dst.TestOneof.(*Test_K).K = newDst
+						}
+						var newSrc *Test_TestNested
+						if src != nil {
+							newSrc = src.GetK()
+						}
+						if err := newDst.SetFields(newSrc, oneofSubs...); err != nil {
+							return err
+						}
+					} else {
+						if src != nil {
+							dst.TestOneof.(*Test_K).K = src.GetK()
+						} else {
+							dst.TestOneof.(*Test_K).K = nil
+						}
+					}
 
 				default:
 					return fmt.Errorf("invalid oneof field: '%s.%s'", name, oneofName)
@@ -385,7 +409,7 @@ func (dst *Test_TestNested_TestNestedNested) SetFields(src *Test_TestNested_Test
 						if src != nil {
 							newSrc = src.GetE()
 						}
-						if err := newDst.SetFields(newSrc, subs...); err != nil {
+						if err := newDst.SetFields(newSrc, oneofSubs...); err != nil {
 							return err
 						}
 					} else {

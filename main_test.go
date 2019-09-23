@@ -202,6 +202,26 @@ func TestFieldMaskPaths(t *testing.T) {
 		"testOneof.d",
 		"testOneof.e",
 		"testOneof.f",
+		"testOneof.k",
+		"testOneof.k.a",
+		"testOneof.k.a.a",
+		"testOneof.k.a.b",
+		"testOneof.k.a.c",
+		"testOneof.k.a.d",
+		"testOneof.k.a.h",
+		"testOneof.k.a.h.nested_field",
+		"testOneof.k.a.i",
+		"testOneof.k.a.i.nested_field_2",
+		"testOneof.k.a.testNestedNestedOneOf",
+		"testOneof.k.a.testNestedNestedOneOf.e",
+		"testOneof.k.a.testNestedNestedOneOf.f",
+		"testOneof.k.a.testNestedNestedOneOf.g",
+		"testOneof.k.b",
+		"testOneof.k.c",
+		"testOneof.k.d",
+		"testOneof.k.e",
+		"testOneof.k.f",
+		"testOneof.k.g",
 	})
 	a.So(testdata.TestFieldPathsTopLevel, should.Resemble, []string{
 		"a",
@@ -389,6 +409,29 @@ func TestSetFields(t *testing.T) {
 			Result: &testdata.Test{
 				TestOneof: &testdata.Test_D{},
 				G:         &testdata.Empty{},
+			},
+		},
+		{
+			Name:        "testOneof.k.a.a",
+			Destination: &testdata.Test{},
+			Source: &testdata.Test{
+				TestOneof: &testdata.Test_K{
+					K: &testdata.Test_TestNested{
+						A: &testdata.Test_TestNested_TestNestedNested{
+							A: 42,
+						},
+					},
+				},
+			},
+			Paths: []string{"testOneof.k.a.a"},
+			Result: &testdata.Test{
+				TestOneof: &testdata.Test_K{
+					K: &testdata.Test_TestNested{
+						A: &testdata.Test_TestNested_TestNestedNested{
+							A: 42,
+						},
+					},
+				},
 			},
 		},
 		{
