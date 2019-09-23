@@ -65,6 +65,7 @@ message Test {
     int32 d = 4;
     uint32 e = 5 [(gogoproto.customname) = "CustomNameOneof"];
     bytes f = 6;
+    TestNested k = 10;
   }
   Empty g = 7;
   google.protobuf.StringValue h = 8;

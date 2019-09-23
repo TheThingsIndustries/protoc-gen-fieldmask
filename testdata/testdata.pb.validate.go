@@ -188,7 +188,7 @@ func (m *Test) ValidateFields(paths ...string) error {
 		case "testOneof":
 			if len(subs) == 0 {
 				subs = []string{
-					"d", "e", "f",
+					"d", "e", "f", "k",
 				}
 			}
 			for name, subs := range _processPaths(subs) {
@@ -200,6 +200,17 @@ func (m *Test) ValidateFields(paths ...string) error {
 					// no validation rules for CustomNameOneof
 				case "f":
 					// no validation rules for F
+				case "k":
+
+					if v, ok := interface{}(m.GetK()).(interface{ ValidateFields(...string) error }); ok {
+						if err := v.ValidateFields(subs...); err != nil {
+							return TestValidationError{
+								field:  "k",
+								reason: "embedded message failed validation",
+								cause:  err,
+							}
+						}
+					}
 
 				default:
 					return TestValidationError{
