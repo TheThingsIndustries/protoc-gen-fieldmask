@@ -141,10 +141,10 @@ func (m *setterModule) buildSetFieldsCase(buf *strings.Builder, imports importMa
 		))
 	}
 
-	buildIndented(buf, tabCount+1, `	if err := newDst.SetFields(newSrc, subs...); err != nil {
+	buildIndented(buf, tabCount+1, fmt.Sprintf(`	if err := newDst.SetFields(newSrc, %s...); err != nil {
 		return err
 	}
-} else {`)
+} else {`, subs))
 	if err := buildFinal(tabCount + 2); err != nil {
 		return err
 	}

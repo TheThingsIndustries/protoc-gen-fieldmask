@@ -189,7 +189,7 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 						if src != nil {
 							newSrc = src.GetK()
 						}
-						if err := newDst.SetFields(newSrc, subs...); err != nil {
+						if err := newDst.SetFields(newSrc, oneofSubs...); err != nil {
 							return err
 						}
 					} else {
@@ -409,7 +409,7 @@ func (dst *Test_TestNested_TestNestedNested) SetFields(src *Test_TestNested_Test
 						if src != nil {
 							newSrc = src.GetE()
 						}
-						if err := newDst.SetFields(newSrc, subs...); err != nil {
+						if err := newDst.SetFields(newSrc, oneofSubs...); err != nil {
 							return err
 						}
 					} else {
