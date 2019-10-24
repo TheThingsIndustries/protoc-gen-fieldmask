@@ -105,16 +105,16 @@ type isTest_TestOneof interface {
 }
 
 type Test_D struct {
-	D int32 `protobuf:"varint,4,opt,name=d,proto3,oneof"`
+	D int32 `protobuf:"varint,4,opt,name=d,proto3,oneof" json:"d,omitempty"`
 }
 type Test_CustomNameOneof struct {
-	CustomNameOneof uint32 `protobuf:"varint,5,opt,name=e,proto3,oneof"`
+	CustomNameOneof uint32 `protobuf:"varint,5,opt,name=e,proto3,oneof" json:"e,omitempty"`
 }
 type Test_F struct {
-	F []byte `protobuf:"bytes,6,opt,name=f,proto3,oneof"`
+	F []byte `protobuf:"bytes,6,opt,name=f,proto3,oneof" json:"f,omitempty"`
 }
 type Test_K struct {
-	K *Test_TestNested `protobuf:"bytes,10,opt,name=k,proto3,oneof"`
+	K *Test_TestNested `protobuf:"bytes,10,opt,name=k,proto3,oneof" json:"k,omitempty"`
 }
 
 func (*Test_D) isTest_TestOneof()               {}
@@ -327,13 +327,13 @@ type isTest_TestNested_TestNestedNested_TestNestedNestedOneOf interface {
 }
 
 type Test_TestNested_TestNestedNested_E struct {
-	E *Empty `protobuf:"bytes,5,opt,name=e,proto3,oneof"`
+	E *Empty `protobuf:"bytes,5,opt,name=e,proto3,oneof" json:"e,omitempty"`
 }
 type Test_TestNested_TestNestedNested_F struct {
-	F uint32 `protobuf:"varint,6,opt,name=f,proto3,oneof"`
+	F uint32 `protobuf:"varint,6,opt,name=f,proto3,oneof" json:"f,omitempty"`
 }
 type Test_TestNested_TestNestedNested_G struct {
-	G *types.UInt64Value `protobuf:"bytes,7,opt,name=g,proto3,oneof"`
+	G *types.UInt64Value `protobuf:"bytes,7,opt,name=g,proto3,oneof" json:"g,omitempty"`
 }
 
 func (*Test_TestNested_TestNestedNested_E) isTest_TestNested_TestNestedNested_TestNestedNestedOneOf() {
