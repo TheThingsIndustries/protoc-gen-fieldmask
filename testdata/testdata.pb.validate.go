@@ -186,6 +186,12 @@ func (m *Test) ValidateFields(paths ...string) error {
 			}
 
 		case "testOneof":
+			if m.TestOneof == nil {
+				return TestValidationError{
+					field:  "testOneof",
+					reason: "value is required",
+				}
+			}
 			if len(subs) == 0 {
 				subs = []string{
 					"d", "e", "f", "k",
@@ -195,12 +201,42 @@ func (m *Test) ValidateFields(paths ...string) error {
 				_ = subs
 				switch name {
 				case "d":
-					// no validation rules for D
+					w, ok := m.TestOneof.(*Test_D)
+					if !ok || w == nil {
+						continue
+					}
+
+					if m.GetD() <= 5 {
+						return TestValidationError{
+							field:  "d",
+							reason: "value must be greater than 5",
+						}
+					}
+
 				case "e":
-					// no validation rules for CustomNameOneof
+					w, ok := m.TestOneof.(*Test_CustomNameOneof)
+					if !ok || w == nil {
+						continue
+					}
+
+					if m.GetCustomNameOneof() <= 5 {
+						return TestValidationError{
+							field:  "e",
+							reason: "value must be greater than 5",
+						}
+					}
+
 				case "f":
+					w, ok := m.TestOneof.(*Test_F)
+					if !ok || w == nil {
+						continue
+					}
 					// no validation rules for F
 				case "k":
+					w, ok := m.TestOneof.(*Test_K)
+					if !ok || w == nil {
+						continue
+					}
 
 					if v, ok := interface{}(m.GetK()).(interface{ ValidateFields(...string) error }); ok {
 						if err := v.ValidateFields(subs...); err != nil {
@@ -212,11 +248,6 @@ func (m *Test) ValidateFields(paths ...string) error {
 						}
 					}
 
-				default:
-					return TestValidationError{
-						field:  "testOneof",
-						reason: "value is required",
-					}
 				}
 			}
 		default:
@@ -489,6 +520,10 @@ func (m *Test_TestNested_TestNestedNested) ValidateFields(paths ...string) error
 				_ = subs
 				switch name {
 				case "e":
+					w, ok := m.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_E)
+					if !ok || w == nil {
+						continue
+					}
 
 					if v, ok := interface{}(m.GetE()).(interface{ ValidateFields(...string) error }); ok {
 						if err := v.ValidateFields(subs...); err != nil {
@@ -501,8 +536,16 @@ func (m *Test_TestNested_TestNestedNested) ValidateFields(paths ...string) error
 					}
 
 				case "f":
+					w, ok := m.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_F)
+					if !ok || w == nil {
+						continue
+					}
 					// no validation rules for F
 				case "g":
+					w, ok := m.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_G)
+					if !ok || w == nil {
+						continue
+					}
 
 					if v, ok := interface{}(m.GetG()).(interface{ ValidateFields(...string) error }); ok {
 						if err := v.ValidateFields(subs...); err != nil {

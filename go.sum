@@ -1,7 +1,7 @@
 github.com/TheThingsIndustries/protoc-gen-star v0.4.11-gogo.3 h1:3E1qaZEOIrtWBJq/CToEQMnbmSfCfRQPa484aV9Ts+Y=
 github.com/TheThingsIndustries/protoc-gen-star v0.4.11-gogo.3/go.mod h1:SzZiQuLVuCNsxdkazur9ESD0ILSQfLBfYC355QROrhg=
-github.com/TheThingsIndustries/protoc-gen-validate v0.2.0-java-fieldmask.3 h1:NwW6+TnOmrl6ascaoJNTI1o3R/ImdA3IWYXn9C23CM0=
-github.com/TheThingsIndustries/protoc-gen-validate v0.2.0-java-fieldmask.3/go.mod h1:LR0f1C6JcbrNrl8adf2KOQX32hMpEHzsfWrtV1uCoVo=
+github.com/TheThingsIndustries/protoc-gen-validate v0.2.0-java-fieldmask.4 h1:FUI3bfgtSWYtDj46a54d8l1RqkzicoouG63RC6B5yLQ=
+github.com/TheThingsIndustries/protoc-gen-validate v0.2.0-java-fieldmask.4/go.mod h1:LR0f1C6JcbrNrl8adf2KOQX32hMpEHzsfWrtV1uCoVo=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
