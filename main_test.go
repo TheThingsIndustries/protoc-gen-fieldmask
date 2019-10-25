@@ -561,7 +561,43 @@ func TestValidateFields(t *testing.T) {
 					},
 					C: func(v time.Duration) *time.Duration { return &v }(43 * time.Second),
 				},
+				TestOneof: &testdata.Test_CustomNameOneof{
+					CustomNameOneof: 6,
+				},
 			},
+		},
+		{
+			Name: "nil paths/invalid testOneof unset",
+			Message: &testdata.Test{
+				A: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{
+						A: 42,
+						Test_TestNested_TestNestedNested_TestNestedNestedEmbed2: testdata.Test_TestNested_TestNestedNested_TestNestedNestedEmbed2{
+							NestedField_2: 2,
+						},
+					},
+					C: func(v time.Duration) *time.Duration { return &v }(43 * time.Second),
+				},
+			},
+			ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
+		},
+		{
+			Name: "nil paths/invalid testOneof.d",
+			Message: &testdata.Test{
+				A: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{
+						A: 42,
+						Test_TestNested_TestNestedNested_TestNestedNestedEmbed2: testdata.Test_TestNested_TestNestedNested_TestNestedNestedEmbed2{
+							NestedField_2: 2,
+						},
+					},
+					C: func(v time.Duration) *time.Duration { return &v }(43 * time.Second),
+				},
+				TestOneof: &testdata.Test_D{
+					D: 3,
+				},
+			},
+			ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
 		},
 		{
 			Name: "nil paths/invalid a.a.a",

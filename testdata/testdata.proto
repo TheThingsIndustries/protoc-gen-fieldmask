@@ -62,8 +62,8 @@ message Test {
   oneof testOneof {
     option (validate.required) = true;
 
-    int32 d = 4;
-    uint32 e = 5 [(gogoproto.customname) = "CustomNameOneof"];
+    int32 d = 4 [(validate.rules).int32.gt = 5];
+    uint32 e = 5 [(gogoproto.customname) = "CustomNameOneof", (validate.rules).uint32.gt = 5];
     bytes f = 6;
     TestNested k = 10;
   }
