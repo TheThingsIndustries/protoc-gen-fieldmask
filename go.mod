@@ -14,4 +14,6 @@ require (
 	github.com/lyft/protoc-gen-star v0.4.12
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/smartystreets/assertions v1.0.1
+	golang.org/x/lint v0.0.0-20191125180803-fdd1cda4f05f // indirect
+	golang.org/x/tools v0.0.0-20191205225056-3393d29bb9fe // indirect
 )
