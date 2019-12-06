@@ -361,7 +361,7 @@ func TestSetFields(t *testing.T) {
 			},
 		},
 		{
-			Name: "a.b a.a.a a.b a.b b testOneof",
+			Name: "a.b,a.a.a,a.b,a.b,b,testOneof",
 			Destination: &testdata.Test{
 				TestOneof: &testdata.Test_CustomNameOneof{},
 				G:         &testdata.Empty{},
@@ -380,7 +380,6 @@ func TestSetFields(t *testing.T) {
 			Paths: []string{"a.b", "a.a.a", "a.b", "a.b", "b", "testOneof"},
 			Result: &testdata.Test{
 				A: &testdata.Test_TestNested{
-					A: &testdata.Test_TestNested_TestNestedNested{},
 					B: []byte{1, 2, 3},
 				},
 				CustomName: &testdata.Test_TestNested{

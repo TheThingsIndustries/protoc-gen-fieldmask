@@ -111,21 +111,24 @@ func (m *setterModule) buildSetFieldsCase(buf *strings.Builder, imports importMa
 
 	if goType.IsPointer() {
 		buildIndented(buf, tabCount+1, fmt.Sprintf(`if len(%s) > 0 {
-	newDst := %s
-	if newDst == nil {
-		newDst = &%s{}
-		%s = newDst
-	}
 	var newSrc %s
 	if src != nil {
 		newSrc = %s
+	}
+	newDst := %s
+	if newDst == nil {
+		if newSrc == nil {
+			continue
+		}
+		newDst = &%s{}
+		%s = newDst
 	}`,
 			subs,
+			goType,
+			srcPath,
 			dstPath,
 			goType.Value(),
 			dstPath,
-			goType,
-			srcPath,
 		))
 	} else {
 		buildIndented(buf, tabCount+1, fmt.Sprintf(`if len(%s) > 0 {

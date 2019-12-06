@@ -23,14 +23,17 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 		switch name {
 		case "a":
 			if len(subs) > 0 {
-				newDst := dst.A
-				if newDst == nil {
-					newDst = &Test_TestNested{}
-					dst.A = newDst
-				}
 				var newSrc *Test_TestNested
 				if src != nil {
 					newSrc = src.A
+				}
+				newDst := dst.A
+				if newDst == nil {
+					if newSrc == nil {
+						continue
+					}
+					newDst = &Test_TestNested{}
+					dst.A = newDst
 				}
 				if err := newDst.SetFields(newSrc, subs...); err != nil {
 					return err
@@ -44,14 +47,17 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 			}
 		case "b":
 			if len(subs) > 0 {
-				newDst := dst.CustomName
-				if newDst == nil {
-					newDst = &Test_TestNested{}
-					dst.CustomName = newDst
-				}
 				var newSrc *Test_TestNested
 				if src != nil {
 					newSrc = src.CustomName
+				}
+				newDst := dst.CustomName
+				if newDst == nil {
+					if newSrc == nil {
+						continue
+					}
+					newDst = &Test_TestNested{}
+					dst.CustomName = newDst
 				}
 				if err := newDst.SetFields(newSrc, subs...); err != nil {
 					return err
@@ -83,14 +89,17 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 			}
 		case "g":
 			if len(subs) > 0 {
-				newDst := dst.G
-				if newDst == nil {
-					newDst = &Empty{}
-					dst.G = newDst
-				}
 				var newSrc *Empty
 				if src != nil {
 					newSrc = src.G
+				}
+				newDst := dst.G
+				if newDst == nil {
+					if newSrc == nil {
+						continue
+					}
+					newDst = &Empty{}
+					dst.G = newDst
 				}
 				if err := newDst.SetFields(newSrc, subs...); err != nil {
 					return err
@@ -180,14 +189,17 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 						dst.TestOneof = &Test_K{}
 					}
 					if len(oneofSubs) > 0 {
-						newDst := dst.TestOneof.(*Test_K).K
-						if newDst == nil {
-							newDst = &Test_TestNested{}
-							dst.TestOneof.(*Test_K).K = newDst
-						}
 						var newSrc *Test_TestNested
 						if src != nil {
 							newSrc = src.GetK()
+						}
+						newDst := dst.TestOneof.(*Test_K).K
+						if newDst == nil {
+							if newSrc == nil {
+								continue
+							}
+							newDst = &Test_TestNested{}
+							dst.TestOneof.(*Test_K).K = newDst
 						}
 						if err := newDst.SetFields(newSrc, oneofSubs...); err != nil {
 							return err
@@ -217,14 +229,17 @@ func (dst *Test_TestNested) SetFields(src *Test_TestNested, paths ...string) err
 		switch name {
 		case "a":
 			if len(subs) > 0 {
-				newDst := dst.A
-				if newDst == nil {
-					newDst = &Test_TestNested_TestNestedNested{}
-					dst.A = newDst
-				}
 				var newSrc *Test_TestNested_TestNestedNested
 				if src != nil {
 					newSrc = src.A
+				}
+				newDst := dst.A
+				if newDst == nil {
+					if newSrc == nil {
+						continue
+					}
+					newDst = &Test_TestNested_TestNestedNested{}
+					dst.A = newDst
 				}
 				if err := newDst.SetFields(newSrc, subs...); err != nil {
 					return err
@@ -342,14 +357,17 @@ func (dst *Test_TestNested_TestNestedNested) SetFields(src *Test_TestNested_Test
 			}
 		case "h":
 			if len(subs) > 0 {
-				newDst := dst.Test_TestNested_TestNestedNested_TestNestedNestedEmbed
-				if newDst == nil {
-					newDst = &Test_TestNested_TestNestedNested_TestNestedNestedEmbed{}
-					dst.Test_TestNested_TestNestedNested_TestNestedNestedEmbed = newDst
-				}
 				var newSrc *Test_TestNested_TestNestedNested_TestNestedNestedEmbed
 				if src != nil {
 					newSrc = src.Test_TestNested_TestNestedNested_TestNestedNestedEmbed
+				}
+				newDst := dst.Test_TestNested_TestNestedNested_TestNestedNestedEmbed
+				if newDst == nil {
+					if newSrc == nil {
+						continue
+					}
+					newDst = &Test_TestNested_TestNestedNested_TestNestedNestedEmbed{}
+					dst.Test_TestNested_TestNestedNested_TestNestedNestedEmbed = newDst
 				}
 				if err := newDst.SetFields(newSrc, subs...); err != nil {
 					return err
@@ -400,14 +418,17 @@ func (dst *Test_TestNested_TestNestedNested) SetFields(src *Test_TestNested_Test
 						dst.TestNestedNestedOneOf = &Test_TestNested_TestNestedNested_E{}
 					}
 					if len(oneofSubs) > 0 {
-						newDst := dst.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_E).E
-						if newDst == nil {
-							newDst = &Empty{}
-							dst.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_E).E = newDst
-						}
 						var newSrc *Empty
 						if src != nil {
 							newSrc = src.GetE()
+						}
+						newDst := dst.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_E).E
+						if newDst == nil {
+							if newSrc == nil {
+								continue
+							}
+							newDst = &Empty{}
+							dst.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_E).E = newDst
 						}
 						if err := newDst.SetFields(newSrc, oneofSubs...); err != nil {
 							return err
