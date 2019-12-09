@@ -10,9 +10,9 @@ GO111MODULE=on go install .
 
 ## Usage:
 
-For example, in `TheThingsIndustries/lorawan-stack`:
+For example, from root of this repository:
 
 ```sh
 protoc -Itestdata -Ivendor --fieldmask_out=lang=gogo:$GOPATH/src testdata/testdata.proto
 ```
-Note, you will need to run `GO111MODULE=on go mod vendor` before running the command above in this repository.
+Note, you will need to run `GO111MODULE=on go mod vendor` before running the command above.
