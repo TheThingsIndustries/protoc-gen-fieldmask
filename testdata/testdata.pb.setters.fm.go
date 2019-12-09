@@ -23,14 +23,18 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 		switch name {
 		case "a":
 			if len(subs) > 0 {
-				newDst := dst.A
-				if newDst == nil {
-					newDst = &Test_TestNested{}
-					dst.A = newDst
+				var newDst, newSrc *Test_TestNested
+				if (src == nil || src.A == nil) && dst.A == nil {
+					continue
 				}
-				var newSrc *Test_TestNested
 				if src != nil {
 					newSrc = src.A
+				}
+				if dst.A != nil {
+					newDst = dst.A
+				} else {
+					newDst = &Test_TestNested{}
+					dst.A = newDst
 				}
 				if err := newDst.SetFields(newSrc, subs...); err != nil {
 					return err
@@ -44,14 +48,18 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 			}
 		case "b":
 			if len(subs) > 0 {
-				newDst := dst.CustomName
-				if newDst == nil {
-					newDst = &Test_TestNested{}
-					dst.CustomName = newDst
+				var newDst, newSrc *Test_TestNested
+				if (src == nil || src.CustomName == nil) && dst.CustomName == nil {
+					continue
 				}
-				var newSrc *Test_TestNested
 				if src != nil {
 					newSrc = src.CustomName
+				}
+				if dst.CustomName != nil {
+					newDst = dst.CustomName
+				} else {
+					newDst = &Test_TestNested{}
+					dst.CustomName = newDst
 				}
 				if err := newDst.SetFields(newSrc, subs...); err != nil {
 					return err
@@ -65,11 +73,11 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 			}
 		case "c":
 			if len(subs) > 0 {
-				newDst := &dst.C
-				var newSrc *Test_TestNested
+				var newDst, newSrc *Test_TestNested
 				if src != nil {
 					newSrc = &src.C
 				}
+				newDst = &dst.C
 				if err := newDst.SetFields(newSrc, subs...); err != nil {
 					return err
 				}
@@ -83,14 +91,18 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 			}
 		case "g":
 			if len(subs) > 0 {
-				newDst := dst.G
-				if newDst == nil {
-					newDst = &Empty{}
-					dst.G = newDst
+				var newDst, newSrc *Empty
+				if (src == nil || src.G == nil) && dst.G == nil {
+					continue
 				}
-				var newSrc *Empty
 				if src != nil {
 					newSrc = src.G
+				}
+				if dst.G != nil {
+					newDst = dst.G
+				} else {
+					newDst = &Empty{}
+					dst.G = newDst
 				}
 				if err := newDst.SetFields(newSrc, subs...); err != nil {
 					return err
@@ -138,65 +150,87 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 			for oneofName, oneofSubs := range subPathMap {
 				switch oneofName {
 				case "d":
-					if _, ok := dst.TestOneof.(*Test_D); !ok {
-						dst.TestOneof = &Test_D{}
+					_, srcOk := src.TestOneof.(*Test_D)
+					if !srcOk && src.TestOneof != nil {
+						return fmt.Errorf("attempt to set oneof 'd', while different oneof is set in source")
+					}
+					_, dstOk := dst.TestOneof.(*Test_D)
+					if !dstOk && dst.TestOneof != nil {
+						return fmt.Errorf("attempt to set oneof 'd', while different oneof is set in destination")
 					}
 					if len(oneofSubs) > 0 {
 						return fmt.Errorf("'d' has no subfields, but %s were specified", oneofSubs)
 					}
 					if src != nil {
-						dst.TestOneof.(*Test_D).D = src.GetD()
+						dst.TestOneof = src.TestOneof
 					} else {
-						var zero int32
-						dst.TestOneof.(*Test_D).D = zero
+						dst.TestOneof = &Test_D{}
 					}
 				case "e":
-					if _, ok := dst.TestOneof.(*Test_CustomNameOneof); !ok {
-						dst.TestOneof = &Test_CustomNameOneof{}
+					_, srcOk := src.TestOneof.(*Test_CustomNameOneof)
+					if !srcOk && src.TestOneof != nil {
+						return fmt.Errorf("attempt to set oneof 'e', while different oneof is set in source")
+					}
+					_, dstOk := dst.TestOneof.(*Test_CustomNameOneof)
+					if !dstOk && dst.TestOneof != nil {
+						return fmt.Errorf("attempt to set oneof 'e', while different oneof is set in destination")
 					}
 					if len(oneofSubs) > 0 {
 						return fmt.Errorf("'e' has no subfields, but %s were specified", oneofSubs)
 					}
 					if src != nil {
-						dst.TestOneof.(*Test_CustomNameOneof).CustomNameOneof = src.GetCustomNameOneof()
+						dst.TestOneof = src.TestOneof
 					} else {
-						var zero uint32
-						dst.TestOneof.(*Test_CustomNameOneof).CustomNameOneof = zero
+						dst.TestOneof = &Test_CustomNameOneof{}
 					}
 				case "f":
-					if _, ok := dst.TestOneof.(*Test_F); !ok {
-						dst.TestOneof = &Test_F{}
+					_, srcOk := src.TestOneof.(*Test_F)
+					if !srcOk && src.TestOneof != nil {
+						return fmt.Errorf("attempt to set oneof 'f', while different oneof is set in source")
+					}
+					_, dstOk := dst.TestOneof.(*Test_F)
+					if !dstOk && dst.TestOneof != nil {
+						return fmt.Errorf("attempt to set oneof 'f', while different oneof is set in destination")
 					}
 					if len(oneofSubs) > 0 {
 						return fmt.Errorf("'f' has no subfields, but %s were specified", oneofSubs)
 					}
 					if src != nil {
-						dst.TestOneof.(*Test_F).F = src.GetF()
+						dst.TestOneof = src.TestOneof
 					} else {
-						dst.TestOneof.(*Test_F).F = nil
+						dst.TestOneof = nil
 					}
 				case "k":
-					if _, ok := dst.TestOneof.(*Test_K); !ok {
-						dst.TestOneof = &Test_K{}
+					_, srcOk := src.TestOneof.(*Test_K)
+					if !srcOk && src.TestOneof != nil {
+						return fmt.Errorf("attempt to set oneof 'k', while different oneof is set in source")
+					}
+					_, dstOk := dst.TestOneof.(*Test_K)
+					if !dstOk && dst.TestOneof != nil {
+						return fmt.Errorf("attempt to set oneof 'k', while different oneof is set in destination")
 					}
 					if len(oneofSubs) > 0 {
-						newDst := dst.TestOneof.(*Test_K).K
-						if newDst == nil {
-							newDst = &Test_TestNested{}
-							dst.TestOneof.(*Test_K).K = newDst
+						var newDst, newSrc *Test_TestNested
+						if !srcOk && !dstOk {
+							continue
 						}
-						var newSrc *Test_TestNested
-						if src != nil {
-							newSrc = src.GetK()
+						if srcOk {
+							newSrc = src.TestOneof.(*Test_K).K
+						}
+						if dstOk {
+							newDst = dst.TestOneof.(*Test_K).K
+						} else {
+							newDst = &Test_TestNested{}
+							dst.TestOneof = &Test_K{K: newDst}
 						}
 						if err := newDst.SetFields(newSrc, oneofSubs...); err != nil {
 							return err
 						}
 					} else {
 						if src != nil {
-							dst.TestOneof.(*Test_K).K = src.GetK()
+							dst.TestOneof = src.TestOneof
 						} else {
-							dst.TestOneof.(*Test_K).K = nil
+							dst.TestOneof = nil
 						}
 					}
 
@@ -217,14 +251,18 @@ func (dst *Test_TestNested) SetFields(src *Test_TestNested, paths ...string) err
 		switch name {
 		case "a":
 			if len(subs) > 0 {
-				newDst := dst.A
-				if newDst == nil {
-					newDst = &Test_TestNested_TestNestedNested{}
-					dst.A = newDst
+				var newDst, newSrc *Test_TestNested_TestNestedNested
+				if (src == nil || src.A == nil) && dst.A == nil {
+					continue
 				}
-				var newSrc *Test_TestNested_TestNestedNested
 				if src != nil {
 					newSrc = src.A
+				}
+				if dst.A != nil {
+					newDst = dst.A
+				} else {
+					newDst = &Test_TestNested_TestNestedNested{}
+					dst.A = newDst
 				}
 				if err := newDst.SetFields(newSrc, subs...); err != nil {
 					return err
@@ -342,14 +380,18 @@ func (dst *Test_TestNested_TestNestedNested) SetFields(src *Test_TestNested_Test
 			}
 		case "h":
 			if len(subs) > 0 {
-				newDst := dst.Test_TestNested_TestNestedNested_TestNestedNestedEmbed
-				if newDst == nil {
-					newDst = &Test_TestNested_TestNestedNested_TestNestedNestedEmbed{}
-					dst.Test_TestNested_TestNestedNested_TestNestedNestedEmbed = newDst
+				var newDst, newSrc *Test_TestNested_TestNestedNested_TestNestedNestedEmbed
+				if (src == nil || src.Test_TestNested_TestNestedNested_TestNestedNestedEmbed == nil) && dst.Test_TestNested_TestNestedNested_TestNestedNestedEmbed == nil {
+					continue
 				}
-				var newSrc *Test_TestNested_TestNestedNested_TestNestedNestedEmbed
 				if src != nil {
 					newSrc = src.Test_TestNested_TestNestedNested_TestNestedNestedEmbed
+				}
+				if dst.Test_TestNested_TestNestedNested_TestNestedNestedEmbed != nil {
+					newDst = dst.Test_TestNested_TestNestedNested_TestNestedNestedEmbed
+				} else {
+					newDst = &Test_TestNested_TestNestedNested_TestNestedNestedEmbed{}
+					dst.Test_TestNested_TestNestedNested_TestNestedNestedEmbed = newDst
 				}
 				if err := newDst.SetFields(newSrc, subs...); err != nil {
 					return err
@@ -363,11 +405,11 @@ func (dst *Test_TestNested_TestNestedNested) SetFields(src *Test_TestNested_Test
 			}
 		case "i":
 			if len(subs) > 0 {
-				newDst := &dst.Test_TestNested_TestNestedNested_TestNestedNestedEmbed2
-				var newSrc *Test_TestNested_TestNestedNested_TestNestedNestedEmbed2
+				var newDst, newSrc *Test_TestNested_TestNestedNested_TestNestedNestedEmbed2
 				if src != nil {
 					newSrc = &src.Test_TestNested_TestNestedNested_TestNestedNestedEmbed2
 				}
+				newDst = &dst.Test_TestNested_TestNestedNested_TestNestedNestedEmbed2
 				if err := newDst.SetFields(newSrc, subs...); err != nil {
 					return err
 				}
@@ -396,53 +438,71 @@ func (dst *Test_TestNested_TestNestedNested) SetFields(src *Test_TestNested_Test
 			for oneofName, oneofSubs := range subPathMap {
 				switch oneofName {
 				case "e":
-					if _, ok := dst.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_E); !ok {
-						dst.TestNestedNestedOneOf = &Test_TestNested_TestNestedNested_E{}
+					_, srcOk := src.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_E)
+					if !srcOk && src.TestNestedNestedOneOf != nil {
+						return fmt.Errorf("attempt to set oneof 'e', while different oneof is set in source")
+					}
+					_, dstOk := dst.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_E)
+					if !dstOk && dst.TestNestedNestedOneOf != nil {
+						return fmt.Errorf("attempt to set oneof 'e', while different oneof is set in destination")
 					}
 					if len(oneofSubs) > 0 {
-						newDst := dst.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_E).E
-						if newDst == nil {
-							newDst = &Empty{}
-							dst.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_E).E = newDst
+						var newDst, newSrc *Empty
+						if !srcOk && !dstOk {
+							continue
 						}
-						var newSrc *Empty
-						if src != nil {
-							newSrc = src.GetE()
+						if srcOk {
+							newSrc = src.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_E).E
+						}
+						if dstOk {
+							newDst = dst.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_E).E
+						} else {
+							newDst = &Empty{}
+							dst.TestNestedNestedOneOf = &Test_TestNested_TestNestedNested_E{E: newDst}
 						}
 						if err := newDst.SetFields(newSrc, oneofSubs...); err != nil {
 							return err
 						}
 					} else {
 						if src != nil {
-							dst.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_E).E = src.GetE()
+							dst.TestNestedNestedOneOf = src.TestNestedNestedOneOf
 						} else {
-							dst.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_E).E = nil
+							dst.TestNestedNestedOneOf = nil
 						}
 					}
 				case "f":
-					if _, ok := dst.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_F); !ok {
-						dst.TestNestedNestedOneOf = &Test_TestNested_TestNestedNested_F{}
+					_, srcOk := src.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_F)
+					if !srcOk && src.TestNestedNestedOneOf != nil {
+						return fmt.Errorf("attempt to set oneof 'f', while different oneof is set in source")
+					}
+					_, dstOk := dst.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_F)
+					if !dstOk && dst.TestNestedNestedOneOf != nil {
+						return fmt.Errorf("attempt to set oneof 'f', while different oneof is set in destination")
 					}
 					if len(oneofSubs) > 0 {
 						return fmt.Errorf("'f' has no subfields, but %s were specified", oneofSubs)
 					}
 					if src != nil {
-						dst.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_F).F = src.GetF()
+						dst.TestNestedNestedOneOf = src.TestNestedNestedOneOf
 					} else {
-						var zero uint32
-						dst.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_F).F = zero
+						dst.TestNestedNestedOneOf = &Test_TestNested_TestNestedNested_F{}
 					}
 				case "g":
-					if _, ok := dst.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_G); !ok {
-						dst.TestNestedNestedOneOf = &Test_TestNested_TestNestedNested_G{}
+					_, srcOk := src.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_G)
+					if !srcOk && src.TestNestedNestedOneOf != nil {
+						return fmt.Errorf("attempt to set oneof 'g', while different oneof is set in source")
+					}
+					_, dstOk := dst.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_G)
+					if !dstOk && dst.TestNestedNestedOneOf != nil {
+						return fmt.Errorf("attempt to set oneof 'g', while different oneof is set in destination")
 					}
 					if len(oneofSubs) > 0 {
 						return fmt.Errorf("'g' has no subfields, but %s were specified", oneofSubs)
 					}
 					if src != nil {
-						dst.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_G).G = src.GetG()
+						dst.TestNestedNestedOneOf = src.TestNestedNestedOneOf
 					} else {
-						dst.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_G).G = nil
+						dst.TestNestedNestedOneOf = nil
 					}
 
 				default:

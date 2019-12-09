@@ -361,7 +361,7 @@ func TestSetFields(t *testing.T) {
 			},
 		},
 		{
-			Name: "a.b a.a.a a.b a.b b testOneof",
+			Name: "a.b,a.a.a,a.b,a.b,b,testOneof",
 			Destination: &testdata.Test{
 				TestOneof: &testdata.Test_CustomNameOneof{},
 				G:         &testdata.Empty{},
@@ -380,7 +380,6 @@ func TestSetFields(t *testing.T) {
 			Paths: []string{"a.b", "a.a.a", "a.b", "a.b", "b", "testOneof"},
 			Result: &testdata.Test{
 				A: &testdata.Test_TestNested{
-					A: &testdata.Test_TestNested_TestNestedNested{},
 					B: []byte{1, 2, 3},
 				},
 				CustomName: &testdata.Test_TestNested{
@@ -393,7 +392,29 @@ func TestSetFields(t *testing.T) {
 			},
 		},
 		{
-			Name: "testOneof.d",
+			Name: "destination testOneof mismatch",
+			Destination: &testdata.Test{
+				TestOneof: &testdata.Test_CustomNameOneof{
+					CustomNameOneof: 42,
+				},
+				G: &testdata.Empty{},
+			},
+			Source: &testdata.Test{
+				TestOneof: &testdata.Test_D{
+					D: 42,
+				},
+			},
+			Paths: []string{"testOneof.d"},
+			Result: &testdata.Test{
+				TestOneof: &testdata.Test_CustomNameOneof{
+					CustomNameOneof: 42,
+				},
+				G: &testdata.Empty{},
+			},
+			ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
+		},
+		{
+			Name: "source testOneof mismatch",
 			Destination: &testdata.Test{
 				TestOneof: &testdata.Test_D{
 					D: 42,
@@ -407,8 +428,36 @@ func TestSetFields(t *testing.T) {
 			},
 			Paths: []string{"testOneof.d"},
 			Result: &testdata.Test{
-				TestOneof: &testdata.Test_D{},
-				G:         &testdata.Empty{},
+				TestOneof: &testdata.Test_D{
+					D: 42,
+				},
+				G: &testdata.Empty{},
+			},
+			ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
+		},
+		{
+			Name: "unset testOneof",
+			Destination: &testdata.Test{
+				TestOneof: &testdata.Test_D{
+					D: 42,
+				},
+				G: &testdata.Empty{},
+			},
+			Source: &testdata.Test{},
+			Paths:  []string{"testOneof.d"},
+			Result: &testdata.Test{
+				G: &testdata.Empty{},
+			},
+		},
+		{
+			Name: "set non-existing testOneof",
+			Destination: &testdata.Test{
+				G: &testdata.Empty{},
+			},
+			Source: &testdata.Test{},
+			Paths:  []string{"testOneof.e"},
+			Result: &testdata.Test{
+				G: &testdata.Empty{},
 			},
 		},
 		{
@@ -432,18 +481,6 @@ func TestSetFields(t *testing.T) {
 						},
 					},
 				},
-			},
-		},
-		{
-			Name: "testOneof.e",
-			Destination: &testdata.Test{
-				G: &testdata.Empty{},
-			},
-			Source: &testdata.Test{},
-			Paths:  []string{"testOneof.e"},
-			Result: &testdata.Test{
-				TestOneof: &testdata.Test_CustomNameOneof{},
-				G:         &testdata.Empty{},
 			},
 		},
 		{
