@@ -35,48 +35,51 @@ func (m *setterModule) buildSetFieldsCase(buf *strings.Builder, imports importMa
 
 	buildIndented(buf, tabCount, fmt.Sprintf(`case "%s":`, f.Name()))
 
+	if f.InOneOf() {
+		buildIndented(buf, tabCount+1, fmt.Sprintf(`_, srcOk := src.%s.(*%s)
+if !srcOk && src.%s != nil {
+	return fmt.Errorf("attempt to set oneof '%s', while different oneof is set in source")
+}
+_, dstOk := dst.%s.(*%s)
+if !dstOk && dst.%s != nil {
+	return fmt.Errorf("attempt to set oneof '%s', while different oneof is set in destination")
+}`,
+			m.ctx.Name(f.OneOf()), m.ctx.OneofOption(f), m.ctx.Name(f.OneOf()),
+			f.Name(),
+			m.ctx.Name(f.OneOf()), m.ctx.OneofOption(f),
+			m.ctx.Name(f.OneOf()),
+			f.Name(),
+		))
+	}
+
 	goType := m.ctx.Type(f)
 
-	dstPath := "dst"
-	srcPath := "src"
-	if f.InOneOf() {
-		dstPath = fmt.Sprintf("%s.%s", dstPath, m.ctx.Name(f.OneOf()))
-
-		buildIndented(buf, tabCount+1, fmt.Sprintf(`if _, ok := %s.(*%s); !ok {
-	%s = &%s{}
-}`,
-			dstPath, m.ctx.OneofOption(f),
-			dstPath, m.ctx.OneofOption(f),
-		))
-
-		dstPath = fmt.Sprintf("%s.(*%s).%s", dstPath, m.ctx.OneofOption(f), m.ctx.Name(f))
-		srcPath = fmt.Sprintf("%s.Get%s()", srcPath, m.ctx.Name(f))
-
-	} else {
-		name := m.ctx.Name(f).String()
-		if name == "" {
-			name = goType.Value().String()
-			if i := strings.LastIndex(name, "."); i > 0 {
-				name = name[i+1:]
-			}
+	fName := m.ctx.Name(f).String()
+	if fName == "" {
+		fName = goType.Value().String()
+		if i := strings.LastIndex(fName, "."); i > 0 {
+			fName = fName[i+1:]
 		}
-		dstPath = fmt.Sprintf("%s.%s", dstPath, name)
-		srcPath = fmt.Sprintf("%s.%s", srcPath, name)
 	}
 
 	ft := f.Type()
 
 	buildFinal := func(tabCount uint) error {
+		fPath := fName
+		if f.InOneOf() {
+			fPath = m.ctx.Name(f.OneOf()).String()
+		}
+
 		buildIndented(buf, tabCount, fmt.Sprintf(`if src != nil {
-	%s = %s
+	dst.%s = src.%s
 } else {`,
-			dstPath, srcPath,
+			fPath, fPath,
 		))
 
 		if goType.IsPointer() {
-			buildIndented(buf, tabCount, fmt.Sprintf(`	%s = nil
+			buildIndented(buf, tabCount, fmt.Sprintf(`	dst.%s = nil
 }`,
-				dstPath,
+				fPath,
 			))
 			return nil
 		}
@@ -87,11 +90,18 @@ func (m *setterModule) buildSetFieldsCase(buf *strings.Builder, imports importMa
 			}
 		}
 
+		if f.InOneOf() {
+			buildIndented(buf, tabCount, fmt.Sprintf(`	dst.%s = &%s{}
+}`,
+				fPath, m.ctx.OneofOption(f),
+			))
+			return nil
+		}
 		buildIndented(buf, tabCount, fmt.Sprintf(`	var zero %s
-	%s = zero
+	dst.%s = zero
 }`,
 			goType,
-			dstPath,
+			fPath,
 		))
 		return nil
 	}
@@ -109,38 +119,61 @@ func (m *setterModule) buildSetFieldsCase(buf *strings.Builder, imports importMa
 		return buildFinal(tabCount + 1)
 	}
 
-	if goType.IsPointer() {
-		buildIndented(buf, tabCount+1, fmt.Sprintf(`if len(%s) > 0 {
-	var newSrc %s
-	if src != nil {
-		newSrc = %s
-	}
-	newDst := %s
-	if newDst == nil {
-		if newSrc == nil {
-			continue
-		}
-		newDst = &%s{}
-		%s = newDst
-	}`,
-			subs,
-			goType,
-			srcPath,
-			dstPath,
+	buildIndented(buf, tabCount+1, fmt.Sprintf(`if len(%s) > 0 {
+	var newDst, newSrc *%s`,
+		subs,
+		goType.Value(),
+	))
+
+	switch {
+	case f.InOneOf():
+		fPath := fmt.Sprintf("%s.(*%s).%s", m.ctx.Name(f.OneOf()), m.ctx.OneofOption(f), fName)
+		buildIndented(buf, tabCount+2, fmt.Sprintf(`if !srcOk && !dstOk {
+	continue
+}
+if srcOk {
+	newSrc = src.%s
+}
+if dstOk {
+	newDst = dst.%s
+} else {
+	newDst = &%s{}
+	dst.%s = &%s{%s: newDst}
+}`,
+			fPath,
+			fPath,
 			goType.Value(),
-			dstPath,
+			m.ctx.Name(f.OneOf()), m.ctx.OneofOption(f), fName,
 		))
-	} else {
-		buildIndented(buf, tabCount+1, fmt.Sprintf(`if len(%s) > 0 {
-	newDst := &%s
-	var newSrc *%s
-	if src != nil {
-		newSrc = &%s
-	}`,
-			subs,
-			dstPath,
-			goType,
-			srcPath,
+
+	case goType.IsPointer():
+		buildIndented(buf, tabCount+2, fmt.Sprintf(`if (src == nil || src.%s == nil) && dst.%s == nil {
+	continue
+}
+if src != nil {
+	newSrc = src.%s
+}
+if dst.%s != nil {
+	newDst = dst.%s
+} else {
+	newDst = &%s{}
+	dst.%s = newDst
+}`,
+			fName, fName,
+			fName,
+			fName,
+			fName,
+			goType.Value(),
+			fName,
+		))
+
+	default:
+		buildIndented(buf, tabCount+2, fmt.Sprintf(`if src != nil {
+	newSrc = &src.%s
+}
+newDst = &dst.%s`,
+			fName,
+			fName,
 		))
 	}
 
