@@ -179,41 +179,32 @@ func (m *pathHelperModule) Execute(files map[string]pgs.File, pkgs map[string]pg
 		m.AddGeneratorTemplateFile(dir.Push(dir.Base()).SetExt(".pb.util.fm.go").String(), template.Must(template.New("util").Parse(`package {{ .Package }}
 
 import (
-	"sort"
 	"strings"
 )
 
 // _processPaths returns paths as a pathMap.
 func _processPaths(paths []string) map[string][]string {
-	sort.Strings(paths)
-
-	topLevel := make(map[string]struct{}, len(paths))
-	_pathMap := make(map[string]map[string]struct{}, len(paths))
+	if len(paths) == 0 {
+		return nil
+	}
+	pathMap := make(map[string][]string, len(paths))
 	for _, p := range paths {
 		if !strings.Contains(p, ".") {
-			topLevel[p] = struct{}{}
+			pathMap[p] = nil
 			continue
 		}
 		parts := strings.SplitN(p, ".", 2)
 		h, t := parts[0], parts[1]
-		if _pathMap[h] == nil {
-			_pathMap[h] = map[string]struct{}{t: {}}
+		if val, ok := pathMap[h]; ok {
+			if val == nil {
+				continue
+			}
+			pathMap[h] = append(pathMap[h], t)
 		} else {
-			_pathMap[h][t] = struct{}{}
+			pathMap[h] = []string{t}
 		}
 	}
 
-	for f := range topLevel {
-		_pathMap[f] = nil
-	}
-
-	pathMap := make(map[string][]string, len(_pathMap))
-	for top, subs := range _pathMap {
-		pathMap[top] = make([]string, 0, len(subs))
-		for sub := range subs {
-			pathMap[top] = append(pathMap[top], sub)
-		}
-	}
 	return pathMap
 }`)), struct {
 			Package pgs.Name

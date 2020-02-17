@@ -216,7 +216,7 @@ func (dst *%s) SetFields(src *%s, paths ...string) error {
 
 	fmt.Fprintf(buf, `
 func (dst *%s) SetFields(src *%s, paths ...string) error {
-	for name, subs := range _processPaths(append(paths[:0:0], paths...)) {
+	for name, subs := range _processPaths(paths) {
 		switch name {
 `,
 		mType, mType,
