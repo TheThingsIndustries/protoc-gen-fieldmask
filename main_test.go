@@ -336,6 +336,34 @@ func TestSetFields(t *testing.T) {
 			},
 		},
 		{
+			Name: "a",
+			Destination: &testdata.Test{
+				CustomName: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{},
+				},
+			},
+			Source: &testdata.Test{
+				A: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{
+						B: 42,
+					},
+					B: []byte{1, 2, 3},
+				},
+			},
+			Paths: []string{"a"},
+			Result: &testdata.Test{
+				A: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{
+						B: 42,
+					},
+					B: []byte{1, 2, 3},
+				},
+				CustomName: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{},
+				},
+			},
+		},
+		{
 			Name: "a.b",
 			Destination: &testdata.Test{
 				CustomName: &testdata.Test_TestNested{
@@ -353,6 +381,62 @@ func TestSetFields(t *testing.T) {
 			Paths: []string{"a.b"},
 			Result: &testdata.Test{
 				A: &testdata.Test_TestNested{
+					B: []byte{1, 2, 3},
+				},
+				CustomName: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{},
+				},
+			},
+		},
+		{
+			Name: "a,a.b",
+			Destination: &testdata.Test{
+				CustomName: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{},
+				},
+			},
+			Source: &testdata.Test{
+				A: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{
+						B: 42,
+					},
+					B: []byte{1, 2, 3},
+				},
+			},
+			Paths: []string{"a", "a.b"},
+			Result: &testdata.Test{
+				A: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{
+						B: 42,
+					},
+					B: []byte{1, 2, 3},
+				},
+				CustomName: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{},
+				},
+			},
+		},
+		{
+			Name: "a.b,a",
+			Destination: &testdata.Test{
+				CustomName: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{},
+				},
+			},
+			Source: &testdata.Test{
+				A: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{
+						B: 42,
+					},
+					B: []byte{1, 2, 3},
+				},
+			},
+			Paths: []string{"a.b", "a"},
+			Result: &testdata.Test{
+				A: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{
+						B: 42,
+					},
 					B: []byte{1, 2, 3},
 				},
 				CustomName: &testdata.Test_TestNested{
