@@ -258,7 +258,7 @@ func BenchmarkSetFields(t *testing.B) {
 		t.Run(tc.Name, func(t *testing.B) {
 			t.ResetTimer()
 			for i := 0; i < t.N; i++ {
-				tc.Destination.ValidateFields(tc.Paths...)
+				// tc.Destination.ValidateFields(tc.Paths...)
 				tc.Destination.SetFields(tc.Source, tc.Paths...)
 			}
 		})
