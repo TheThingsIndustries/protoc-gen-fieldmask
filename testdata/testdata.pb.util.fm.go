@@ -19,7 +19,10 @@ func _processPaths(paths []string) map[string][]string {
 		}
 		parts := strings.SplitN(p, ".", 2)
 		h, t := parts[0], parts[1]
-		if _, ok := pathMap[h]; ok {
+		if val, ok := pathMap[h]; ok {
+			if val == nil {
+				continue
+			}
 			pathMap[h] = append(pathMap[h], t)
 		} else {
 			pathMap[h] = []string{t}

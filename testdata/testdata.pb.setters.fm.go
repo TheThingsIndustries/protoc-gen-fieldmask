@@ -19,7 +19,7 @@ func (dst *Empty) SetFields(src *Empty, paths ...string) error {
 }
 
 func (dst *Test) SetFields(src *Test, paths ...string) error {
-	for name, subs := range _processPaths(append(paths[:0:0], paths...)) {
+	for name, subs := range _processPaths(paths) {
 		switch name {
 		case "a":
 			if len(subs) > 0 {
@@ -247,7 +247,7 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 }
 
 func (dst *Test_TestNested) SetFields(src *Test_TestNested, paths ...string) error {
-	for name, subs := range _processPaths(append(paths[:0:0], paths...)) {
+	for name, subs := range _processPaths(paths) {
 		switch name {
 		case "a":
 			if len(subs) > 0 {
@@ -338,7 +338,7 @@ func (dst *Test_TestNested) SetFields(src *Test_TestNested, paths ...string) err
 }
 
 func (dst *Test_TestNested_TestNestedNested) SetFields(src *Test_TestNested_TestNestedNested, paths ...string) error {
-	for name, subs := range _processPaths(append(paths[:0:0], paths...)) {
+	for name, subs := range _processPaths(paths) {
 		switch name {
 		case "a":
 			if len(subs) > 0 {
@@ -518,7 +518,7 @@ func (dst *Test_TestNested_TestNestedNested) SetFields(src *Test_TestNested_Test
 }
 
 func (dst *Test_TestNested_TestNestedNested_TestNestedNestedEmbed) SetFields(src *Test_TestNested_TestNestedNested_TestNestedNestedEmbed, paths ...string) error {
-	for name, subs := range _processPaths(append(paths[:0:0], paths...)) {
+	for name, subs := range _processPaths(paths) {
 		switch name {
 		case "nested_field":
 			if len(subs) > 0 {
@@ -539,7 +539,7 @@ func (dst *Test_TestNested_TestNestedNested_TestNestedNestedEmbed) SetFields(src
 }
 
 func (dst *Test_TestNested_TestNestedNested_TestNestedNestedEmbed2) SetFields(src *Test_TestNested_TestNestedNested_TestNestedNestedEmbed2, paths ...string) error {
-	for name, subs := range _processPaths(append(paths[:0:0], paths...)) {
+	for name, subs := range _processPaths(paths) {
 		switch name {
 		case "nested_field_2":
 			if len(subs) > 0 {
