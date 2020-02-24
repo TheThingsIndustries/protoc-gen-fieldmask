@@ -22,7 +22,7 @@ before_install:
 - sudo mv /tmp/include/google /usr/local/include/google
 
 script:
-- make -B clean test build
+- make -B clean test benchmark build
 - gofmt -w -s $(go list -f '{{ .Dir }}' ./...)
 - go mod tidy
 - git diff --exit-code
