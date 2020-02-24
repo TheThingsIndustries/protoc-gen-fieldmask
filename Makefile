@@ -46,3 +46,7 @@ test: .tools/protoc-gen-gogo vendor/github.com/gogo/protobuf/gogoproto/gogo.prot
 	@PROTOC="$(PROTOC)" go test -regenerate
 	$(info Running tests...)
 	@PROTOC="$(PROTOC)" go test -coverprofile=coverage.out ./...
+
+benchmark: .tools/protoc-gen-gogo vendor/github.com/gogo/protobuf/gogoproto/gogo.proto
+	$(info Running benchmarks...)
+	@PROTOC="$(PROTOC)" go test -bench .

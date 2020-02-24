@@ -289,337 +289,339 @@ func TestFieldMaskPaths(t *testing.T) {
 	})
 }
 
+var setFieldsTestCases = []struct {
+	Name                        string
+	Source, Destination, Result *testdata.Test
+	Paths                       []string
+	ErrorAssertion              func(t *testing.T, err error) bool
+}{
+	{
+		Name: "nil source",
+		Destination: &testdata.Test{
+			A: &testdata.Test_TestNested{},
+			CustomName: &testdata.Test_TestNested{
+				A: &testdata.Test_TestNested_TestNestedNested{},
+			},
+		},
+		Source: nil,
+		Paths:  []string{"a.b", "b.c"},
+		Result: &testdata.Test{
+			A: &testdata.Test_TestNested{},
+			CustomName: &testdata.Test_TestNested{
+				A: &testdata.Test_TestNested_TestNestedNested{},
+			},
+		},
+	},
+	{
+		Name: "no paths",
+		Destination: &testdata.Test{
+			CustomName: &testdata.Test_TestNested{
+				A: &testdata.Test_TestNested_TestNestedNested{},
+			},
+		},
+		Source: &testdata.Test{
+			A: &testdata.Test_TestNested{
+				B: []byte{1, 2, 3},
+			},
+			CustomName: &testdata.Test_TestNested{
+				B: []byte{1, 2, 4},
+			},
+		},
+		Paths: nil,
+		Result: &testdata.Test{
+			CustomName: &testdata.Test_TestNested{
+				A: &testdata.Test_TestNested_TestNestedNested{},
+			},
+		},
+	},
+	{
+		Name: "a",
+		Destination: &testdata.Test{
+			CustomName: &testdata.Test_TestNested{
+				A: &testdata.Test_TestNested_TestNestedNested{},
+			},
+		},
+		Source: &testdata.Test{
+			A: &testdata.Test_TestNested{
+				A: &testdata.Test_TestNested_TestNestedNested{
+					B: 42,
+				},
+				B: []byte{1, 2, 3},
+			},
+		},
+		Paths: []string{"a"},
+		Result: &testdata.Test{
+			A: &testdata.Test_TestNested{
+				A: &testdata.Test_TestNested_TestNestedNested{
+					B: 42,
+				},
+				B: []byte{1, 2, 3},
+			},
+			CustomName: &testdata.Test_TestNested{
+				A: &testdata.Test_TestNested_TestNestedNested{},
+			},
+		},
+	},
+	{
+		Name: "a.b",
+		Destination: &testdata.Test{
+			CustomName: &testdata.Test_TestNested{
+				A: &testdata.Test_TestNested_TestNestedNested{},
+			},
+		},
+		Source: &testdata.Test{
+			A: &testdata.Test_TestNested{
+				B: []byte{1, 2, 3},
+			},
+			CustomName: &testdata.Test_TestNested{
+				B: []byte{1, 2, 4},
+			},
+		},
+		Paths: []string{"a.b"},
+		Result: &testdata.Test{
+			A: &testdata.Test_TestNested{
+				B: []byte{1, 2, 3},
+			},
+			CustomName: &testdata.Test_TestNested{
+				A: &testdata.Test_TestNested_TestNestedNested{},
+			},
+		},
+	},
+	{
+		Name: "a,a.b",
+		Destination: &testdata.Test{
+			CustomName: &testdata.Test_TestNested{
+				A: &testdata.Test_TestNested_TestNestedNested{},
+			},
+		},
+		Source: &testdata.Test{
+			A: &testdata.Test_TestNested{
+				A: &testdata.Test_TestNested_TestNestedNested{
+					B: 42,
+				},
+				B: []byte{1, 2, 3},
+			},
+		},
+		Paths: []string{"a", "a.b"},
+		Result: &testdata.Test{
+			A: &testdata.Test_TestNested{
+				A: &testdata.Test_TestNested_TestNestedNested{
+					B: 42,
+				},
+				B: []byte{1, 2, 3},
+			},
+			CustomName: &testdata.Test_TestNested{
+				A: &testdata.Test_TestNested_TestNestedNested{},
+			},
+		},
+	},
+	{
+		Name: "a.b,a",
+		Destination: &testdata.Test{
+			CustomName: &testdata.Test_TestNested{
+				A: &testdata.Test_TestNested_TestNestedNested{},
+			},
+		},
+		Source: &testdata.Test{
+			A: &testdata.Test_TestNested{
+				A: &testdata.Test_TestNested_TestNestedNested{
+					B: 42,
+				},
+				B: []byte{1, 2, 3},
+			},
+		},
+		Paths: []string{"a.b", "a"},
+		Result: &testdata.Test{
+			A: &testdata.Test_TestNested{
+				A: &testdata.Test_TestNested_TestNestedNested{
+					B: 42,
+				},
+				B: []byte{1, 2, 3},
+			},
+			CustomName: &testdata.Test_TestNested{
+				A: &testdata.Test_TestNested_TestNestedNested{},
+			},
+		},
+	},
+	{
+		Name: "a.b,a.a.a,a.b,a.b,b,testOneof",
+		Destination: &testdata.Test{
+			TestOneof: &testdata.Test_CustomNameOneof{},
+			G:         &testdata.Empty{},
+		},
+		Source: &testdata.Test{
+			A: &testdata.Test_TestNested{
+				B: []byte{1, 2, 3},
+			},
+			CustomName: &testdata.Test_TestNested{
+				B: []byte{1, 2, 4},
+			},
+			TestOneof: &testdata.Test_D{
+				D: 42,
+			},
+		},
+		Paths: []string{"a.b", "a.a.a", "a.b", "a.b", "b", "testOneof"},
+		Result: &testdata.Test{
+			A: &testdata.Test_TestNested{
+				B: []byte{1, 2, 3},
+			},
+			CustomName: &testdata.Test_TestNested{
+				B: []byte{1, 2, 4},
+			},
+			TestOneof: &testdata.Test_D{
+				D: 42,
+			},
+			G: &testdata.Empty{},
+		},
+	},
+	{
+		Name: "destination testOneof mismatch",
+		Destination: &testdata.Test{
+			TestOneof: &testdata.Test_CustomNameOneof{
+				CustomNameOneof: 42,
+			},
+			G: &testdata.Empty{},
+		},
+		Source: &testdata.Test{
+			TestOneof: &testdata.Test_D{
+				D: 42,
+			},
+		},
+		Paths: []string{"testOneof.d"},
+		Result: &testdata.Test{
+			TestOneof: &testdata.Test_CustomNameOneof{
+				CustomNameOneof: 42,
+			},
+			G: &testdata.Empty{},
+		},
+		ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
+	},
+	{
+		Name: "source testOneof mismatch",
+		Destination: &testdata.Test{
+			TestOneof: &testdata.Test_D{
+				D: 42,
+			},
+			G: &testdata.Empty{},
+		},
+		Source: &testdata.Test{
+			TestOneof: &testdata.Test_CustomNameOneof{
+				CustomNameOneof: 42,
+			},
+		},
+		Paths: []string{"testOneof.d"},
+		Result: &testdata.Test{
+			TestOneof: &testdata.Test_D{
+				D: 42,
+			},
+			G: &testdata.Empty{},
+		},
+		ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
+	},
+	{
+		Name: "unset testOneof",
+		Destination: &testdata.Test{
+			TestOneof: &testdata.Test_D{
+				D: 42,
+			},
+			G: &testdata.Empty{},
+		},
+		Source: &testdata.Test{},
+		Paths:  []string{"testOneof.d"},
+		Result: &testdata.Test{
+			G: &testdata.Empty{},
+		},
+	},
+	{
+		Name: "set non-existing testOneof",
+		Destination: &testdata.Test{
+			G: &testdata.Empty{},
+		},
+		Source: &testdata.Test{},
+		Paths:  []string{"testOneof.e"},
+		Result: &testdata.Test{
+			G: &testdata.Empty{},
+		},
+	},
+	{
+		Name:        "testOneof.k.a.a",
+		Destination: &testdata.Test{},
+		Source: &testdata.Test{
+			TestOneof: &testdata.Test_K{
+				K: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{
+						A: 42,
+					},
+				},
+			},
+		},
+		Paths: []string{"testOneof.k.a.a"},
+		Result: &testdata.Test{
+			TestOneof: &testdata.Test_K{
+				K: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{
+						A: 42,
+					},
+				},
+			},
+		},
+	},
+	{
+		Name: "non-nullable c.a",
+		Destination: &testdata.Test{
+			C: testdata.Test_TestNested{
+				A: &testdata.Test_TestNested_TestNestedNested{},
+			},
+		},
+		Source: &testdata.Test{
+			C: testdata.Test_TestNested{
+				B: []byte("42"),
+			},
+		},
+		Paths: []string{"c.b"},
+		Result: &testdata.Test{
+			C: testdata.Test_TestNested{
+				A: &testdata.Test_TestNested_TestNestedNested{},
+				B: []byte("42"),
+			},
+		},
+	},
+	{
+		Name:           "non-existent top-level field",
+		Destination:    &testdata.Test{},
+		Source:         &testdata.Test{},
+		Paths:          []string{"42"},
+		Result:         &testdata.Test{},
+		ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
+	},
+	{
+		Name:           "non-existent sub-field",
+		Destination:    &testdata.Test{},
+		Source:         &testdata.Test{},
+		Paths:          []string{"41.42.43"},
+		Result:         &testdata.Test{},
+		ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
+	},
+	{
+		Name:           "non-existent oneof",
+		Destination:    &testdata.Test{},
+		Source:         &testdata.Test{},
+		Paths:          []string{"testOneof.42"},
+		Result:         &testdata.Test{},
+		ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
+	},
+	{
+		Name:           "double oneofs",
+		Destination:    &testdata.Test{},
+		Source:         &testdata.Test{},
+		Paths:          []string{"testOneof.e", "testOneof.d"},
+		Result:         &testdata.Test{},
+		ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
+	},
+}
+
 func TestSetFields(t *testing.T) {
-	for _, tc := range []struct {
-		Name                        string
-		Source, Destination, Result *testdata.Test
-		Paths                       []string
-		ErrorAssertion              func(t *testing.T, err error) bool
-	}{
-		{
-			Name: "nil source",
-			Destination: &testdata.Test{
-				A: &testdata.Test_TestNested{},
-				CustomName: &testdata.Test_TestNested{
-					A: &testdata.Test_TestNested_TestNestedNested{},
-				},
-			},
-			Source: nil,
-			Paths:  []string{"a.b", "b.c"},
-			Result: &testdata.Test{
-				A: &testdata.Test_TestNested{},
-				CustomName: &testdata.Test_TestNested{
-					A: &testdata.Test_TestNested_TestNestedNested{},
-				},
-			},
-		},
-		{
-			Name: "no paths",
-			Destination: &testdata.Test{
-				CustomName: &testdata.Test_TestNested{
-					A: &testdata.Test_TestNested_TestNestedNested{},
-				},
-			},
-			Source: &testdata.Test{
-				A: &testdata.Test_TestNested{
-					B: []byte{1, 2, 3},
-				},
-				CustomName: &testdata.Test_TestNested{
-					B: []byte{1, 2, 4},
-				},
-			},
-			Paths: nil,
-			Result: &testdata.Test{
-				CustomName: &testdata.Test_TestNested{
-					A: &testdata.Test_TestNested_TestNestedNested{},
-				},
-			},
-		},
-		{
-			Name: "a",
-			Destination: &testdata.Test{
-				CustomName: &testdata.Test_TestNested{
-					A: &testdata.Test_TestNested_TestNestedNested{},
-				},
-			},
-			Source: &testdata.Test{
-				A: &testdata.Test_TestNested{
-					A: &testdata.Test_TestNested_TestNestedNested{
-						B: 42,
-					},
-					B: []byte{1, 2, 3},
-				},
-			},
-			Paths: []string{"a"},
-			Result: &testdata.Test{
-				A: &testdata.Test_TestNested{
-					A: &testdata.Test_TestNested_TestNestedNested{
-						B: 42,
-					},
-					B: []byte{1, 2, 3},
-				},
-				CustomName: &testdata.Test_TestNested{
-					A: &testdata.Test_TestNested_TestNestedNested{},
-				},
-			},
-		},
-		{
-			Name: "a.b",
-			Destination: &testdata.Test{
-				CustomName: &testdata.Test_TestNested{
-					A: &testdata.Test_TestNested_TestNestedNested{},
-				},
-			},
-			Source: &testdata.Test{
-				A: &testdata.Test_TestNested{
-					B: []byte{1, 2, 3},
-				},
-				CustomName: &testdata.Test_TestNested{
-					B: []byte{1, 2, 4},
-				},
-			},
-			Paths: []string{"a.b"},
-			Result: &testdata.Test{
-				A: &testdata.Test_TestNested{
-					B: []byte{1, 2, 3},
-				},
-				CustomName: &testdata.Test_TestNested{
-					A: &testdata.Test_TestNested_TestNestedNested{},
-				},
-			},
-		},
-		{
-			Name: "a,a.b",
-			Destination: &testdata.Test{
-				CustomName: &testdata.Test_TestNested{
-					A: &testdata.Test_TestNested_TestNestedNested{},
-				},
-			},
-			Source: &testdata.Test{
-				A: &testdata.Test_TestNested{
-					A: &testdata.Test_TestNested_TestNestedNested{
-						B: 42,
-					},
-					B: []byte{1, 2, 3},
-				},
-			},
-			Paths: []string{"a", "a.b"},
-			Result: &testdata.Test{
-				A: &testdata.Test_TestNested{
-					A: &testdata.Test_TestNested_TestNestedNested{
-						B: 42,
-					},
-					B: []byte{1, 2, 3},
-				},
-				CustomName: &testdata.Test_TestNested{
-					A: &testdata.Test_TestNested_TestNestedNested{},
-				},
-			},
-		},
-		{
-			Name: "a.b,a",
-			Destination: &testdata.Test{
-				CustomName: &testdata.Test_TestNested{
-					A: &testdata.Test_TestNested_TestNestedNested{},
-				},
-			},
-			Source: &testdata.Test{
-				A: &testdata.Test_TestNested{
-					A: &testdata.Test_TestNested_TestNestedNested{
-						B: 42,
-					},
-					B: []byte{1, 2, 3},
-				},
-			},
-			Paths: []string{"a.b", "a"},
-			Result: &testdata.Test{
-				A: &testdata.Test_TestNested{
-					A: &testdata.Test_TestNested_TestNestedNested{
-						B: 42,
-					},
-					B: []byte{1, 2, 3},
-				},
-				CustomName: &testdata.Test_TestNested{
-					A: &testdata.Test_TestNested_TestNestedNested{},
-				},
-			},
-		},
-		{
-			Name: "a.b,a.a.a,a.b,a.b,b,testOneof",
-			Destination: &testdata.Test{
-				TestOneof: &testdata.Test_CustomNameOneof{},
-				G:         &testdata.Empty{},
-			},
-			Source: &testdata.Test{
-				A: &testdata.Test_TestNested{
-					B: []byte{1, 2, 3},
-				},
-				CustomName: &testdata.Test_TestNested{
-					B: []byte{1, 2, 4},
-				},
-				TestOneof: &testdata.Test_D{
-					D: 42,
-				},
-			},
-			Paths: []string{"a.b", "a.a.a", "a.b", "a.b", "b", "testOneof"},
-			Result: &testdata.Test{
-				A: &testdata.Test_TestNested{
-					B: []byte{1, 2, 3},
-				},
-				CustomName: &testdata.Test_TestNested{
-					B: []byte{1, 2, 4},
-				},
-				TestOneof: &testdata.Test_D{
-					D: 42,
-				},
-				G: &testdata.Empty{},
-			},
-		},
-		{
-			Name: "destination testOneof mismatch",
-			Destination: &testdata.Test{
-				TestOneof: &testdata.Test_CustomNameOneof{
-					CustomNameOneof: 42,
-				},
-				G: &testdata.Empty{},
-			},
-			Source: &testdata.Test{
-				TestOneof: &testdata.Test_D{
-					D: 42,
-				},
-			},
-			Paths: []string{"testOneof.d"},
-			Result: &testdata.Test{
-				TestOneof: &testdata.Test_CustomNameOneof{
-					CustomNameOneof: 42,
-				},
-				G: &testdata.Empty{},
-			},
-			ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
-		},
-		{
-			Name: "source testOneof mismatch",
-			Destination: &testdata.Test{
-				TestOneof: &testdata.Test_D{
-					D: 42,
-				},
-				G: &testdata.Empty{},
-			},
-			Source: &testdata.Test{
-				TestOneof: &testdata.Test_CustomNameOneof{
-					CustomNameOneof: 42,
-				},
-			},
-			Paths: []string{"testOneof.d"},
-			Result: &testdata.Test{
-				TestOneof: &testdata.Test_D{
-					D: 42,
-				},
-				G: &testdata.Empty{},
-			},
-			ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
-		},
-		{
-			Name: "unset testOneof",
-			Destination: &testdata.Test{
-				TestOneof: &testdata.Test_D{
-					D: 42,
-				},
-				G: &testdata.Empty{},
-			},
-			Source: &testdata.Test{},
-			Paths:  []string{"testOneof.d"},
-			Result: &testdata.Test{
-				G: &testdata.Empty{},
-			},
-		},
-		{
-			Name: "set non-existing testOneof",
-			Destination: &testdata.Test{
-				G: &testdata.Empty{},
-			},
-			Source: &testdata.Test{},
-			Paths:  []string{"testOneof.e"},
-			Result: &testdata.Test{
-				G: &testdata.Empty{},
-			},
-		},
-		{
-			Name:        "testOneof.k.a.a",
-			Destination: &testdata.Test{},
-			Source: &testdata.Test{
-				TestOneof: &testdata.Test_K{
-					K: &testdata.Test_TestNested{
-						A: &testdata.Test_TestNested_TestNestedNested{
-							A: 42,
-						},
-					},
-				},
-			},
-			Paths: []string{"testOneof.k.a.a"},
-			Result: &testdata.Test{
-				TestOneof: &testdata.Test_K{
-					K: &testdata.Test_TestNested{
-						A: &testdata.Test_TestNested_TestNestedNested{
-							A: 42,
-						},
-					},
-				},
-			},
-		},
-		{
-			Name: "non-nullable c.a",
-			Destination: &testdata.Test{
-				C: testdata.Test_TestNested{
-					A: &testdata.Test_TestNested_TestNestedNested{},
-				},
-			},
-			Source: &testdata.Test{
-				C: testdata.Test_TestNested{
-					B: []byte("42"),
-				},
-			},
-			Paths: []string{"c.b"},
-			Result: &testdata.Test{
-				C: testdata.Test_TestNested{
-					A: &testdata.Test_TestNested_TestNestedNested{},
-					B: []byte("42"),
-				},
-			},
-		},
-		{
-			Name:           "non-existent top-level field",
-			Destination:    &testdata.Test{},
-			Source:         &testdata.Test{},
-			Paths:          []string{"42"},
-			Result:         &testdata.Test{},
-			ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
-		},
-		{
-			Name:           "non-existent sub-field",
-			Destination:    &testdata.Test{},
-			Source:         &testdata.Test{},
-			Paths:          []string{"41.42.43"},
-			Result:         &testdata.Test{},
-			ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
-		},
-		{
-			Name:           "non-existent oneof",
-			Destination:    &testdata.Test{},
-			Source:         &testdata.Test{},
-			Paths:          []string{"testOneof.42"},
-			Result:         &testdata.Test{},
-			ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
-		},
-		{
-			Name:           "double oneofs",
-			Destination:    &testdata.Test{},
-			Source:         &testdata.Test{},
-			Paths:          []string{"testOneof.e", "testOneof.d"},
-			Result:         &testdata.Test{},
-			ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
-		},
-	} {
+	for _, tc := range setFieldsTestCases {
 		t.Run(tc.Name, func(t *testing.T) {
 			a := assertions.New(t)
 
@@ -640,127 +642,142 @@ func TestSetFields(t *testing.T) {
 	}
 }
 
+func BenchmarkSetFields(t *testing.B) {
+	for _, tc := range setFieldsTestCases {
+		src := deepcopy.Copy(tc.Source).(*testdata.Test)
+		dst := deepcopy.Copy(tc.Destination).(*testdata.Test)
+		paths := deepcopy.Copy(tc.Paths).([]string)
+		t.Run(tc.Name, func(t *testing.B) {
+			for i := 0; i < t.N; i++ {
+				dst.SetFields(src, paths...)
+			}
+		})
+	}
+}
+
+var validateFieldsTestCases = []struct {
+	Name           string
+	Message        *testdata.Test
+	Paths          []string
+	ErrorAssertion func(t *testing.T, err error) bool
+}{
+	{
+		Name:  "nil message",
+		Paths: []string{"a.b", "b.c"},
+	},
+	{
+		Name: "a.a.a",
+		Message: &testdata.Test{
+			A: &testdata.Test_TestNested{
+				A: &testdata.Test_TestNested_TestNestedNested{
+					A: 42,
+				},
+			},
+			CustomName: &testdata.Test_TestNested{
+				A: &testdata.Test_TestNested_TestNestedNested{},
+			},
+		},
+		Paths: []string{"a.a.a"},
+	},
+	{
+		Name:    "a.g",
+		Message: &testdata.Test{},
+		Paths:   []string{"a.g"},
+	},
+	{
+		Name: "nil paths/valid",
+		Message: &testdata.Test{
+			A: &testdata.Test_TestNested{
+				A: &testdata.Test_TestNested_TestNestedNested{
+					A: 42,
+					Test_TestNested_TestNestedNested_TestNestedNestedEmbed2: testdata.Test_TestNested_TestNestedNested_TestNestedNestedEmbed2{
+						NestedField_2: 2,
+					},
+				},
+				C: func(v time.Duration) *time.Duration { return &v }(43 * time.Second),
+			},
+			TestOneof: &testdata.Test_CustomNameOneof{
+				CustomNameOneof: 6,
+			},
+		},
+	},
+	{
+		Name: "nil paths/invalid testOneof unset",
+		Message: &testdata.Test{
+			A: &testdata.Test_TestNested{
+				A: &testdata.Test_TestNested_TestNestedNested{
+					A: 42,
+					Test_TestNested_TestNestedNested_TestNestedNestedEmbed2: testdata.Test_TestNested_TestNestedNested_TestNestedNestedEmbed2{
+						NestedField_2: 2,
+					},
+				},
+				C: func(v time.Duration) *time.Duration { return &v }(43 * time.Second),
+			},
+		},
+		ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
+	},
+	{
+		Name: "nil paths/invalid testOneof.d",
+		Message: &testdata.Test{
+			A: &testdata.Test_TestNested{
+				A: &testdata.Test_TestNested_TestNestedNested{
+					A: 42,
+					Test_TestNested_TestNestedNested_TestNestedNestedEmbed2: testdata.Test_TestNested_TestNestedNested_TestNestedNestedEmbed2{
+						NestedField_2: 2,
+					},
+				},
+				C: func(v time.Duration) *time.Duration { return &v }(43 * time.Second),
+			},
+			TestOneof: &testdata.Test_D{
+				D: 3,
+			},
+		},
+		ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
+	},
+	{
+		Name: "nil paths/invalid a.a.a",
+		Message: &testdata.Test{
+			A: &testdata.Test_TestNested{
+				A: &testdata.Test_TestNested_TestNestedNested{
+					A: 43,
+				},
+			},
+		},
+		ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
+	},
+	{
+		Name: "a.a.i/valid a.a.i.nested_field_2",
+		Message: &testdata.Test{
+			A: &testdata.Test_TestNested{
+				A: &testdata.Test_TestNested_TestNestedNested{
+					Test_TestNested_TestNestedNested_TestNestedNestedEmbed2: testdata.Test_TestNested_TestNestedNested_TestNestedNestedEmbed2{
+						NestedField_2: 2,
+					},
+				},
+			},
+		},
+		Paths: []string{"a.a.i"},
+	},
+	{
+		Name: "a.a.i/invalid a.a.i.nested_field_2",
+		Message: &testdata.Test{
+			A: &testdata.Test_TestNested{
+				A: &testdata.Test_TestNested_TestNestedNested{},
+			},
+		},
+		Paths:          []string{"a.a.i"},
+		ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
+	},
+	{
+		Name:           "non-existent sub-field",
+		Message:        &testdata.Test{},
+		Paths:          []string{"41.42.43"},
+		ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
+	},
+}
+
 func TestValidateFields(t *testing.T) {
-	for _, tc := range []struct {
-		Name           string
-		Message        *testdata.Test
-		Paths          []string
-		ErrorAssertion func(t *testing.T, err error) bool
-	}{
-		{
-			Name:  "nil message",
-			Paths: []string{"a.b", "b.c"},
-		},
-		{
-			Name: "a.a.a",
-			Message: &testdata.Test{
-				A: &testdata.Test_TestNested{
-					A: &testdata.Test_TestNested_TestNestedNested{
-						A: 42,
-					},
-				},
-				CustomName: &testdata.Test_TestNested{
-					A: &testdata.Test_TestNested_TestNestedNested{},
-				},
-			},
-			Paths: []string{"a.a.a"},
-		},
-		{
-			Name:    "a.g",
-			Message: &testdata.Test{},
-			Paths:   []string{"a.g"},
-		},
-		{
-			Name: "nil paths/valid",
-			Message: &testdata.Test{
-				A: &testdata.Test_TestNested{
-					A: &testdata.Test_TestNested_TestNestedNested{
-						A: 42,
-						Test_TestNested_TestNestedNested_TestNestedNestedEmbed2: testdata.Test_TestNested_TestNestedNested_TestNestedNestedEmbed2{
-							NestedField_2: 2,
-						},
-					},
-					C: func(v time.Duration) *time.Duration { return &v }(43 * time.Second),
-				},
-				TestOneof: &testdata.Test_CustomNameOneof{
-					CustomNameOneof: 6,
-				},
-			},
-		},
-		{
-			Name: "nil paths/invalid testOneof unset",
-			Message: &testdata.Test{
-				A: &testdata.Test_TestNested{
-					A: &testdata.Test_TestNested_TestNestedNested{
-						A: 42,
-						Test_TestNested_TestNestedNested_TestNestedNestedEmbed2: testdata.Test_TestNested_TestNestedNested_TestNestedNestedEmbed2{
-							NestedField_2: 2,
-						},
-					},
-					C: func(v time.Duration) *time.Duration { return &v }(43 * time.Second),
-				},
-			},
-			ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
-		},
-		{
-			Name: "nil paths/invalid testOneof.d",
-			Message: &testdata.Test{
-				A: &testdata.Test_TestNested{
-					A: &testdata.Test_TestNested_TestNestedNested{
-						A: 42,
-						Test_TestNested_TestNestedNested_TestNestedNestedEmbed2: testdata.Test_TestNested_TestNestedNested_TestNestedNestedEmbed2{
-							NestedField_2: 2,
-						},
-					},
-					C: func(v time.Duration) *time.Duration { return &v }(43 * time.Second),
-				},
-				TestOneof: &testdata.Test_D{
-					D: 3,
-				},
-			},
-			ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
-		},
-		{
-			Name: "nil paths/invalid a.a.a",
-			Message: &testdata.Test{
-				A: &testdata.Test_TestNested{
-					A: &testdata.Test_TestNested_TestNestedNested{
-						A: 43,
-					},
-				},
-			},
-			ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
-		},
-		{
-			Name: "a.a.i/valid a.a.i.nested_field_2",
-			Message: &testdata.Test{
-				A: &testdata.Test_TestNested{
-					A: &testdata.Test_TestNested_TestNestedNested{
-						Test_TestNested_TestNestedNested_TestNestedNestedEmbed2: testdata.Test_TestNested_TestNestedNested_TestNestedNestedEmbed2{
-							NestedField_2: 2,
-						},
-					},
-				},
-			},
-			Paths: []string{"a.a.i"},
-		},
-		{
-			Name: "a.a.i/invalid a.a.i.nested_field_2",
-			Message: &testdata.Test{
-				A: &testdata.Test_TestNested{
-					A: &testdata.Test_TestNested_TestNestedNested{},
-				},
-			},
-			Paths:          []string{"a.a.i"},
-			ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
-		},
-		{
-			Name:           "non-existent sub-field",
-			Message:        &testdata.Test{},
-			Paths:          []string{"41.42.43"},
-			ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
-		},
-	} {
+	for _, tc := range validateFieldsTestCases {
 		t.Run(tc.Name, func(t *testing.T) {
 			a := assertions.New(t)
 
@@ -774,6 +791,18 @@ func TestValidateFields(t *testing.T) {
 				a.So(err, should.BeNil)
 			}
 			a.So(paths, should.Resemble, tc.Paths)
+		})
+	}
+}
+
+func BenchmarkValidateFields(t *testing.B) {
+	for _, tc := range validateFieldsTestCases {
+		msg := deepcopy.Copy(tc.Message).(*testdata.Test)
+		paths := deepcopy.Copy(tc.Paths).([]string)
+		t.Run(tc.Name, func(t *testing.B) {
+			for i := 0; i < t.N; i++ {
+				msg.ValidateFields(paths...)
+			}
 		})
 	}
 }
