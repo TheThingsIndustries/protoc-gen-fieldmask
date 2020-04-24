@@ -28,7 +28,7 @@ build:
 .PHONY: clean
 
 clean:
-	rm -rf dist .tools
+	rm -rf dist .tools vendor
 
 .tools/protoc-gen-gogo: go.mod go.sum
 	go build -o $@ github.com/gogo/protobuf/protoc-gen-gogo
