@@ -31,7 +31,7 @@ message Test {
     message TestNestedNested {
       int32 a = 1 [(validate.rules).int32 = { gt: 24, lte: 42 }];
       sfixed64 b = 2;
-      repeated bytes c = 3;
+      repeated string c = 3 [(validate.rules).repeated.max_items = 9, (validate.rules).repeated.items.string.max_len = 64];
       map<int32,uint32> d = 4;
       oneof testNestedNestedOneOf{
         Empty e = 5;

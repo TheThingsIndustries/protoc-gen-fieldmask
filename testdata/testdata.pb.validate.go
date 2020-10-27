@@ -484,6 +484,18 @@ func (m *Test_TestNested_TestNestedNested) ValidateFields(paths ...string) error
 			// no validation rules for B
 		case "c":
 
+			for idx, item := range m.GetC() {
+				_, _ = idx, item
+
+				if utf8.RuneCountInString(item) > 64 {
+					return Test_TestNested_TestNestedNestedValidationError{
+						field:  fmt.Sprintf("c[%v]", idx),
+						reason: "value length must be at most 64 runes",
+					}
+				}
+
+			}
+
 		case "d":
 			// no validation rules for D
 		case "h":
