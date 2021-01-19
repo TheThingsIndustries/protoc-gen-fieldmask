@@ -4,7 +4,7 @@ go 1.15
 
 replace github.com/lyft/protoc-gen-star => github.com/TheThingsIndustries/protoc-gen-star v0.5.2-gogo.1
 
-replace github.com/envoyproxy/protoc-gen-validate => github.com/TheThingsIndustries/protoc-gen-validate v0.4.1-fieldmask.1
+replace github.com/envoyproxy/protoc-gen-validate => ../protoc-gen-validate
 
 require (
 	github.com/envoyproxy/protoc-gen-validate v0.4.0
