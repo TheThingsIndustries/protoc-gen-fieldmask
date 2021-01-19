@@ -19,6 +19,7 @@ import "github.com/envoyproxy/protoc-gen-validate/validate/validate.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/wrappers.proto";
+import "otherpackage/otherpackage.proto";
 
 package testdata;
 
@@ -70,4 +71,5 @@ message Test {
   Empty g = 7;
   google.protobuf.StringValue h = 8;
   google.protobuf.StringValue i = 9 [(gogoproto.nullable) = false];
+  otherpackage.Embed j = 11 [(gogoproto.embed) = true];
 }
