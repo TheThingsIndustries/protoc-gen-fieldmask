@@ -75,16 +75,13 @@ func TestGolden(t *testing.T) {
 	}
 	defer os.RemoveAll(workDir)
 
-	var paths []string
-	if err := filepath.Walk("testdata", func(path string, info os.FileInfo, err error) error {
-		if err != nil || info.IsDir() || !strings.HasSuffix(path, ".proto") {
-			return nil
-		}
-		paths = append(paths, path)
-		return nil
-	}); err != nil {
-		t.Errorf("Failed to walk `testdata`: %s", err)
-		t.FailNow()
+	for _, glob := range []string{
+		"testdata/otherpackage/*.proto",
+		"testdata/*.proto",
+	} {
+		paths, err := filepath.Glob(glob)
+		if err != nil {
+			t.Fatal(err)
 	}
 
 	runProtoc(t, append([]string{
@@ -93,6 +90,7 @@ func TestGolden(t *testing.T) {
 		fmt.Sprintf("--fieldmask_out=lang=gogo,Mgoogle/protobuf/wrappers.proto=github.com/gogo/protobuf/types:%s", workDir),
 		fmt.Sprintf("--gogo_out=Mgoogle/protobuf/wrappers.proto=github.com/gogo/protobuf/types:%s", workDir),
 	}, paths...)...)
+	}
 
 	if err := filepath.Walk(workDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil || info.IsDir() {
