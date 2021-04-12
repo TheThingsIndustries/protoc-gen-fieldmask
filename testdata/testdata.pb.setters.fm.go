@@ -133,6 +133,25 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 				var zero types.StringValue
 				dst.I = zero
 			}
+		case "j":
+			if len(subs) > 0 {
+				return fmt.Errorf("'j' has no subfields, but %s were specified", subs)
+			}
+			if src != nil {
+				dst.Embed = src.Embed
+			} else {
+				dst.Embed = nil
+			}
+		case "l":
+			if len(subs) > 0 {
+				return fmt.Errorf("'l' has no subfields, but %s were specified", subs)
+			}
+			if src != nil {
+				dst.L = src.L
+			} else {
+				var zero string
+				dst.L = zero
+			}
 
 		case "testOneof":
 			if len(subs) == 0 && src == nil {

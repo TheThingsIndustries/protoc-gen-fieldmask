@@ -68,6 +68,8 @@ var TestFieldPathsNested = []string{
 	"g",
 	"h",
 	"i",
+	"j",
+	"l",
 	"testOneof",
 	"testOneof.d",
 	"testOneof.e",
@@ -101,6 +103,8 @@ var TestFieldPathsTopLevel = []string{
 	"g",
 	"h",
 	"i",
+	"j",
+	"l",
 	"testOneof",
 }
 var Test_TestNestedFieldPathsNested = []string{

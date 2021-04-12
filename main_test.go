@@ -75,24 +75,22 @@ func TestGolden(t *testing.T) {
 	}
 	defer os.RemoveAll(workDir)
 
-	var paths []string
-	if err := filepath.Walk("testdata", func(path string, info os.FileInfo, err error) error {
-		if err != nil || info.IsDir() || !strings.HasSuffix(path, ".proto") {
-			return nil
+	for _, glob := range []string{
+		"testdata/otherpackage/*.proto",
+		"testdata/*.proto",
+	} {
+		paths, err := filepath.Glob(glob)
+		if err != nil {
+			t.Fatal(err)
 		}
-		paths = append(paths, path)
-		return nil
-	}); err != nil {
-		t.Errorf("Failed to walk `testdata`: %s", err)
-		t.FailNow()
-	}
 
-	runProtoc(t, append([]string{
-		"-Ivendor",
-		"-Itestdata",
-		fmt.Sprintf("--fieldmask_out=lang=gogo,Mgoogle/protobuf/wrappers.proto=github.com/gogo/protobuf/types:%s", workDir),
-		fmt.Sprintf("--gogo_out=Mgoogle/protobuf/wrappers.proto=github.com/gogo/protobuf/types:%s", workDir),
-	}, paths...)...)
+		runProtoc(t, append([]string{
+			"-Ivendor",
+			"-Itestdata",
+			fmt.Sprintf("--fieldmask_out=lang=gogo,Mgoogle/protobuf/wrappers.proto=github.com/gogo/protobuf/types:%s", workDir),
+			fmt.Sprintf("--gogo_out=Mgoogle/protobuf/wrappers.proto=github.com/gogo/protobuf/types:%s", workDir),
+		}, paths...)...)
+	}
 
 	if err := filepath.Walk(workDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil || info.IsDir() {
@@ -124,7 +122,6 @@ func TestGolden(t *testing.T) {
 			t.Fail()
 		}
 		return nil
-
 	}); err != nil {
 		t.Errorf("Failed to walk `%s`: %s", workDir, err)
 		t.FailNow()
@@ -198,6 +195,8 @@ func TestFieldMaskPaths(t *testing.T) {
 		"g",
 		"h",
 		"i",
+		"j",
+		"l",
 		"testOneof",
 		"testOneof.d",
 		"testOneof.e",
@@ -230,6 +229,8 @@ func TestFieldMaskPaths(t *testing.T) {
 		"g",
 		"h",
 		"i",
+		"j",
+		"l",
 		"testOneof",
 	})
 
@@ -773,6 +774,12 @@ var validateFieldsTestCases = []struct {
 		Message:        &testdata.Test{},
 		Paths:          []string{"41.42.43"},
 		ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
+	},
+	{
+		Name:           "l",
+		Message:        &testdata.Test{},
+		Paths:          []string{"l"},
+		ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeNil) },
 	},
 }
 
