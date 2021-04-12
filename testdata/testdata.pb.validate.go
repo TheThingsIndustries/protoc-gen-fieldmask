@@ -197,6 +197,25 @@ func (m *Test) ValidateFields(paths ...string) error {
 				}
 			}
 
+		case "l":
+
+			if m.GetL() != "" {
+
+				if uri, err := url.Parse(m.GetL()); err != nil {
+					return TestValidationError{
+						field:  "l",
+						reason: "value must be a valid URI",
+						cause:  err,
+					}
+				} else if !uri.IsAbs() {
+					return TestValidationError{
+						field:  "l",
+						reason: "value must be absolute",
+					}
+				}
+
+			}
+
 		case "testOneof":
 			if m.TestOneof == nil {
 				return TestValidationError{
