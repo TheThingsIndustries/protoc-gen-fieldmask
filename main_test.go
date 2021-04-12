@@ -122,7 +122,6 @@ func TestGolden(t *testing.T) {
 			t.Fail()
 		}
 		return nil
-
 	}); err != nil {
 		t.Errorf("Failed to walk `%s`: %s", workDir, err)
 		t.FailNow()
@@ -197,6 +196,7 @@ func TestFieldMaskPaths(t *testing.T) {
 		"h",
 		"i",
 		"j",
+		"l",
 		"testOneof",
 		"testOneof.d",
 		"testOneof.e",
@@ -230,6 +230,7 @@ func TestFieldMaskPaths(t *testing.T) {
 		"h",
 		"i",
 		"j",
+		"l",
 		"testOneof",
 	})
 
@@ -773,6 +774,12 @@ var validateFieldsTestCases = []struct {
 		Message:        &testdata.Test{},
 		Paths:          []string{"41.42.43"},
 		ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
+	},
+	{
+		Name:           "l",
+		Message:        &testdata.Test{},
+		Paths:          []string{"l"},
+		ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeNil) },
 	},
 }
 
