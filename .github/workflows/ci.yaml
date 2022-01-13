@@ -1,0 +1,32 @@
+name: General
+
+on: pull_request
+
+jobs:
+  ci:
+    name: Continuous Integration
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v2
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: '~1.15'
+    - name: Initialize Go module cache
+      uses: actions/cache@v2
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+    - name: Install Protoc
+      uses: arduino/setup-protoc@v1
+      with:
+        version: "3.7.1"
+    - name: Test, benchmark and build
+      run: make -B clean test benchmark build
+    - name: Format files
+      run: gofmt -w -s $(go list -f '{{ .Dir }}' ./...)
+    - name: Check diff
+      run: go mod tidy && git diff --exit-code
