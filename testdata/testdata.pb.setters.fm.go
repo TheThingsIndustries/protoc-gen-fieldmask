@@ -170,83 +170,56 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 				switch oneofName {
 				case "d":
 					_, srcOk := src.TestOneof.(*Test_D)
-					if !srcOk && src.TestOneof != nil {
-						return fmt.Errorf("attempt to set oneof 'd', while different oneof is set in source")
-					}
-					_, dstOk := dst.TestOneof.(*Test_D)
-					if !dstOk && dst.TestOneof != nil {
-						return fmt.Errorf("attempt to set oneof 'd', while different oneof is set in destination")
-					}
 					if len(oneofSubs) > 0 {
 						return fmt.Errorf("'d' has no subfields, but %s were specified", oneofSubs)
 					}
-					if src != nil {
+					if srcOk {
 						dst.TestOneof = src.TestOneof
 					} else {
-						dst.TestOneof = &Test_D{}
+						dst.TestOneof = nil
 					}
 				case "e":
 					_, srcOk := src.TestOneof.(*Test_CustomNameOneof)
-					if !srcOk && src.TestOneof != nil {
-						return fmt.Errorf("attempt to set oneof 'e', while different oneof is set in source")
-					}
-					_, dstOk := dst.TestOneof.(*Test_CustomNameOneof)
-					if !dstOk && dst.TestOneof != nil {
-						return fmt.Errorf("attempt to set oneof 'e', while different oneof is set in destination")
-					}
 					if len(oneofSubs) > 0 {
 						return fmt.Errorf("'e' has no subfields, but %s were specified", oneofSubs)
 					}
-					if src != nil {
+					if srcOk {
 						dst.TestOneof = src.TestOneof
 					} else {
-						dst.TestOneof = &Test_CustomNameOneof{}
+						dst.TestOneof = nil
 					}
 				case "f":
 					_, srcOk := src.TestOneof.(*Test_F)
-					if !srcOk && src.TestOneof != nil {
-						return fmt.Errorf("attempt to set oneof 'f', while different oneof is set in source")
-					}
-					_, dstOk := dst.TestOneof.(*Test_F)
-					if !dstOk && dst.TestOneof != nil {
-						return fmt.Errorf("attempt to set oneof 'f', while different oneof is set in destination")
-					}
 					if len(oneofSubs) > 0 {
 						return fmt.Errorf("'f' has no subfields, but %s were specified", oneofSubs)
 					}
-					if src != nil {
+					if srcOk {
 						dst.TestOneof = src.TestOneof
 					} else {
 						dst.TestOneof = nil
 					}
 				case "k":
 					_, srcOk := src.TestOneof.(*Test_K)
-					if !srcOk && src.TestOneof != nil {
-						return fmt.Errorf("attempt to set oneof 'k', while different oneof is set in source")
-					}
-					_, dstOk := dst.TestOneof.(*Test_K)
-					if !dstOk && dst.TestOneof != nil {
-						return fmt.Errorf("attempt to set oneof 'k', while different oneof is set in destination")
-					}
 					if len(oneofSubs) > 0 {
 						var newDst, newSrc *Test_TestNested
-						if !srcOk && !dstOk {
-							continue
-						}
 						if srcOk {
 							newSrc = src.TestOneof.(*Test_K).K
 						}
+						_, dstOk := dst.TestOneof.(*Test_K)
 						if dstOk {
 							newDst = dst.TestOneof.(*Test_K).K
-						} else {
+						} else if srcOk {
 							newDst = &Test_TestNested{}
 							dst.TestOneof = &Test_K{K: newDst}
+						} else {
+							dst.TestOneof = nil
+							continue
 						}
 						if err := newDst.SetFields(newSrc, oneofSubs...); err != nil {
 							return err
 						}
 					} else {
-						if src != nil {
+						if srcOk {
 							dst.TestOneof = src.TestOneof
 						} else {
 							dst.TestOneof = nil
@@ -458,32 +431,26 @@ func (dst *Test_TestNested_TestNestedNested) SetFields(src *Test_TestNested_Test
 				switch oneofName {
 				case "e":
 					_, srcOk := src.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_E)
-					if !srcOk && src.TestNestedNestedOneOf != nil {
-						return fmt.Errorf("attempt to set oneof 'e', while different oneof is set in source")
-					}
-					_, dstOk := dst.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_E)
-					if !dstOk && dst.TestNestedNestedOneOf != nil {
-						return fmt.Errorf("attempt to set oneof 'e', while different oneof is set in destination")
-					}
 					if len(oneofSubs) > 0 {
 						var newDst, newSrc *Empty
-						if !srcOk && !dstOk {
-							continue
-						}
 						if srcOk {
 							newSrc = src.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_E).E
 						}
+						_, dstOk := dst.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_E)
 						if dstOk {
 							newDst = dst.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_E).E
-						} else {
+						} else if srcOk {
 							newDst = &Empty{}
 							dst.TestNestedNestedOneOf = &Test_TestNested_TestNestedNested_E{E: newDst}
+						} else {
+							dst.TestNestedNestedOneOf = nil
+							continue
 						}
 						if err := newDst.SetFields(newSrc, oneofSubs...); err != nil {
 							return err
 						}
 					} else {
-						if src != nil {
+						if srcOk {
 							dst.TestNestedNestedOneOf = src.TestNestedNestedOneOf
 						} else {
 							dst.TestNestedNestedOneOf = nil
@@ -491,34 +458,20 @@ func (dst *Test_TestNested_TestNestedNested) SetFields(src *Test_TestNested_Test
 					}
 				case "f":
 					_, srcOk := src.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_F)
-					if !srcOk && src.TestNestedNestedOneOf != nil {
-						return fmt.Errorf("attempt to set oneof 'f', while different oneof is set in source")
-					}
-					_, dstOk := dst.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_F)
-					if !dstOk && dst.TestNestedNestedOneOf != nil {
-						return fmt.Errorf("attempt to set oneof 'f', while different oneof is set in destination")
-					}
 					if len(oneofSubs) > 0 {
 						return fmt.Errorf("'f' has no subfields, but %s were specified", oneofSubs)
 					}
-					if src != nil {
+					if srcOk {
 						dst.TestNestedNestedOneOf = src.TestNestedNestedOneOf
 					} else {
-						dst.TestNestedNestedOneOf = &Test_TestNested_TestNestedNested_F{}
+						dst.TestNestedNestedOneOf = nil
 					}
 				case "g":
 					_, srcOk := src.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_G)
-					if !srcOk && src.TestNestedNestedOneOf != nil {
-						return fmt.Errorf("attempt to set oneof 'g', while different oneof is set in source")
-					}
-					_, dstOk := dst.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_G)
-					if !dstOk && dst.TestNestedNestedOneOf != nil {
-						return fmt.Errorf("attempt to set oneof 'g', while different oneof is set in destination")
-					}
 					if len(oneofSubs) > 0 {
 						return fmt.Errorf("'g' has no subfields, but %s were specified", oneofSubs)
 					}
-					if src != nil {
+					if srcOk {
 						dst.TestNestedNestedOneOf = src.TestNestedNestedOneOf
 					} else {
 						dst.TestNestedNestedOneOf = nil

@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/TheThingsIndustries/protoc-gen-fieldmask/testdata"
+	"github.com/gogo/protobuf/types"
 	"github.com/kr/pretty"
 	"github.com/mohae/deepcopy"
 	"github.com/smartystreets/assertions"
@@ -490,12 +491,29 @@ var setFieldsTestCases = []struct {
 		},
 		Paths: []string{"testOneof.d"},
 		Result: &testdata.Test{
-			TestOneof: &testdata.Test_CustomNameOneof{
-				CustomNameOneof: 42,
+			TestOneof: &testdata.Test_D{
+				D: 42,
 			},
 			G: &testdata.Empty{},
 		},
-		ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
+	},
+	{
+		Name: "destination testOneof empty",
+		Destination: &testdata.Test{
+			G: &testdata.Empty{},
+		},
+		Source: &testdata.Test{
+			TestOneof: &testdata.Test_D{
+				D: 42,
+			},
+		},
+		Paths: []string{"testOneof.d"},
+		Result: &testdata.Test{
+			TestOneof: &testdata.Test_D{
+				D: 42,
+			},
+			G: &testdata.Empty{},
+		},
 	},
 	{
 		Name: "source testOneof mismatch",
@@ -512,12 +530,48 @@ var setFieldsTestCases = []struct {
 		},
 		Paths: []string{"testOneof.d"},
 		Result: &testdata.Test{
-			TestOneof: &testdata.Test_D{
-				D: 42,
+			G: &testdata.Empty{},
+		},
+	},
+	{
+		Name: "source testOneof empty",
+		Destination: &testdata.Test{
+			G: &testdata.Empty{},
+		},
+		Source: &testdata.Test{},
+		Paths:  []string{"testOneof.d"},
+		Result: &testdata.Test{
+			G: &testdata.Empty{},
+		},
+	},
+	{
+		Name: "source+destination testOneof mismatch",
+		Destination: &testdata.Test{
+			TestOneof: &testdata.Test_F{
+				F: []byte{0x42},
 			},
 			G: &testdata.Empty{},
 		},
-		ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
+		Source: &testdata.Test{
+			TestOneof: &testdata.Test_CustomNameOneof{
+				CustomNameOneof: 42,
+			},
+		},
+		Paths: []string{"testOneof.d"},
+		Result: &testdata.Test{
+			G: &testdata.Empty{},
+		},
+	},
+	{
+		Name: "source+destination testOneof empty",
+		Destination: &testdata.Test{
+			G: &testdata.Empty{},
+		},
+		Source: &testdata.Test{},
+		Paths:  []string{"testOneof.d"},
+		Result: &testdata.Test{
+			G: &testdata.Empty{},
+		},
 	},
 	{
 		Name: "unset testOneof",
@@ -563,6 +617,184 @@ var setFieldsTestCases = []struct {
 					A: &testdata.Test_TestNested_TestNestedNested{
 						A: 42,
 					},
+				},
+			},
+		},
+	},
+	{
+		Name:        "source testOneof.k.a.testNestedNestedOneOf.g mismatch",
+		Destination: &testdata.Test{},
+		Source: &testdata.Test{
+			TestOneof: &testdata.Test_K{
+				K: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{
+						TestNestedNestedOneOf: &testdata.Test_TestNested_TestNestedNested_F{
+							F: 42,
+						},
+					},
+				},
+			},
+		},
+		Paths: []string{"testOneof.k.a.testNestedNestedOneOf.g"},
+		Result: &testdata.Test{
+			TestOneof: &testdata.Test_K{
+				K: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{},
+				},
+			},
+		},
+	},
+	{
+		Name:        "source testOneof.k.a.testNestedNestedOneOf.g empty",
+		Destination: &testdata.Test{},
+		Source: &testdata.Test{
+			TestOneof: &testdata.Test_K{
+				K: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{},
+				},
+			},
+		},
+		Paths: []string{"testOneof.k.a.testNestedNestedOneOf.g"},
+		Result: &testdata.Test{
+			TestOneof: &testdata.Test_K{
+				K: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{},
+				},
+			},
+		},
+	},
+	{
+		Name: "destination testOneof.k.a.testNestedNestedOneOf.g mismatch",
+		Destination: &testdata.Test{
+			TestOneof: &testdata.Test_K{
+				K: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{
+						TestNestedNestedOneOf: &testdata.Test_TestNested_TestNestedNested_F{
+							F: 42,
+						},
+					},
+				},
+			},
+		},
+		Source: &testdata.Test{
+			TestOneof: &testdata.Test_K{
+				K: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{
+						TestNestedNestedOneOf: &testdata.Test_TestNested_TestNestedNested_G{
+							G: &types.UInt64Value{
+								Value: 42,
+							},
+						},
+					},
+				},
+			},
+		},
+		Paths: []string{"testOneof.k.a.testNestedNestedOneOf.g"},
+		Result: &testdata.Test{
+			TestOneof: &testdata.Test_K{
+				K: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{
+						TestNestedNestedOneOf: &testdata.Test_TestNested_TestNestedNested_G{
+							G: &types.UInt64Value{
+								Value: 42,
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+	{
+		Name: "destination testOneof.k.a.testNestedNestedOneOf.g empty",
+		Destination: &testdata.Test{
+			TestOneof: &testdata.Test_K{
+				K: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{},
+				},
+			},
+		},
+		Source: &testdata.Test{
+			TestOneof: &testdata.Test_K{
+				K: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{
+						TestNestedNestedOneOf: &testdata.Test_TestNested_TestNestedNested_G{
+							G: &types.UInt64Value{
+								Value: 42,
+							},
+						},
+					},
+				},
+			},
+		},
+		Paths: []string{"testOneof.k.a.testNestedNestedOneOf.g"},
+		Result: &testdata.Test{
+			TestOneof: &testdata.Test_K{
+				K: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{
+						TestNestedNestedOneOf: &testdata.Test_TestNested_TestNestedNested_G{
+							G: &types.UInt64Value{
+								Value: 42,
+							},
+						},
+					},
+				},
+			},
+		},
+	},
+	{
+		Name: "source+destination testOneof.k.a.testNestedNestedOneOf.g mismatch",
+		Destination: &testdata.Test{
+			TestOneof: &testdata.Test_K{
+				K: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{
+						TestNestedNestedOneOf: &testdata.Test_TestNested_TestNestedNested_F{
+							F: 42,
+						},
+					},
+				},
+			},
+		},
+		Source: &testdata.Test{
+			TestOneof: &testdata.Test_K{
+				K: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{
+						TestNestedNestedOneOf: &testdata.Test_TestNested_TestNestedNested_E{
+							E: &testdata.Empty{},
+						},
+					},
+				},
+			},
+		},
+		Paths: []string{"testOneof.k.a.testNestedNestedOneOf.g"},
+		Result: &testdata.Test{
+			TestOneof: &testdata.Test_K{
+				K: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{},
+				},
+			},
+		},
+	},
+	{
+		Name: "source+destination testOneof.k.a.testNestedNestedOneOf.g empty",
+		Destination: &testdata.Test{
+			TestOneof: &testdata.Test_K{
+				K: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{},
+				},
+			},
+		},
+		Source: &testdata.Test{
+			TestOneof: &testdata.Test_K{
+				K: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{},
+				},
+			},
+		},
+		Paths: []string{"testOneof.k.a.testNestedNestedOneOf.g"},
+		Result: &testdata.Test{
+			TestOneof: &testdata.Test_K{
+				K: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{},
 				},
 			},
 		},

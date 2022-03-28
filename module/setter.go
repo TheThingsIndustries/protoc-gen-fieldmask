@@ -36,19 +36,8 @@ func (m *setterModule) buildSetFieldsCase(buf *strings.Builder, imports importMa
 	buildIndented(buf, tabCount, fmt.Sprintf(`case "%s":`, f.Name()))
 
 	if f.InOneOf() {
-		buildIndented(buf, tabCount+1, fmt.Sprintf(`_, srcOk := src.%s.(*%s)
-if !srcOk && src.%s != nil {
-	return fmt.Errorf("attempt to set oneof '%s', while different oneof is set in source")
-}
-_, dstOk := dst.%s.(*%s)
-if !dstOk && dst.%s != nil {
-	return fmt.Errorf("attempt to set oneof '%s', while different oneof is set in destination")
-}`,
-			m.ctx.Name(f.OneOf()), m.ctx.OneofOption(f), m.ctx.Name(f.OneOf()),
-			f.Name(),
+		buildIndented(buf, tabCount+1, fmt.Sprintf(`_, srcOk := src.%s.(*%s)`,
 			m.ctx.Name(f.OneOf()), m.ctx.OneofOption(f),
-			m.ctx.Name(f.OneOf()),
-			f.Name(),
 		))
 	}
 
@@ -70,9 +59,14 @@ if !dstOk && dst.%s != nil {
 			fPath = m.ctx.Name(f.OneOf()).String()
 		}
 
-		buildIndented(buf, tabCount, fmt.Sprintf(`if src != nil {
-	dst.%s = src.%s
-} else {`,
+		srcCheck := `src != nil`
+		if f.InOneOf() {
+			srcCheck = `srcOk`
+		}
+		buildIndented(buf, tabCount, fmt.Sprintf(`if %s {
+			dst.%s = src.%s
+		} else {`,
+			srcCheck,
 			fPath, fPath,
 		))
 
@@ -91,9 +85,9 @@ if !dstOk && dst.%s != nil {
 		}
 
 		if f.InOneOf() {
-			buildIndented(buf, tabCount, fmt.Sprintf(`	dst.%s = &%s{}
+			buildIndented(buf, tabCount, fmt.Sprintf(`	dst.%s = nil
 }`,
-				fPath, m.ctx.OneofOption(f),
+				fPath,
 			))
 			return nil
 		}
@@ -128,22 +122,25 @@ if !dstOk && dst.%s != nil {
 	switch {
 	case f.InOneOf():
 		fPath := fmt.Sprintf("%s.(*%s).%s", m.ctx.Name(f.OneOf()), m.ctx.OneofOption(f), fName)
-		buildIndented(buf, tabCount+2, fmt.Sprintf(`if !srcOk && !dstOk {
-	continue
-}
-if srcOk {
+		buildIndented(buf, tabCount+2, fmt.Sprintf(`if srcOk {
 	newSrc = src.%s
 }
+_, dstOk := dst.%s.(*%s)
 if dstOk {
 	newDst = dst.%s
-} else {
+} else if srcOk {
 	newDst = &%s{}
 	dst.%s = &%s{%s: newDst}
+} else {
+	dst.%s = nil
+	continue
 }`,
 			fPath,
+			m.ctx.Name(f.OneOf()), m.ctx.OneofOption(f),
 			fPath,
 			goType.Value(),
 			m.ctx.Name(f.OneOf()), m.ctx.OneofOption(f), fName,
+			m.ctx.Name(f.OneOf()),
 		))
 
 	case goType.IsPointer():
