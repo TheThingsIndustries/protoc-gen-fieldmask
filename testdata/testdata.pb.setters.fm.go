@@ -169,7 +169,10 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 			for oneofName, oneofSubs := range subPathMap {
 				switch oneofName {
 				case "d":
-					_, srcOk := src.TestOneof.(*Test_D)
+					var srcOk bool
+					if src != nil {
+						_, srcOk = src.TestOneof.(*Test_D)
+					}
 					if len(oneofSubs) > 0 {
 						return fmt.Errorf("'d' has no subfields, but %s were specified", oneofSubs)
 					}
@@ -179,7 +182,10 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 						dst.TestOneof = nil
 					}
 				case "e":
-					_, srcOk := src.TestOneof.(*Test_CustomNameOneof)
+					var srcOk bool
+					if src != nil {
+						_, srcOk = src.TestOneof.(*Test_CustomNameOneof)
+					}
 					if len(oneofSubs) > 0 {
 						return fmt.Errorf("'e' has no subfields, but %s were specified", oneofSubs)
 					}
@@ -189,7 +195,10 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 						dst.TestOneof = nil
 					}
 				case "f":
-					_, srcOk := src.TestOneof.(*Test_F)
+					var srcOk bool
+					if src != nil {
+						_, srcOk = src.TestOneof.(*Test_F)
+					}
 					if len(oneofSubs) > 0 {
 						return fmt.Errorf("'f' has no subfields, but %s were specified", oneofSubs)
 					}
@@ -199,13 +208,19 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 						dst.TestOneof = nil
 					}
 				case "k":
-					_, srcOk := src.TestOneof.(*Test_K)
+					var srcOk bool
+					if src != nil {
+						_, srcOk = src.TestOneof.(*Test_K)
+					}
 					if len(oneofSubs) > 0 {
 						var newDst, newSrc *Test_TestNested
 						if srcOk {
 							newSrc = src.TestOneof.(*Test_K).K
 						}
-						_, dstOk := dst.TestOneof.(*Test_K)
+						var dstOk bool
+						if dst != nil {
+							_, dstOk = dst.TestOneof.(*Test_K)
+						}
 						if dstOk {
 							newDst = dst.TestOneof.(*Test_K).K
 						} else if srcOk {
@@ -430,13 +445,19 @@ func (dst *Test_TestNested_TestNestedNested) SetFields(src *Test_TestNested_Test
 			for oneofName, oneofSubs := range subPathMap {
 				switch oneofName {
 				case "e":
-					_, srcOk := src.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_E)
+					var srcOk bool
+					if src != nil {
+						_, srcOk = src.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_E)
+					}
 					if len(oneofSubs) > 0 {
 						var newDst, newSrc *Empty
 						if srcOk {
 							newSrc = src.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_E).E
 						}
-						_, dstOk := dst.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_E)
+						var dstOk bool
+						if dst != nil {
+							_, dstOk = dst.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_E)
+						}
 						if dstOk {
 							newDst = dst.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_E).E
 						} else if srcOk {
@@ -457,7 +478,10 @@ func (dst *Test_TestNested_TestNestedNested) SetFields(src *Test_TestNested_Test
 						}
 					}
 				case "f":
-					_, srcOk := src.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_F)
+					var srcOk bool
+					if src != nil {
+						_, srcOk = src.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_F)
+					}
 					if len(oneofSubs) > 0 {
 						return fmt.Errorf("'f' has no subfields, but %s were specified", oneofSubs)
 					}
@@ -467,7 +491,10 @@ func (dst *Test_TestNested_TestNestedNested) SetFields(src *Test_TestNested_Test
 						dst.TestNestedNestedOneOf = nil
 					}
 				case "g":
-					_, srcOk := src.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_G)
+					var srcOk bool
+					if src != nil {
+						_, srcOk = src.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_G)
+					}
 					if len(oneofSubs) > 0 {
 						return fmt.Errorf("'g' has no subfields, but %s were specified", oneofSubs)
 					}

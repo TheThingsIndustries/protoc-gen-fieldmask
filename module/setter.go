@@ -36,7 +36,10 @@ func (m *setterModule) buildSetFieldsCase(buf *strings.Builder, imports importMa
 	buildIndented(buf, tabCount, fmt.Sprintf(`case "%s":`, f.Name()))
 
 	if f.InOneOf() {
-		buildIndented(buf, tabCount+1, fmt.Sprintf(`_, srcOk := src.%s.(*%s)`,
+		buildIndented(buf, tabCount+1, fmt.Sprintf(`var srcOk bool
+		if src != nil {
+			_, srcOk = src.%s.(*%s)
+		}`,
 			m.ctx.Name(f.OneOf()), m.ctx.OneofOption(f),
 		))
 	}
@@ -125,7 +128,10 @@ func (m *setterModule) buildSetFieldsCase(buf *strings.Builder, imports importMa
 		buildIndented(buf, tabCount+2, fmt.Sprintf(`if srcOk {
 	newSrc = src.%s
 }
-_, dstOk := dst.%s.(*%s)
+var dstOk bool
+if dst != nil {
+	_, dstOk = dst.%s.(*%s)
+}
 if dstOk {
 	newDst = dst.%s
 } else if srcOk {
