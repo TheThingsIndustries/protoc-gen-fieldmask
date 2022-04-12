@@ -36,11 +36,22 @@ func (m *setterModule) buildSetFieldsCase(buf *strings.Builder, imports importMa
 	buildIndented(buf, tabCount, fmt.Sprintf(`case "%s":`, f.Name()))
 
 	if f.InOneOf() {
-		buildIndented(buf, tabCount+1, fmt.Sprintf(`var srcOk bool
-		if src != nil {
-			_, srcOk = src.%s.(*%s)
-		}`,
+		buildIndented(buf, tabCount+1, fmt.Sprintf(`_, srcTypeOk := src.%s.(*%s)
+srcValid := srcTypeOk || src.%s == nil || len(oneofSubs) == 0
+if !srcValid {
+	return fmt.Errorf("attempt to set oneof '%s', while different oneof is set in source")
+}
+_, dstTypeOk := dst.%s.(*%s)
+dstValid := dstTypeOk || dst.%s == nil || len(oneofSubs) == 0
+if !dstValid {
+	return fmt.Errorf("attempt to set oneof '%s', while different oneof is set in destination")
+}`,
 			m.ctx.Name(f.OneOf()), m.ctx.OneofOption(f),
+			m.ctx.Name(f.OneOf()),
+			f.Name(),
+			m.ctx.Name(f.OneOf()), m.ctx.OneofOption(f),
+			m.ctx.Name(f.OneOf()),
+			f.Name(),
 		))
 	}
 
@@ -64,7 +75,7 @@ func (m *setterModule) buildSetFieldsCase(buf *strings.Builder, imports importMa
 
 		srcCheck := `src != nil`
 		if f.InOneOf() {
-			srcCheck = `srcOk`
+			srcCheck = `srcTypeOk`
 		}
 		buildIndented(buf, tabCount, fmt.Sprintf(`if %s {
 			dst.%s = src.%s
@@ -125,16 +136,12 @@ func (m *setterModule) buildSetFieldsCase(buf *strings.Builder, imports importMa
 	switch {
 	case f.InOneOf():
 		fPath := fmt.Sprintf("%s.(*%s).%s", m.ctx.Name(f.OneOf()), m.ctx.OneofOption(f), fName)
-		buildIndented(buf, tabCount+2, fmt.Sprintf(`if srcOk {
+		buildIndented(buf, tabCount+2, fmt.Sprintf(`if srcTypeOk {
 	newSrc = src.%s
 }
-var dstOk bool
-if dst != nil {
-	_, dstOk = dst.%s.(*%s)
-}
-if dstOk {
+if dstTypeOk {
 	newDst = dst.%s
-} else if srcOk {
+} else if srcTypeOk {
 	newDst = &%s{}
 	dst.%s = &%s{%s: newDst}
 } else {
@@ -142,7 +149,6 @@ if dstOk {
 	continue
 }`,
 			fPath,
-			m.ctx.Name(f.OneOf()), m.ctx.OneofOption(f),
 			fPath,
 			goType.Value(),
 			m.ctx.Name(f.OneOf()), m.ctx.OneofOption(f), fName,

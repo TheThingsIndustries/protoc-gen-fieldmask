@@ -645,6 +645,30 @@ var setFieldsTestCases = []struct {
 		},
 	},
 	{
+		Name:        "source testOneof.k.a.testNestedNestedOneOf.g.a mismatch",
+		Destination: &testdata.Test{},
+		Source: &testdata.Test{
+			TestOneof: &testdata.Test_K{
+				K: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{
+						TestNestedNestedOneOf: &testdata.Test_TestNested_TestNestedNested_F{
+							F: 42,
+						},
+					},
+				},
+			},
+		},
+		Paths:          []string{"testOneof.k.a.testNestedNestedOneOf.g.a"},
+		ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
+		Result: &testdata.Test{
+			TestOneof: &testdata.Test_K{
+				K: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{},
+				},
+			},
+		},
+	},
+	{
 		Name:        "source testOneof.k.a.testNestedNestedOneOf.g empty",
 		Destination: &testdata.Test{},
 		Source: &testdata.Test{
@@ -698,6 +722,46 @@ var setFieldsTestCases = []struct {
 							G: &types.UInt64Value{
 								Value: 42,
 							},
+						},
+					},
+				},
+			},
+		},
+	},
+	{
+		Name: "destination testOneof.k.a.testNestedNestedOneOf.g.a mismatch",
+		Destination: &testdata.Test{
+			TestOneof: &testdata.Test_K{
+				K: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{
+						TestNestedNestedOneOf: &testdata.Test_TestNested_TestNestedNested_F{
+							F: 42,
+						},
+					},
+				},
+			},
+		},
+		Source: &testdata.Test{
+			TestOneof: &testdata.Test_K{
+				K: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{
+						TestNestedNestedOneOf: &testdata.Test_TestNested_TestNestedNested_G{
+							G: &types.UInt64Value{
+								Value: 42,
+							},
+						},
+					},
+				},
+			},
+		},
+		Paths:          []string{"testOneof.k.a.testNestedNestedOneOf.g.a"},
+		ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
+		Result: &testdata.Test{
+			TestOneof: &testdata.Test_K{
+				K: &testdata.Test_TestNested{
+					A: &testdata.Test_TestNested_TestNestedNested{
+						TestNestedNestedOneOf: &testdata.Test_TestNested_TestNestedNested_F{
+							F: 42,
 						},
 					},
 				},
