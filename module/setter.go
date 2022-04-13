@@ -36,15 +36,18 @@ func (m *setterModule) buildSetFieldsCase(buf *strings.Builder, imports importMa
 	buildIndented(buf, tabCount, fmt.Sprintf(`case "%s":`, f.Name()))
 
 	if f.InOneOf() {
-		buildIndented(buf, tabCount+1, fmt.Sprintf(`_, srcOk := src.%s.(*%s)
-if !srcOk && src.%s != nil {
+		buildIndented(buf, tabCount+1, fmt.Sprintf(`_, srcTypeOk := src.%s.(*%s)
+srcValid := srcTypeOk || src.%s == nil || len(oneofSubs) == 0
+if !srcValid {
 	return fmt.Errorf("attempt to set oneof '%s', while different oneof is set in source")
 }
-_, dstOk := dst.%s.(*%s)
-if !dstOk && dst.%s != nil {
+_, dstTypeOk := dst.%s.(*%s)
+dstValid := dstTypeOk || dst.%s == nil || len(oneofSubs) == 0
+if !dstValid {
 	return fmt.Errorf("attempt to set oneof '%s', while different oneof is set in destination")
 }`,
-			m.ctx.Name(f.OneOf()), m.ctx.OneofOption(f), m.ctx.Name(f.OneOf()),
+			m.ctx.Name(f.OneOf()), m.ctx.OneofOption(f),
+			m.ctx.Name(f.OneOf()),
 			f.Name(),
 			m.ctx.Name(f.OneOf()), m.ctx.OneofOption(f),
 			m.ctx.Name(f.OneOf()),
@@ -70,9 +73,14 @@ if !dstOk && dst.%s != nil {
 			fPath = m.ctx.Name(f.OneOf()).String()
 		}
 
-		buildIndented(buf, tabCount, fmt.Sprintf(`if src != nil {
-	dst.%s = src.%s
-} else {`,
+		srcCheck := `src != nil`
+		if f.InOneOf() {
+			srcCheck = `srcTypeOk`
+		}
+		buildIndented(buf, tabCount, fmt.Sprintf(`if %s {
+			dst.%s = src.%s
+		} else {`,
+			srcCheck,
 			fPath, fPath,
 		))
 
@@ -91,9 +99,9 @@ if !dstOk && dst.%s != nil {
 		}
 
 		if f.InOneOf() {
-			buildIndented(buf, tabCount, fmt.Sprintf(`	dst.%s = &%s{}
+			buildIndented(buf, tabCount, fmt.Sprintf(`	dst.%s = nil
 }`,
-				fPath, m.ctx.OneofOption(f),
+				fPath,
 			))
 			return nil
 		}
@@ -128,22 +136,23 @@ if !dstOk && dst.%s != nil {
 	switch {
 	case f.InOneOf():
 		fPath := fmt.Sprintf("%s.(*%s).%s", m.ctx.Name(f.OneOf()), m.ctx.OneofOption(f), fName)
-		buildIndented(buf, tabCount+2, fmt.Sprintf(`if !srcOk && !dstOk {
-	continue
-}
-if srcOk {
+		buildIndented(buf, tabCount+2, fmt.Sprintf(`if srcTypeOk {
 	newSrc = src.%s
 }
-if dstOk {
+if dstTypeOk {
 	newDst = dst.%s
-} else {
+} else if srcTypeOk {
 	newDst = &%s{}
 	dst.%s = &%s{%s: newDst}
+} else {
+	dst.%s = nil
+	continue
 }`,
 			fPath,
 			fPath,
 			goType.Value(),
 			m.ctx.Name(f.OneOf()), m.ctx.OneofOption(f), fName,
+			m.ctx.Name(f.OneOf()),
 		))
 
 	case goType.IsPointer():
