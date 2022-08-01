@@ -106,7 +106,7 @@ func TestGolden(t *testing.T) {
 
 		goldenPath := filepath.Join(".", strings.TrimPrefix(path, filepath.Join(workDir, "github.com", "TheThingsIndustries", "protoc-gen-fieldmask")))
 		if *regenerate {
-			if err := ioutil.WriteFile(goldenPath, b, 0666); err != nil {
+			if err := ioutil.WriteFile(goldenPath, b, 0o666); err != nil {
 				t.Errorf("Failed to write golden file at `%s`: %s", goldenPath, err)
 			}
 			return nil
@@ -669,16 +669,22 @@ var setFieldsTestCases = []struct {
 		},
 	},
 	{
-		Name:        "source testOneof.k.a.testNestedNestedOneOf.g empty",
-		Destination: &testdata.Test{},
-		Source: &testdata.Test{
+		Name: "source testOneof.k.a.testNestedNestedOneOf.g empty",
+		Destination: &testdata.Test{
 			TestOneof: &testdata.Test_K{
 				K: &testdata.Test_TestNested{
-					A: &testdata.Test_TestNested_TestNestedNested{},
+					A: &testdata.Test_TestNested_TestNestedNested{
+						TestNestedNestedOneOf: &testdata.Test_TestNested_TestNestedNested_G{
+							G: &types.UInt64Value{
+								Value: 42,
+							},
+						},
+					},
 				},
 			},
 		},
-		Paths: []string{"testOneof.k.a.testNestedNestedOneOf.g"},
+		Source: &testdata.Test{},
+		Paths:  []string{"testOneof.k.a.testNestedNestedOneOf.g"},
 		Result: &testdata.Test{
 			TestOneof: &testdata.Test_K{
 				K: &testdata.Test_TestNested{
@@ -769,14 +775,8 @@ var setFieldsTestCases = []struct {
 		},
 	},
 	{
-		Name: "destination testOneof.k.a.testNestedNestedOneOf.g empty",
-		Destination: &testdata.Test{
-			TestOneof: &testdata.Test_K{
-				K: &testdata.Test_TestNested{
-					A: &testdata.Test_TestNested_TestNestedNested{},
-				},
-			},
-		},
+		Name:        "destination testOneof.k.a.testNestedNestedOneOf.g empty",
+		Destination: &testdata.Test{},
 		Source: &testdata.Test{
 			TestOneof: &testdata.Test_K{
 				K: &testdata.Test_TestNested{
