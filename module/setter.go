@@ -36,14 +36,15 @@ func (m *setterModule) buildSetFieldsCase(buf *strings.Builder, imports importMa
 	buildIndented(buf, tabCount, fmt.Sprintf(`case "%s":`, f.Name()))
 
 	if f.InOneOf() {
-		buildIndented(buf, tabCount+1, fmt.Sprintf(`_, srcTypeOk := src.%s.(*%s)
-srcValid := srcTypeOk || src.%s == nil || len(oneofSubs) == 0
-if !srcValid {
+		buildIndented(buf, tabCount+1, fmt.Sprintf(`var srcTypeOk bool
+if src != nil {
+	_, srcTypeOk = src.%s.(*%s)
+}
+if srcValid := srcTypeOk || src == nil || src.%s == nil || len(oneofSubs) == 0; !srcValid {
 	return fmt.Errorf("attempt to set oneof '%s', while different oneof is set in source")
 }
 _, dstTypeOk := dst.%s.(*%s)
-dstValid := dstTypeOk || dst.%s == nil || len(oneofSubs) == 0
-if !dstValid {
+if dstValid := dstTypeOk || dst.%s == nil || len(oneofSubs) == 0; !dstValid {
 	return fmt.Errorf("attempt to set oneof '%s', while different oneof is set in destination")
 }`,
 			m.ctx.Name(f.OneOf()), m.ctx.OneofOption(f),

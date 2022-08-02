@@ -169,14 +169,15 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 			for oneofName, oneofSubs := range subPathMap {
 				switch oneofName {
 				case "d":
-					_, srcTypeOk := src.TestOneof.(*Test_D)
-					srcValid := srcTypeOk || src.TestOneof == nil || len(oneofSubs) == 0
-					if !srcValid {
+					var srcTypeOk bool
+					if src != nil {
+						_, srcTypeOk = src.TestOneof.(*Test_D)
+					}
+					if srcValid := srcTypeOk || src == nil || src.TestOneof == nil || len(oneofSubs) == 0; !srcValid {
 						return fmt.Errorf("attempt to set oneof 'd', while different oneof is set in source")
 					}
 					_, dstTypeOk := dst.TestOneof.(*Test_D)
-					dstValid := dstTypeOk || dst.TestOneof == nil || len(oneofSubs) == 0
-					if !dstValid {
+					if dstValid := dstTypeOk || dst.TestOneof == nil || len(oneofSubs) == 0; !dstValid {
 						return fmt.Errorf("attempt to set oneof 'd', while different oneof is set in destination")
 					}
 					if len(oneofSubs) > 0 {
@@ -188,14 +189,15 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 						dst.TestOneof = nil
 					}
 				case "e":
-					_, srcTypeOk := src.TestOneof.(*Test_CustomNameOneof)
-					srcValid := srcTypeOk || src.TestOneof == nil || len(oneofSubs) == 0
-					if !srcValid {
+					var srcTypeOk bool
+					if src != nil {
+						_, srcTypeOk = src.TestOneof.(*Test_CustomNameOneof)
+					}
+					if srcValid := srcTypeOk || src == nil || src.TestOneof == nil || len(oneofSubs) == 0; !srcValid {
 						return fmt.Errorf("attempt to set oneof 'e', while different oneof is set in source")
 					}
 					_, dstTypeOk := dst.TestOneof.(*Test_CustomNameOneof)
-					dstValid := dstTypeOk || dst.TestOneof == nil || len(oneofSubs) == 0
-					if !dstValid {
+					if dstValid := dstTypeOk || dst.TestOneof == nil || len(oneofSubs) == 0; !dstValid {
 						return fmt.Errorf("attempt to set oneof 'e', while different oneof is set in destination")
 					}
 					if len(oneofSubs) > 0 {
@@ -207,14 +209,15 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 						dst.TestOneof = nil
 					}
 				case "f":
-					_, srcTypeOk := src.TestOneof.(*Test_F)
-					srcValid := srcTypeOk || src.TestOneof == nil || len(oneofSubs) == 0
-					if !srcValid {
+					var srcTypeOk bool
+					if src != nil {
+						_, srcTypeOk = src.TestOneof.(*Test_F)
+					}
+					if srcValid := srcTypeOk || src == nil || src.TestOneof == nil || len(oneofSubs) == 0; !srcValid {
 						return fmt.Errorf("attempt to set oneof 'f', while different oneof is set in source")
 					}
 					_, dstTypeOk := dst.TestOneof.(*Test_F)
-					dstValid := dstTypeOk || dst.TestOneof == nil || len(oneofSubs) == 0
-					if !dstValid {
+					if dstValid := dstTypeOk || dst.TestOneof == nil || len(oneofSubs) == 0; !dstValid {
 						return fmt.Errorf("attempt to set oneof 'f', while different oneof is set in destination")
 					}
 					if len(oneofSubs) > 0 {
@@ -226,14 +229,15 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 						dst.TestOneof = nil
 					}
 				case "k":
-					_, srcTypeOk := src.TestOneof.(*Test_K)
-					srcValid := srcTypeOk || src.TestOneof == nil || len(oneofSubs) == 0
-					if !srcValid {
+					var srcTypeOk bool
+					if src != nil {
+						_, srcTypeOk = src.TestOneof.(*Test_K)
+					}
+					if srcValid := srcTypeOk || src == nil || src.TestOneof == nil || len(oneofSubs) == 0; !srcValid {
 						return fmt.Errorf("attempt to set oneof 'k', while different oneof is set in source")
 					}
 					_, dstTypeOk := dst.TestOneof.(*Test_K)
-					dstValid := dstTypeOk || dst.TestOneof == nil || len(oneofSubs) == 0
-					if !dstValid {
+					if dstValid := dstTypeOk || dst.TestOneof == nil || len(oneofSubs) == 0; !dstValid {
 						return fmt.Errorf("attempt to set oneof 'k', while different oneof is set in destination")
 					}
 					if len(oneofSubs) > 0 {
@@ -465,14 +469,15 @@ func (dst *Test_TestNested_TestNestedNested) SetFields(src *Test_TestNested_Test
 			for oneofName, oneofSubs := range subPathMap {
 				switch oneofName {
 				case "e":
-					_, srcTypeOk := src.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_E)
-					srcValid := srcTypeOk || src.TestNestedNestedOneOf == nil || len(oneofSubs) == 0
-					if !srcValid {
+					var srcTypeOk bool
+					if src != nil {
+						_, srcTypeOk = src.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_E)
+					}
+					if srcValid := srcTypeOk || src == nil || src.TestNestedNestedOneOf == nil || len(oneofSubs) == 0; !srcValid {
 						return fmt.Errorf("attempt to set oneof 'e', while different oneof is set in source")
 					}
 					_, dstTypeOk := dst.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_E)
-					dstValid := dstTypeOk || dst.TestNestedNestedOneOf == nil || len(oneofSubs) == 0
-					if !dstValid {
+					if dstValid := dstTypeOk || dst.TestNestedNestedOneOf == nil || len(oneofSubs) == 0; !dstValid {
 						return fmt.Errorf("attempt to set oneof 'e', while different oneof is set in destination")
 					}
 					if len(oneofSubs) > 0 {
@@ -500,14 +505,15 @@ func (dst *Test_TestNested_TestNestedNested) SetFields(src *Test_TestNested_Test
 						}
 					}
 				case "f":
-					_, srcTypeOk := src.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_F)
-					srcValid := srcTypeOk || src.TestNestedNestedOneOf == nil || len(oneofSubs) == 0
-					if !srcValid {
+					var srcTypeOk bool
+					if src != nil {
+						_, srcTypeOk = src.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_F)
+					}
+					if srcValid := srcTypeOk || src == nil || src.TestNestedNestedOneOf == nil || len(oneofSubs) == 0; !srcValid {
 						return fmt.Errorf("attempt to set oneof 'f', while different oneof is set in source")
 					}
 					_, dstTypeOk := dst.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_F)
-					dstValid := dstTypeOk || dst.TestNestedNestedOneOf == nil || len(oneofSubs) == 0
-					if !dstValid {
+					if dstValid := dstTypeOk || dst.TestNestedNestedOneOf == nil || len(oneofSubs) == 0; !dstValid {
 						return fmt.Errorf("attempt to set oneof 'f', while different oneof is set in destination")
 					}
 					if len(oneofSubs) > 0 {
@@ -519,14 +525,15 @@ func (dst *Test_TestNested_TestNestedNested) SetFields(src *Test_TestNested_Test
 						dst.TestNestedNestedOneOf = nil
 					}
 				case "g":
-					_, srcTypeOk := src.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_G)
-					srcValid := srcTypeOk || src.TestNestedNestedOneOf == nil || len(oneofSubs) == 0
-					if !srcValid {
+					var srcTypeOk bool
+					if src != nil {
+						_, srcTypeOk = src.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_G)
+					}
+					if srcValid := srcTypeOk || src == nil || src.TestNestedNestedOneOf == nil || len(oneofSubs) == 0; !srcValid {
 						return fmt.Errorf("attempt to set oneof 'g', while different oneof is set in source")
 					}
 					_, dstTypeOk := dst.TestNestedNestedOneOf.(*Test_TestNested_TestNestedNested_G)
-					dstValid := dstTypeOk || dst.TestNestedNestedOneOf == nil || len(oneofSubs) == 0
-					if !dstValid {
+					if dstValid := dstTypeOk || dst.TestNestedNestedOneOf == nil || len(oneofSubs) == 0; !dstValid {
 						return fmt.Errorf("attempt to set oneof 'g', while different oneof is set in destination")
 					}
 					if len(oneofSubs) > 0 {
