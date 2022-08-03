@@ -12,9 +12,6 @@ func (dst *Empty) SetFields(src *Empty, paths ...string) error {
 	if len(paths) != 0 {
 		return fmt.Errorf("message Empty has no fields, but paths %s were specified", paths)
 	}
-	if src != nil {
-		*dst = *src
-	}
 	return nil
 }
 
