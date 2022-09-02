@@ -21,9 +21,11 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-go-
     - name: Install Protoc
-      uses: arduino/setup-protoc@v1
-      with:
-        version: "3.7.1"
+      run: |
+        PB_REL="https://github.com/protocolbuffers/protobuf/releases"
+        PB_VERSION=21.5
+        curl -LO $PB_REL/download/v$PB_VERSION/protoc-$PB_VERSION-linux-x86_64.zip
+        unzip protoc-$PB_VERSION-linux-x86_64.zip -d $HOME/.local
     - name: Test, benchmark and build
       run: make -B clean test benchmark build
     - name: Format files
