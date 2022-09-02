@@ -1,8 +1,9 @@
 package processor
 
 import (
-	pgs "github.com/lyft/protoc-gen-star"
 	"strings"
+
+	pgs "github.com/lyft/protoc-gen-star/v2"
 )
 
 func HeaderPrepender(header string) pgs.PostProcessor { return headerPrepender(header) }

@@ -2,11 +2,7 @@
 
 package testdata
 
-import (
-	fmt "fmt"
-	github_com_TheThingsIndustries_protoc_gen_fieldmask_testdata_testpackage "github.com/TheThingsIndustries/protoc-gen-fieldmask/testdata/testpackage"
-	types "github.com/gogo/protobuf/types"
-)
+import fmt "fmt"
 
 func (dst *Empty) SetFields(src *Empty, paths ...string) error {
 	if len(paths) != 0 {
@@ -46,35 +42,43 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 		case "b":
 			if len(subs) > 0 {
 				var newDst, newSrc *Test_TestNested
-				if (src == nil || src.CustomName == nil) && dst.CustomName == nil {
+				if (src == nil || src.B == nil) && dst.B == nil {
 					continue
 				}
 				if src != nil {
-					newSrc = src.CustomName
+					newSrc = src.B
 				}
-				if dst.CustomName != nil {
-					newDst = dst.CustomName
+				if dst.B != nil {
+					newDst = dst.B
 				} else {
 					newDst = &Test_TestNested{}
-					dst.CustomName = newDst
+					dst.B = newDst
 				}
 				if err := newDst.SetFields(newSrc, subs...); err != nil {
 					return err
 				}
 			} else {
 				if src != nil {
-					dst.CustomName = src.CustomName
+					dst.B = src.B
 				} else {
-					dst.CustomName = nil
+					dst.B = nil
 				}
 			}
 		case "c":
 			if len(subs) > 0 {
 				var newDst, newSrc *Test_TestNested
-				if src != nil {
-					newSrc = &src.C
+				if (src == nil || src.C == nil) && dst.C == nil {
+					continue
 				}
-				newDst = &dst.C
+				if src != nil {
+					newSrc = src.C
+				}
+				if dst.C != nil {
+					newDst = dst.C
+				} else {
+					newDst = &Test_TestNested{}
+					dst.C = newDst
+				}
 				if err := newDst.SetFields(newSrc, subs...); err != nil {
 					return err
 				}
@@ -82,8 +86,7 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 				if src != nil {
 					dst.C = src.C
 				} else {
-					var zero Test_TestNested
-					dst.C = zero
+					dst.C = nil
 				}
 			}
 		case "g":
@@ -127,17 +130,16 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 			if src != nil {
 				dst.I = src.I
 			} else {
-				var zero types.StringValue
-				dst.I = zero
+				dst.I = nil
 			}
 		case "j":
 			if len(subs) > 0 {
 				return fmt.Errorf("'j' has no subfields, but %s were specified", subs)
 			}
 			if src != nil {
-				dst.Embed = src.Embed
+				dst.J = src.J
 			} else {
-				dst.Embed = nil
+				dst.J = nil
 			}
 		case "l":
 			if len(subs) > 0 {
@@ -188,12 +190,12 @@ func (dst *Test) SetFields(src *Test, paths ...string) error {
 				case "e":
 					var srcTypeOk bool
 					if src != nil {
-						_, srcTypeOk = src.TestOneof.(*Test_CustomNameOneof)
+						_, srcTypeOk = src.TestOneof.(*Test_E)
 					}
 					if srcValid := srcTypeOk || src == nil || src.TestOneof == nil || len(oneofSubs) == 0; !srcValid {
 						return fmt.Errorf("attempt to set oneof 'e', while different oneof is set in source")
 					}
-					_, dstTypeOk := dst.TestOneof.(*Test_CustomNameOneof)
+					_, dstTypeOk := dst.TestOneof.(*Test_E)
 					if dstValid := dstTypeOk || dst.TestOneof == nil || len(oneofSubs) == 0; !dstValid {
 						return fmt.Errorf("attempt to set oneof 'e', while different oneof is set in destination")
 					}
@@ -336,7 +338,8 @@ func (dst *Test_TestNested) SetFields(src *Test_TestNested, paths ...string) err
 			if src != nil {
 				dst.E = src.E
 			} else {
-				dst.E = nil
+				var zero string
+				dst.E = zero
 			}
 		case "f":
 			if len(subs) > 0 {
@@ -345,7 +348,7 @@ func (dst *Test_TestNested) SetFields(src *Test_TestNested, paths ...string) err
 			if src != nil {
 				dst.F = src.F
 			} else {
-				var zero github_com_TheThingsIndustries_protoc_gen_fieldmask_testdata_testpackage.CustomType
+				var zero string
 				dst.F = zero
 			}
 		case "g":
@@ -409,44 +412,51 @@ func (dst *Test_TestNested_TestNestedNested) SetFields(src *Test_TestNested_Test
 		case "h":
 			if len(subs) > 0 {
 				var newDst, newSrc *Test_TestNested_TestNestedNested_TestNestedNestedEmbed
-				if (src == nil || src.Test_TestNested_TestNestedNested_TestNestedNestedEmbed == nil) && dst.Test_TestNested_TestNestedNested_TestNestedNestedEmbed == nil {
+				if (src == nil || src.H == nil) && dst.H == nil {
 					continue
 				}
 				if src != nil {
-					newSrc = src.Test_TestNested_TestNestedNested_TestNestedNestedEmbed
+					newSrc = src.H
 				}
-				if dst.Test_TestNested_TestNestedNested_TestNestedNestedEmbed != nil {
-					newDst = dst.Test_TestNested_TestNestedNested_TestNestedNestedEmbed
+				if dst.H != nil {
+					newDst = dst.H
 				} else {
 					newDst = &Test_TestNested_TestNestedNested_TestNestedNestedEmbed{}
-					dst.Test_TestNested_TestNestedNested_TestNestedNestedEmbed = newDst
+					dst.H = newDst
 				}
 				if err := newDst.SetFields(newSrc, subs...); err != nil {
 					return err
 				}
 			} else {
 				if src != nil {
-					dst.Test_TestNested_TestNestedNested_TestNestedNestedEmbed = src.Test_TestNested_TestNestedNested_TestNestedNestedEmbed
+					dst.H = src.H
 				} else {
-					dst.Test_TestNested_TestNestedNested_TestNestedNestedEmbed = nil
+					dst.H = nil
 				}
 			}
 		case "i":
 			if len(subs) > 0 {
 				var newDst, newSrc *Test_TestNested_TestNestedNested_TestNestedNestedEmbed2
-				if src != nil {
-					newSrc = &src.Test_TestNested_TestNestedNested_TestNestedNestedEmbed2
+				if (src == nil || src.I == nil) && dst.I == nil {
+					continue
 				}
-				newDst = &dst.Test_TestNested_TestNestedNested_TestNestedNestedEmbed2
+				if src != nil {
+					newSrc = src.I
+				}
+				if dst.I != nil {
+					newDst = dst.I
+				} else {
+					newDst = &Test_TestNested_TestNestedNested_TestNestedNestedEmbed2{}
+					dst.I = newDst
+				}
 				if err := newDst.SetFields(newSrc, subs...); err != nil {
 					return err
 				}
 			} else {
 				if src != nil {
-					dst.Test_TestNested_TestNestedNested_TestNestedNestedEmbed2 = src.Test_TestNested_TestNestedNested_TestNestedNestedEmbed2
+					dst.I = src.I
 				} else {
-					var zero Test_TestNested_TestNestedNested_TestNestedNestedEmbed2
-					dst.Test_TestNested_TestNestedNested_TestNestedNestedEmbed2 = zero
+					dst.I = nil
 				}
 			}
 
