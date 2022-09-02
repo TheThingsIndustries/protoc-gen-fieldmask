@@ -14,6 +14,7 @@
 
 syntax = "proto3";
 
+import "github.com/envoyproxy/protoc-gen-validate/validate/validate.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/wrappers.proto";
@@ -28,9 +29,9 @@ message Empty {}
 message Test {
   message TestNested {
     message TestNestedNested {
-      int32 a = 1;
+      int32 a = 1 [(validate.rules).int32 = { gt: 24, lte: 42 }];
       sfixed64 b = 2;
-      repeated string c = 3;
+      repeated string c = 3 [(validate.rules).repeated.max_items = 9, (validate.rules).repeated.items.string.max_len = 64];
       map<int32,uint32> d = 4;
       oneof testNestedNestedOneOf{
         Empty e = 5;
@@ -43,13 +44,13 @@ message Test {
       TestNestedNestedEmbed h = 8;
 
       message TestNestedNestedEmbed2 {
-        int32 nested_field_2 = 1;
+        int32 nested_field_2 = 1 [(validate.rules).int32.const = 2];
       }
       TestNestedNestedEmbed2 i = 9;
     }
     TestNestedNested a = 1;
     bytes b = 2;
-    google.protobuf.Duration c = 3;
+    google.protobuf.Duration c = 3 [(validate.rules).duration.gte.seconds = 42];
     google.protobuf.Timestamp d = 4;
     string e = 5;
     string f = 6;
@@ -57,10 +58,12 @@ message Test {
   }
   TestNested a = 1;
   TestNested b = 2;
-  TestNested c = 3;
+  TestNested c = 3 [(validate.rules).message.required = true];
   oneof testOneof {
-    int32 d = 4;
-    uint32 e = 5;
+    option (validate.required) = true;
+
+    int32 d = 4 [(validate.rules).int32.gt = 5];
+    uint32 e = 5 [(validate.rules).uint32.gt = 5];
     bytes f = 6;
     TestNested k = 10;
   }
@@ -68,5 +71,5 @@ message Test {
   google.protobuf.StringValue h = 8;
   google.protobuf.StringValue i = 9;
   otherpackage.Embed j = 11;
-  string l = 12;
+  string l = 12 [(validate.rules).string = { uri: true, ignore_empty: true }];
 }

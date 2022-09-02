@@ -88,7 +88,8 @@ func TestGolden(t *testing.T) {
 
 		runProtoc(t, append([]string{
 			"-Itestdata",
-			fmt.Sprintf("--fieldmask_out=%s", workDir),
+			"-Itestdata/third_party",
+			fmt.Sprintf("--fieldmask_out=lang=go:%s", workDir),
 			fmt.Sprintf("--go_out=%s", workDir),
 		}, paths...)...)
 	}
@@ -988,7 +989,7 @@ var validateFieldsTestCases = []struct {
 	{
 		Name: "nil paths/valid",
 		Message: &testdata.Test{
-			A: &testdata.Test_TestNested{
+			C: &testdata.Test_TestNested{
 				A: &testdata.Test_TestNested_TestNestedNested{
 					A: 42,
 					TestNestedNestedOneOf: &testdata.Test_TestNested_TestNestedNested_F{
@@ -1063,7 +1064,7 @@ var validateFieldsTestCases = []struct {
 		Name: "a.a.i/invalid a.a.i.nested_field_2",
 		Message: &testdata.Test{
 			A: &testdata.Test_TestNested{
-				A: &testdata.Test_TestNested_TestNestedNested{},
+				A: &testdata.Test_TestNested_TestNestedNested{I: &testdata.Test_TestNested_TestNestedNested_TestNestedNestedEmbed2{}},
 			},
 		},
 		Paths:          []string{"a.a.i"},
@@ -1081,4 +1082,35 @@ var validateFieldsTestCases = []struct {
 		Paths:          []string{"l"},
 		ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeNil) },
 	},
+}
+
+func TestValidateFields(t *testing.T) {
+	for _, tc := range validateFieldsTestCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			a := assertions.New(t)
+
+			msg := clone(tc.Message)
+			paths := slices.Clone(tc.Paths)
+
+			err := msg.ValidateFields(paths...)
+			if tc.ErrorAssertion != nil {
+				a.So(tc.ErrorAssertion(t, err), should.BeTrue)
+			} else {
+				a.So(err, should.BeNil)
+			}
+			a.So(paths, should.Resemble, tc.Paths)
+		})
+	}
+}
+
+func BenchmarkValidateFields(t *testing.B) {
+	for _, tc := range validateFieldsTestCases {
+		msg := clone(tc.Message)
+		paths := slices.Clone(tc.Paths)
+		t.Run(tc.Name, func(t *testing.B) {
+			for i := 0; i < t.N; i++ {
+				msg.ValidateFields(paths...)
+			}
+		})
+	}
 }
