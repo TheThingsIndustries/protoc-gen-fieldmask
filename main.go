@@ -17,6 +17,7 @@ package main
 import (
 	"github.com/TheThingsIndustries/protoc-gen-fieldmask/module"
 	"github.com/TheThingsIndustries/protoc-gen-fieldmask/processor"
+	pgvmodule "github.com/envoyproxy/protoc-gen-validate/module"
 	pgs "github.com/lyft/protoc-gen-star/v2"
 	pgsgo "github.com/lyft/protoc-gen-star/v2/lang/go"
 )
@@ -31,6 +32,7 @@ func main() {
 	).RegisterModule(
 		module.PathHelper(initGoContext),
 		module.Setter(initGoContext),
+		pgvmodule.Validator(),
 	).RegisterPostProcessor(
 		processor.HeaderPrepender(FileHeader),
 		pgsgo.GoFmt(),
