@@ -19,8 +19,8 @@ import (
 	"strings"
 	"text/template"
 
-	pgs "github.com/lyft/protoc-gen-star"
-	pgsgo "github.com/lyft/protoc-gen-star/lang/go"
+	pgs "github.com/lyft/protoc-gen-star/v2"
+	pgsgo "github.com/lyft/protoc-gen-star/v2/lang/go"
 )
 
 type setterModule struct {
@@ -91,12 +91,6 @@ if dstValid := dstTypeOk || dst.%s == nil || len(oneofSubs) == 0; !dstValid {
 				fPath,
 			))
 			return nil
-		}
-
-		if path := m.ctx.FieldTypeImportPath(f); path != "" && path != m.ctx.ImportPath(f.Message()) {
-			if err := imports.Add(m.ctx.FieldTypePackageName(f).String(), path.String()); err != nil {
-				return err
-			}
 		}
 
 		if f.InOneOf() {

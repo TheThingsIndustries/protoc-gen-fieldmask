@@ -1,4 +1,4 @@
-// Copyright © 2019 The Things Network Foundation, The Things Industries B.V.
+// Copyright © 2022 The Things Network Foundation, The Things Industries B.V.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,8 +14,6 @@
 
 syntax = "proto3";
 
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
-import "github.com/envoyproxy/protoc-gen-validate/validate/validate.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/wrappers.proto";
@@ -30,9 +28,9 @@ message Empty {}
 message Test {
   message TestNested {
     message TestNestedNested {
-      int32 a = 1 [(validate.rules).int32 = { gt: 24, lte: 42 }];
+      int32 a = 1;
       sfixed64 b = 2;
-      repeated string c = 3 [(validate.rules).repeated.max_items = 9, (validate.rules).repeated.items.string.max_len = 64];
+      repeated string c = 3;
       map<int32,uint32> d = 4;
       oneof testNestedNestedOneOf{
         Empty e = 5;
@@ -42,35 +40,33 @@ message Test {
       message TestNestedNestedEmbed {
         int32 nested_field = 1;
       }
-      TestNestedNestedEmbed h = 8 [(gogoproto.embed) = true];
+      TestNestedNestedEmbed h = 8;
 
       message TestNestedNestedEmbed2 {
-        int32 nested_field_2 = 1 [(validate.rules).int32.const = 2];
+        int32 nested_field_2 = 1;
       }
-      TestNestedNestedEmbed2 i = 9 [(gogoproto.embed) = true, (gogoproto.nullable) = false];
+      TestNestedNestedEmbed2 i = 9;
     }
     TestNestedNested a = 1;
     bytes b = 2;
-    google.protobuf.Duration c = 3 [(gogoproto.stdduration) = true, (validate.rules).duration.gte.seconds = 42];
-    google.protobuf.Timestamp d = 4 [(gogoproto.stdtime) = true];
-    string e = 5 [(gogoproto.customtype) = "github.com/TheThingsIndustries/protoc-gen-fieldmask/testdata/testpackage.CustomType"];
-    string f = 6 [(gogoproto.customtype) = "github.com/TheThingsIndustries/protoc-gen-fieldmask/testdata/testpackage.CustomType", (gogoproto.nullable) = false];
+    google.protobuf.Duration c = 3;
+    google.protobuf.Timestamp d = 4;
+    string e = 5;
+    string f = 6;
     repeated TestNestedNested g = 7;
   }
   TestNested a = 1;
-  TestNested b = 2 [(gogoproto.customname) = "CustomName"];
-  TestNested c = 3 [(gogoproto.nullable) = false, (validate.rules).message.required = true];
+  TestNested b = 2;
+  TestNested c = 3;
   oneof testOneof {
-    option (validate.required) = true;
-
-    int32 d = 4 [(validate.rules).int32.gt = 5];
-    uint32 e = 5 [(gogoproto.customname) = "CustomNameOneof", (validate.rules).uint32.gt = 5];
+    int32 d = 4;
+    uint32 e = 5;
     bytes f = 6;
     TestNested k = 10;
   }
   Empty g = 7;
   google.protobuf.StringValue h = 8;
-  google.protobuf.StringValue i = 9 [(gogoproto.nullable) = false];
-  otherpackage.Embed j = 11 [(gogoproto.embed) = true];
-  string l = 12 [(validate.rules).string = { uri: true, ignore_empty: true }];
+  google.protobuf.StringValue i = 9;
+  otherpackage.Embed j = 11;
+  string l = 12;
 }
