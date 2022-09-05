@@ -72,4 +72,5 @@ message Test {
   google.protobuf.StringValue i = 9;
   otherpackage.Embed j = 11;
   string l = 12 [(validate.rules).string = { uri: true, ignore_empty: true }];
+  otherpackage.Enum m = 13;
 }

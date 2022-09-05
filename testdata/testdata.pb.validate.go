@@ -15,6 +15,8 @@ import (
 	"unicode/utf8"
 
 	"google.golang.org/protobuf/types/known/anypb"
+
+	otherpackage "github.com/TheThingsIndustries/protoc-gen-fieldmask/testdata/otherpackage"
 )
 
 // ensure the imports are used
@@ -30,6 +32,8 @@ var (
 	_ = (*url.URL)(nil)
 	_ = (*mail.Address)(nil)
 	_ = anypb.Any{}
+
+	_ = otherpackage.Enum(0)
 )
 
 // ValidateFields checks the field values on Empty with the rules defined in
@@ -220,6 +224,8 @@ func (m *Test) ValidateFields(paths ...string) error {
 
 			}
 
+		case "m":
+			// no validation rules for M
 		case "testOneof":
 			if m.TestOneof == nil {
 				return TestValidationError{
