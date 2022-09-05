@@ -19,3 +19,8 @@ package otherpackage;
 option go_package = "github.com/TheThingsIndustries/protoc-gen-fieldmask/testdata/otherpackage";
 
 message Embed {}
+
+enum Enum {
+  FOO = 0;
+  BAR = 1;
+}

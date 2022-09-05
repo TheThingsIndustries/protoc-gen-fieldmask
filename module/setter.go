@@ -85,7 +85,7 @@ if dstValid := dstTypeOk || dst.%s == nil || len(oneofSubs) == 0; !dstValid {
 			fPath, fPath,
 		))
 
-		if goType.IsPointer() {
+		if goType.IsPointer() || f.InOneOf() {
 			buildIndented(buf, tabCount, fmt.Sprintf(`	dst.%s = nil
 }`,
 				fPath,
@@ -93,13 +93,14 @@ if dstValid := dstTypeOk || dst.%s == nil || len(oneofSubs) == 0; !dstValid {
 			return nil
 		}
 
-		if f.InOneOf() {
-			buildIndented(buf, tabCount, fmt.Sprintf(`	dst.%s = nil
+		if f.Type().Enum() != nil {
+			buildIndented(buf, tabCount, fmt.Sprintf(`	dst.%s = 0
 }`,
 				fPath,
 			))
 			return nil
 		}
+
 		buildIndented(buf, tabCount, fmt.Sprintf(`	var zero %s
 	dst.%s = zero
 }`,
