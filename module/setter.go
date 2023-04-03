@@ -19,8 +19,8 @@ import (
 	"strings"
 	"text/template"
 
-	pgs "github.com/lyft/protoc-gen-star"
-	pgsgo "github.com/lyft/protoc-gen-star/lang/go"
+	pgs "github.com/lyft/protoc-gen-star/v2"
+	pgsgo "github.com/lyft/protoc-gen-star/v2/lang/go"
 )
 
 type setterModule struct {
@@ -85,7 +85,7 @@ if dstValid := dstTypeOk || dst.%s == nil || len(oneofSubs) == 0; !dstValid {
 			fPath, fPath,
 		))
 
-		if goType.IsPointer() {
+		if goType.IsPointer() || f.InOneOf() {
 			buildIndented(buf, tabCount, fmt.Sprintf(`	dst.%s = nil
 }`,
 				fPath,
@@ -93,19 +93,14 @@ if dstValid := dstTypeOk || dst.%s == nil || len(oneofSubs) == 0; !dstValid {
 			return nil
 		}
 
-		if path := m.ctx.FieldTypeImportPath(f); path != "" && path != m.ctx.ImportPath(f.Message()) {
-			if err := imports.Add(m.ctx.FieldTypePackageName(f).String(), path.String()); err != nil {
-				return err
-			}
-		}
-
-		if f.InOneOf() {
-			buildIndented(buf, tabCount, fmt.Sprintf(`	dst.%s = nil
+		if f.Type().Enum() != nil {
+			buildIndented(buf, tabCount, fmt.Sprintf(`	dst.%s = 0
 }`,
 				fPath,
 			))
 			return nil
 		}
+
 		buildIndented(buf, tabCount, fmt.Sprintf(`	var zero %s
 	dst.%s = zero
 }`,

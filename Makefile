@@ -1,4 +1,4 @@
-# Copyright © 2019 The Things Network Foundation, The Things Industries B.V.
+# Copyright © 2022 The Things Network Foundation, The Things Industries B.V.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -30,23 +30,20 @@ build:
 clean:
 	rm -rf dist .tools vendor
 
-.tools/protoc-gen-gogo: go.mod go.sum
-	go build -o $@ github.com/gogo/protobuf/protoc-gen-gogo
-
-vendor/github.com/gogo/protobuf/gogoproto/gogo.proto: go.mod go.sum
-	go mod vendor
+.tools/protoc-gen-go: go.mod go.sum
+	go build -o $@ google.golang.org/protobuf/cmd/protoc-gen-go
 
 .PHONY: test
 
 PROTOC ?= protoc
-PROTOC += --plugin=protoc-gen-gogo=.tools/protoc-gen-gogo
+PROTOC += --plugin=protoc-gen-go=.tools/protoc-gen-go
 
-test: .tools/protoc-gen-gogo vendor/github.com/gogo/protobuf/gogoproto/gogo.proto
+test: .tools/protoc-gen-go
 	$(info Regenerating golden files...)
 	@PROTOC="$(PROTOC)" go test -regenerate
 	$(info Running tests...)
 	@PROTOC="$(PROTOC)" go test -coverprofile=coverage.out ./...
 
-benchmark: .tools/protoc-gen-gogo vendor/github.com/gogo/protobuf/gogoproto/gogo.proto
+benchmark: .tools/protoc-gen-go
 	$(info Running benchmarks...)
 	@PROTOC="$(PROTOC)" go test -bench .

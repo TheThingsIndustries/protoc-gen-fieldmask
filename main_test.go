@@ -23,14 +23,15 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/TheThingsIndustries/protoc-gen-fieldmask/testdata"
-	"github.com/gogo/protobuf/types"
 	"github.com/kr/pretty"
-	"github.com/mohae/deepcopy"
 	"github.com/smartystreets/assertions"
 	"github.com/smartystreets/assertions/should"
+	"golang.org/x/exp/slices"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/durationpb"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 var regenerate = flag.Bool("regenerate", false, "regenerate golden files")
@@ -86,10 +87,10 @@ func TestGolden(t *testing.T) {
 		}
 
 		runProtoc(t, append([]string{
-			"-Ivendor",
 			"-Itestdata",
-			fmt.Sprintf("--fieldmask_out=lang=gogo,Mgoogle/protobuf/wrappers.proto=github.com/gogo/protobuf/types:%s", workDir),
-			fmt.Sprintf("--gogo_out=Mgoogle/protobuf/wrappers.proto=github.com/gogo/protobuf/types:%s", workDir),
+			"-Itestdata/third_party",
+			fmt.Sprintf("--fieldmask_out=lang=go:%s", workDir),
+			fmt.Sprintf("--go_out=%s", workDir),
 		}, paths...)...)
 	}
 
@@ -198,6 +199,7 @@ func TestFieldMaskPaths(t *testing.T) {
 		"i",
 		"j",
 		"l",
+		"m",
 		"testOneof",
 		"testOneof.d",
 		"testOneof.e",
@@ -232,6 +234,7 @@ func TestFieldMaskPaths(t *testing.T) {
 		"i",
 		"j",
 		"l",
+		"m",
 		"testOneof",
 	})
 
@@ -301,7 +304,7 @@ var setFieldsTestCases = []struct {
 		Name: "nil source",
 		Destination: &testdata.Test{
 			A: &testdata.Test_TestNested{},
-			CustomName: &testdata.Test_TestNested{
+			B: &testdata.Test_TestNested{
 				A: &testdata.Test_TestNested_TestNestedNested{},
 			},
 		},
@@ -309,7 +312,7 @@ var setFieldsTestCases = []struct {
 		Paths:  []string{"a.b", "b.c"},
 		Result: &testdata.Test{
 			A: &testdata.Test_TestNested{},
-			CustomName: &testdata.Test_TestNested{
+			B: &testdata.Test_TestNested{
 				A: &testdata.Test_TestNested_TestNestedNested{},
 			},
 		},
@@ -317,7 +320,7 @@ var setFieldsTestCases = []struct {
 	{
 		Name: "no paths",
 		Destination: &testdata.Test{
-			CustomName: &testdata.Test_TestNested{
+			B: &testdata.Test_TestNested{
 				A: &testdata.Test_TestNested_TestNestedNested{},
 			},
 		},
@@ -325,13 +328,13 @@ var setFieldsTestCases = []struct {
 			A: &testdata.Test_TestNested{
 				B: []byte{1, 2, 3},
 			},
-			CustomName: &testdata.Test_TestNested{
+			B: &testdata.Test_TestNested{
 				B: []byte{1, 2, 4},
 			},
 		},
 		Paths: nil,
 		Result: &testdata.Test{
-			CustomName: &testdata.Test_TestNested{
+			B: &testdata.Test_TestNested{
 				A: &testdata.Test_TestNested_TestNestedNested{},
 			},
 		},
@@ -339,7 +342,7 @@ var setFieldsTestCases = []struct {
 	{
 		Name: "a",
 		Destination: &testdata.Test{
-			CustomName: &testdata.Test_TestNested{
+			B: &testdata.Test_TestNested{
 				A: &testdata.Test_TestNested_TestNestedNested{},
 			},
 		},
@@ -359,7 +362,7 @@ var setFieldsTestCases = []struct {
 				},
 				B: []byte{1, 2, 3},
 			},
-			CustomName: &testdata.Test_TestNested{
+			B: &testdata.Test_TestNested{
 				A: &testdata.Test_TestNested_TestNestedNested{},
 			},
 		},
@@ -367,7 +370,7 @@ var setFieldsTestCases = []struct {
 	{
 		Name: "a.b",
 		Destination: &testdata.Test{
-			CustomName: &testdata.Test_TestNested{
+			B: &testdata.Test_TestNested{
 				A: &testdata.Test_TestNested_TestNestedNested{},
 			},
 		},
@@ -375,7 +378,7 @@ var setFieldsTestCases = []struct {
 			A: &testdata.Test_TestNested{
 				B: []byte{1, 2, 3},
 			},
-			CustomName: &testdata.Test_TestNested{
+			B: &testdata.Test_TestNested{
 				B: []byte{1, 2, 4},
 			},
 		},
@@ -384,7 +387,7 @@ var setFieldsTestCases = []struct {
 			A: &testdata.Test_TestNested{
 				B: []byte{1, 2, 3},
 			},
-			CustomName: &testdata.Test_TestNested{
+			B: &testdata.Test_TestNested{
 				A: &testdata.Test_TestNested_TestNestedNested{},
 			},
 		},
@@ -392,7 +395,7 @@ var setFieldsTestCases = []struct {
 	{
 		Name: "a,a.b",
 		Destination: &testdata.Test{
-			CustomName: &testdata.Test_TestNested{
+			B: &testdata.Test_TestNested{
 				A: &testdata.Test_TestNested_TestNestedNested{},
 			},
 		},
@@ -412,7 +415,7 @@ var setFieldsTestCases = []struct {
 				},
 				B: []byte{1, 2, 3},
 			},
-			CustomName: &testdata.Test_TestNested{
+			B: &testdata.Test_TestNested{
 				A: &testdata.Test_TestNested_TestNestedNested{},
 			},
 		},
@@ -420,7 +423,7 @@ var setFieldsTestCases = []struct {
 	{
 		Name: "a.b,a",
 		Destination: &testdata.Test{
-			CustomName: &testdata.Test_TestNested{
+			B: &testdata.Test_TestNested{
 				A: &testdata.Test_TestNested_TestNestedNested{},
 			},
 		},
@@ -440,7 +443,7 @@ var setFieldsTestCases = []struct {
 				},
 				B: []byte{1, 2, 3},
 			},
-			CustomName: &testdata.Test_TestNested{
+			B: &testdata.Test_TestNested{
 				A: &testdata.Test_TestNested_TestNestedNested{},
 			},
 		},
@@ -448,14 +451,14 @@ var setFieldsTestCases = []struct {
 	{
 		Name: "a.b,a.a.a,a.b,a.b,b,testOneof",
 		Destination: &testdata.Test{
-			TestOneof: &testdata.Test_CustomNameOneof{},
+			TestOneof: &testdata.Test_E{},
 			G:         &testdata.Empty{},
 		},
 		Source: &testdata.Test{
 			A: &testdata.Test_TestNested{
 				B: []byte{1, 2, 3},
 			},
-			CustomName: &testdata.Test_TestNested{
+			B: &testdata.Test_TestNested{
 				B: []byte{1, 2, 4},
 			},
 			TestOneof: &testdata.Test_D{
@@ -467,7 +470,7 @@ var setFieldsTestCases = []struct {
 			A: &testdata.Test_TestNested{
 				B: []byte{1, 2, 3},
 			},
-			CustomName: &testdata.Test_TestNested{
+			B: &testdata.Test_TestNested{
 				B: []byte{1, 2, 4},
 			},
 			TestOneof: &testdata.Test_D{
@@ -479,8 +482,8 @@ var setFieldsTestCases = []struct {
 	{
 		Name: "destination testOneof mismatch",
 		Destination: &testdata.Test{
-			TestOneof: &testdata.Test_CustomNameOneof{
-				CustomNameOneof: 42,
+			TestOneof: &testdata.Test_E{
+				E: 42,
 			},
 			G: &testdata.Empty{},
 		},
@@ -524,8 +527,8 @@ var setFieldsTestCases = []struct {
 			G: &testdata.Empty{},
 		},
 		Source: &testdata.Test{
-			TestOneof: &testdata.Test_CustomNameOneof{
-				CustomNameOneof: 42,
+			TestOneof: &testdata.Test_E{
+				E: 42,
 			},
 		},
 		Paths: []string{"testOneof.d"},
@@ -553,8 +556,8 @@ var setFieldsTestCases = []struct {
 			G: &testdata.Empty{},
 		},
 		Source: &testdata.Test{
-			TestOneof: &testdata.Test_CustomNameOneof{
-				CustomNameOneof: 42,
+			TestOneof: &testdata.Test_E{
+				E: 42,
 			},
 		},
 		Paths: []string{"testOneof.d"},
@@ -675,7 +678,7 @@ var setFieldsTestCases = []struct {
 				K: &testdata.Test_TestNested{
 					A: &testdata.Test_TestNested_TestNestedNested{
 						TestNestedNestedOneOf: &testdata.Test_TestNested_TestNestedNested_G{
-							G: &types.UInt64Value{
+							G: &wrapperspb.UInt64Value{
 								Value: 42,
 							},
 						},
@@ -711,7 +714,7 @@ var setFieldsTestCases = []struct {
 				K: &testdata.Test_TestNested{
 					A: &testdata.Test_TestNested_TestNestedNested{
 						TestNestedNestedOneOf: &testdata.Test_TestNested_TestNestedNested_G{
-							G: &types.UInt64Value{
+							G: &wrapperspb.UInt64Value{
 								Value: 42,
 							},
 						},
@@ -725,7 +728,7 @@ var setFieldsTestCases = []struct {
 				K: &testdata.Test_TestNested{
 					A: &testdata.Test_TestNested_TestNestedNested{
 						TestNestedNestedOneOf: &testdata.Test_TestNested_TestNestedNested_G{
-							G: &types.UInt64Value{
+							G: &wrapperspb.UInt64Value{
 								Value: 42,
 							},
 						},
@@ -752,7 +755,7 @@ var setFieldsTestCases = []struct {
 				K: &testdata.Test_TestNested{
 					A: &testdata.Test_TestNested_TestNestedNested{
 						TestNestedNestedOneOf: &testdata.Test_TestNested_TestNestedNested_G{
-							G: &types.UInt64Value{
+							G: &wrapperspb.UInt64Value{
 								Value: 42,
 							},
 						},
@@ -782,7 +785,7 @@ var setFieldsTestCases = []struct {
 				K: &testdata.Test_TestNested{
 					A: &testdata.Test_TestNested_TestNestedNested{
 						TestNestedNestedOneOf: &testdata.Test_TestNested_TestNestedNested_G{
-							G: &types.UInt64Value{
+							G: &wrapperspb.UInt64Value{
 								Value: 42,
 							},
 						},
@@ -796,7 +799,7 @@ var setFieldsTestCases = []struct {
 				K: &testdata.Test_TestNested{
 					A: &testdata.Test_TestNested_TestNestedNested{
 						TestNestedNestedOneOf: &testdata.Test_TestNested_TestNestedNested_G{
-							G: &types.UInt64Value{
+							G: &wrapperspb.UInt64Value{
 								Value: 42,
 							},
 						},
@@ -866,18 +869,18 @@ var setFieldsTestCases = []struct {
 	{
 		Name: "non-nullable c.a",
 		Destination: &testdata.Test{
-			C: testdata.Test_TestNested{
+			C: &testdata.Test_TestNested{
 				A: &testdata.Test_TestNested_TestNestedNested{},
 			},
 		},
 		Source: &testdata.Test{
-			C: testdata.Test_TestNested{
+			C: &testdata.Test_TestNested{
 				B: []byte("42"),
 			},
 		},
 		Paths: []string{"c.b"},
 		Result: &testdata.Test{
-			C: testdata.Test_TestNested{
+			C: &testdata.Test_TestNested{
 				A: &testdata.Test_TestNested_TestNestedNested{},
 				B: []byte("42"),
 			},
@@ -917,14 +920,18 @@ var setFieldsTestCases = []struct {
 	},
 }
 
+func clone[T proto.Message](m T) T {
+	return proto.Clone(m).(T)
+}
+
 func TestSetFields(t *testing.T) {
 	for _, tc := range setFieldsTestCases {
 		t.Run(tc.Name, func(t *testing.T) {
 			a := assertions.New(t)
 
-			src := deepcopy.Copy(tc.Source).(*testdata.Test)
-			dst := deepcopy.Copy(tc.Destination).(*testdata.Test)
-			paths := deepcopy.Copy(tc.Paths).([]string)
+			src := clone(tc.Source)
+			dst := clone(tc.Destination)
+			paths := slices.Clone(tc.Paths)
 
 			err := dst.SetFields(src, paths...)
 			if tc.ErrorAssertion != nil {
@@ -932,8 +939,8 @@ func TestSetFields(t *testing.T) {
 			} else {
 				a.So(err, should.BeNil)
 			}
-			a.So(src, should.Resemble, tc.Source)
-			a.So(dst, should.Resemble, tc.Result)
+			a.So(proto.Equal(src, tc.Source), should.BeTrue)
+			a.So(proto.Equal(dst, tc.Result), should.BeTrue)
 			a.So(paths, should.Resemble, tc.Paths)
 		})
 	}
@@ -941,9 +948,9 @@ func TestSetFields(t *testing.T) {
 
 func BenchmarkSetFields(t *testing.B) {
 	for _, tc := range setFieldsTestCases {
-		src := deepcopy.Copy(tc.Source).(*testdata.Test)
-		dst := deepcopy.Copy(tc.Destination).(*testdata.Test)
-		paths := deepcopy.Copy(tc.Paths).([]string)
+		src := clone(tc.Source)
+		dst := clone(tc.Destination)
+		paths := slices.Clone(tc.Paths)
 		t.Run(tc.Name, func(t *testing.B) {
 			for i := 0; i < t.N; i++ {
 				dst.SetFields(src, paths...)
@@ -970,7 +977,7 @@ var validateFieldsTestCases = []struct {
 					A: 42,
 				},
 			},
-			CustomName: &testdata.Test_TestNested{
+			B: &testdata.Test_TestNested{
 				A: &testdata.Test_TestNested_TestNestedNested{},
 			},
 		},
@@ -984,17 +991,17 @@ var validateFieldsTestCases = []struct {
 	{
 		Name: "nil paths/valid",
 		Message: &testdata.Test{
-			A: &testdata.Test_TestNested{
+			C: &testdata.Test_TestNested{
 				A: &testdata.Test_TestNested_TestNestedNested{
 					A: 42,
-					Test_TestNested_TestNestedNested_TestNestedNestedEmbed2: testdata.Test_TestNested_TestNestedNested_TestNestedNestedEmbed2{
-						NestedField_2: 2,
+					TestNestedNestedOneOf: &testdata.Test_TestNested_TestNestedNested_F{
+						F: 2,
 					},
 				},
-				C: func(v time.Duration) *time.Duration { return &v }(43 * time.Second),
+				C: &durationpb.Duration{Seconds: 42, Nanos: 4242},
 			},
-			TestOneof: &testdata.Test_CustomNameOneof{
-				CustomNameOneof: 6,
+			TestOneof: &testdata.Test_D{
+				D: 6,
 			},
 		},
 	},
@@ -1004,11 +1011,11 @@ var validateFieldsTestCases = []struct {
 			A: &testdata.Test_TestNested{
 				A: &testdata.Test_TestNested_TestNestedNested{
 					A: 42,
-					Test_TestNested_TestNestedNested_TestNestedNestedEmbed2: testdata.Test_TestNested_TestNestedNested_TestNestedNestedEmbed2{
-						NestedField_2: 2,
+					TestNestedNestedOneOf: &testdata.Test_TestNested_TestNestedNested_F{
+						F: 2,
 					},
 				},
-				C: func(v time.Duration) *time.Duration { return &v }(43 * time.Second),
+				C: &durationpb.Duration{Seconds: 42, Nanos: 4242},
 			},
 		},
 		ErrorAssertion: func(t *testing.T, err error) bool { return assertions.New(t).So(err, should.BeError) },
@@ -1019,11 +1026,11 @@ var validateFieldsTestCases = []struct {
 			A: &testdata.Test_TestNested{
 				A: &testdata.Test_TestNested_TestNestedNested{
 					A: 42,
-					Test_TestNested_TestNestedNested_TestNestedNestedEmbed2: testdata.Test_TestNested_TestNestedNested_TestNestedNestedEmbed2{
-						NestedField_2: 2,
+					TestNestedNestedOneOf: &testdata.Test_TestNested_TestNestedNested_F{
+						F: 2,
 					},
 				},
-				C: func(v time.Duration) *time.Duration { return &v }(43 * time.Second),
+				C: &durationpb.Duration{Seconds: 42, Nanos: 4242},
 			},
 			TestOneof: &testdata.Test_D{
 				D: 3,
@@ -1047,8 +1054,8 @@ var validateFieldsTestCases = []struct {
 		Message: &testdata.Test{
 			A: &testdata.Test_TestNested{
 				A: &testdata.Test_TestNested_TestNestedNested{
-					Test_TestNested_TestNestedNested_TestNestedNestedEmbed2: testdata.Test_TestNested_TestNestedNested_TestNestedNestedEmbed2{
-						NestedField_2: 2,
+					TestNestedNestedOneOf: &testdata.Test_TestNested_TestNestedNested_F{
+						F: 2,
 					},
 				},
 			},
@@ -1059,7 +1066,7 @@ var validateFieldsTestCases = []struct {
 		Name: "a.a.i/invalid a.a.i.nested_field_2",
 		Message: &testdata.Test{
 			A: &testdata.Test_TestNested{
-				A: &testdata.Test_TestNested_TestNestedNested{},
+				A: &testdata.Test_TestNested_TestNestedNested{I: &testdata.Test_TestNested_TestNestedNested_TestNestedNestedEmbed2{}},
 			},
 		},
 		Paths:          []string{"a.a.i"},
@@ -1084,8 +1091,8 @@ func TestValidateFields(t *testing.T) {
 		t.Run(tc.Name, func(t *testing.T) {
 			a := assertions.New(t)
 
-			msg := deepcopy.Copy(tc.Message).(*testdata.Test)
-			paths := deepcopy.Copy(tc.Paths).([]string)
+			msg := clone(tc.Message)
+			paths := slices.Clone(tc.Paths)
 
 			err := msg.ValidateFields(paths...)
 			if tc.ErrorAssertion != nil {
@@ -1100,8 +1107,8 @@ func TestValidateFields(t *testing.T) {
 
 func BenchmarkValidateFields(t *testing.B) {
 	for _, tc := range validateFieldsTestCases {
-		msg := deepcopy.Copy(tc.Message).(*testdata.Test)
-		paths := deepcopy.Copy(tc.Paths).([]string)
+		msg := clone(tc.Message)
+		paths := slices.Clone(tc.Paths)
 		t.Run(tc.Name, func(t *testing.B) {
 			for i := 0; i < t.N; i++ {
 				msg.ValidateFields(paths...)

@@ -14,7 +14,9 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/gogo/protobuf/types"
+	"google.golang.org/protobuf/types/known/anypb"
+
+	otherpackage "github.com/TheThingsIndustries/protoc-gen-fieldmask/testdata/otherpackage"
 )
 
 // ensure the imports are used
@@ -29,11 +31,10 @@ var (
 	_ = time.Duration(0)
 	_ = (*url.URL)(nil)
 	_ = (*mail.Address)(nil)
-	_ = types.DynamicAny{}
-)
+	_ = anypb.Any{}
 
-// define the regex for a UUID once up-front
-var _testdata_uuidPattern = regexp.MustCompile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
+	_ = otherpackage.Enum(0)
+)
 
 // ValidateFields checks the field values on Empty with the rules defined in
 // the proto definition for this message. If any rules are violated, an error
@@ -127,7 +128,7 @@ func (m *Test) ValidateFields(paths ...string) error {
 
 		case "b":
 
-			if v, ok := interface{}(m.GetCustomName()).(interface{ ValidateFields(...string) error }); ok {
+			if v, ok := interface{}(m.GetB()).(interface{ ValidateFields(...string) error }); ok {
 				if err := v.ValidateFields(subs...); err != nil {
 					return TestValidationError{
 						field:  "b",
@@ -139,7 +140,14 @@ func (m *Test) ValidateFields(paths ...string) error {
 
 		case "c":
 
-			if v, ok := interface{}(&m.C).(interface{ ValidateFields(...string) error }); ok {
+			if m.GetC() == nil {
+				return TestValidationError{
+					field:  "c",
+					reason: "value is required",
+				}
+			}
+
+			if v, ok := interface{}(m.GetC()).(interface{ ValidateFields(...string) error }); ok {
 				if err := v.ValidateFields(subs...); err != nil {
 					return TestValidationError{
 						field:  "c",
@@ -175,7 +183,7 @@ func (m *Test) ValidateFields(paths ...string) error {
 
 		case "i":
 
-			if v, ok := interface{}(&m.I).(interface{ ValidateFields(...string) error }); ok {
+			if v, ok := interface{}(m.GetI()).(interface{ ValidateFields(...string) error }); ok {
 				if err := v.ValidateFields(subs...); err != nil {
 					return TestValidationError{
 						field:  "i",
@@ -187,7 +195,7 @@ func (m *Test) ValidateFields(paths ...string) error {
 
 		case "j":
 
-			if v, ok := interface{}(m.Embed).(interface{ ValidateFields(...string) error }); ok {
+			if v, ok := interface{}(m.GetJ()).(interface{ ValidateFields(...string) error }); ok {
 				if err := v.ValidateFields(subs...); err != nil {
 					return TestValidationError{
 						field:  "j",
@@ -216,6 +224,8 @@ func (m *Test) ValidateFields(paths ...string) error {
 
 			}
 
+		case "m":
+			// no validation rules for M
 		case "testOneof":
 			if m.TestOneof == nil {
 				return TestValidationError{
@@ -245,12 +255,12 @@ func (m *Test) ValidateFields(paths ...string) error {
 					}
 
 				case "e":
-					w, ok := m.TestOneof.(*Test_CustomNameOneof)
+					w, ok := m.TestOneof.(*Test_E)
 					if !ok || w == nil {
 						continue
 					}
 
-					if m.GetCustomNameOneof() <= 5 {
+					if m.GetE() <= 5 {
 						return TestValidationError{
 							field:  "e",
 							reason: "value must be greater than 5",
@@ -377,7 +387,14 @@ func (m *Test_TestNested) ValidateFields(paths ...string) error {
 		case "c":
 
 			if d := m.GetC(); d != nil {
-				dur := *d
+				dur, err := d.AsDuration(), d.CheckValid()
+				if err != nil {
+					return Test_TestNestedValidationError{
+						field:  "c",
+						reason: "value is not a valid duration",
+						cause:  err,
+					}
+				}
 
 				gte := time.Duration(42*time.Second + 0*time.Nanosecond)
 
@@ -515,6 +532,13 @@ func (m *Test_TestNested_TestNestedNested) ValidateFields(paths ...string) error
 			// no validation rules for B
 		case "c":
 
+			if len(m.GetC()) > 9 {
+				return Test_TestNested_TestNestedNestedValidationError{
+					field:  "c",
+					reason: "value must contain no more than 9 item(s)",
+				}
+			}
+
 			for idx, item := range m.GetC() {
 				_, _ = idx, item
 
@@ -531,7 +555,7 @@ func (m *Test_TestNested_TestNestedNested) ValidateFields(paths ...string) error
 			// no validation rules for D
 		case "h":
 
-			if v, ok := interface{}(m.Test_TestNested_TestNestedNested_TestNestedNestedEmbed).(interface{ ValidateFields(...string) error }); ok {
+			if v, ok := interface{}(m.GetH()).(interface{ ValidateFields(...string) error }); ok {
 				if err := v.ValidateFields(subs...); err != nil {
 					return Test_TestNested_TestNestedNestedValidationError{
 						field:  "h",
@@ -543,7 +567,7 @@ func (m *Test_TestNested_TestNestedNested) ValidateFields(paths ...string) error
 
 		case "i":
 
-			if v, ok := interface{}(&m.Test_TestNested_TestNestedNested_TestNestedNestedEmbed2).(interface{ ValidateFields(...string) error }); ok {
+			if v, ok := interface{}(m.GetI()).(interface{ ValidateFields(...string) error }); ok {
 				if err := v.ValidateFields(subs...); err != nil {
 					return Test_TestNested_TestNestedNestedValidationError{
 						field:  "i",
