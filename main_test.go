@@ -26,8 +26,8 @@ import (
 
 	"github.com/TheThingsIndustries/protoc-gen-fieldmask/testdata"
 	"github.com/kr/pretty"
-	"github.com/smartystreets/assertions"
-	"github.com/smartystreets/assertions/should"
+	"github.com/smarty/assertions"
+	"github.com/smarty/assertions/should"
 	"golang.org/x/exp/slices"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/durationpb"
