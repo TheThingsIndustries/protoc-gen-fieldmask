@@ -9,7 +9,7 @@ require (
 	github.com/lyft/protoc-gen-star/v2 v2.0.3
 	github.com/smarty/assertions v1.15.1
 	golang.org/x/exp v0.0.0-20230807204917-050eac23e9de
-	google.golang.org/protobuf v1.31.0
+	google.golang.org/protobuf v1.33.0
 )
 
 require (
