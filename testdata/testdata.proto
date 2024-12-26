@@ -14,13 +14,13 @@
 
 syntax = "proto3";
 
-import "github.com/envoyproxy/protoc-gen-validate/validate/validate.proto";
+package testdata;
+
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/wrappers.proto";
 import "otherpackage/otherpackage.proto";
-
-package testdata;
+import "validate/validate.proto";
 
 option go_package = "github.com/TheThingsIndustries/protoc-gen-fieldmask/testdata";
 
@@ -29,15 +29,21 @@ message Empty {}
 message Test {
   message TestNested {
     message TestNestedNested {
-      int32 a = 1 [(validate.rules).int32 = { gt: 24, lte: 42 }];
+      int32 a = 1 [(validate.rules).int32 = {
+        gt: 24
+        lte: 42
+      }];
       sfixed64 b = 2;
-      repeated string c = 3 [(validate.rules).repeated.max_items = 9, (validate.rules).repeated.items.string.max_len = 64];
-      map<int32,uint32> d = 4;
-      oneof testNestedNestedOneOf{
+      repeated string c = 3 [
+        (validate.rules).repeated.max_items = 9,
+        (validate.rules).repeated.items.string.max_len = 64
+      ];
+      map<int32, uint32> d = 4;
+      oneof testNestedNestedOneOf {
         Empty e = 5;
         uint32 f = 6;
         google.protobuf.UInt64Value g = 7;
-      };
+      }
       message TestNestedNestedEmbed {
         int32 nested_field = 1;
       }
@@ -71,6 +77,9 @@ message Test {
   google.protobuf.StringValue h = 8;
   google.protobuf.StringValue i = 9;
   otherpackage.Embed j = 11;
-  string l = 12 [(validate.rules).string = { uri: true, ignore_empty: true }];
+  string l = 12 [(validate.rules).string = {
+    uri: true
+    ignore_empty: true
+  }];
   otherpackage.Enum m = 13;
 }

@@ -176,7 +176,8 @@ func (m *pathHelperModule) Execute(files map[string]pgs.File, pkgs map[string]pg
 	}
 
 	for dir, pkg := range dirs {
-		m.AddGeneratorTemplateFile(dir.Push(dir.Base()).SetExt(".pb.util.fm.go").String(), template.Must(template.New("util").Parse(`package {{ .Package }}
+		baseName := pkg.LowerCamelCase().String()
+		m.AddGeneratorTemplateFile(dir.Push(baseName).SetExt(".pb.util.fm.go").String(), template.Must(template.New("util").Parse(`package {{ .Package }}
 
 import (
 	"strings"

@@ -1,0 +1,14 @@
+version: v2
+plugins:
+  - local: .tools/protoc-gen-go
+    out: ./testdata
+    opt:
+      - paths=source_relative
+  - local: dist/protoc-gen-fieldmask
+    out: ./testdata
+    opt:
+      - lang=go
+      - plugin=protoc-gen-go=.tools/protoc-gen-go
+      - paths=source_relative
+inputs:
+  - directory: testdata

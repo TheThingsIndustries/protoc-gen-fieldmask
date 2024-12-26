@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-export GO111MODULE=on
-
 .DEFAULT_GOAL=build
 
 .PHONY: all
@@ -22,28 +20,29 @@ all: build
 
 .PHONY: build
 
-build:
+.tools/protoc-gen-go: go.mod go.sum
+	GOBIN=$(PWD)/.tools go install google.golang.org/protobuf/cmd/protoc-gen-go
+
+dist/protoc-gen-fieldmask: .tools/protoc-gen-go
 	CGO_ENABLED=0 go build -ldflags "-w -s" -o dist/protoc-gen-fieldmask .
+
+build: dist/protoc-gen-fieldmask
 
 .PHONY: clean
 
 clean:
 	rm -rf dist .tools vendor
+	rm -rf testdata/*.pb.go testdata/*.pb.*.go testdata/*/*.pb.go testdata/*/*.pb.*.go
 
-.tools/protoc-gen-go: go.mod go.sum
-	go build -o $@ google.golang.org/protobuf/cmd/protoc-gen-go
+.PHONY: testgen
+
+testgen: build
+	buf generate --template buf.test.gen.yaml
 
 .PHONY: test
 
-PROTOC ?= protoc
-PROTOC += --plugin=protoc-gen-go=.tools/protoc-gen-go
+test: testgen
+	go test ./... -count 1 -cover -coverprofile=coverage.out
 
-test: .tools/protoc-gen-go
-	$(info Regenerating golden files...)
-	@PROTOC="$(PROTOC)" go test -regenerate
-	$(info Running tests...)
-	@PROTOC="$(PROTOC)" go test -coverprofile=coverage.out ./...
-
-benchmark: .tools/protoc-gen-go
-	$(info Running benchmarks...)
-	@PROTOC="$(PROTOC)" go test -bench .
+benchmark: testgen
+	go test -bench ./...
