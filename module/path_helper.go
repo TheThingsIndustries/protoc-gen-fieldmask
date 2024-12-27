@@ -20,8 +20,10 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/TheThingsIndustries/protoc-gen-fieldmask/annotations"
 	pgs "github.com/lyft/protoc-gen-star/v2"
 	pgsgo "github.com/lyft/protoc-gen-star/v2/lang/go"
+	"google.golang.org/protobuf/proto"
 )
 
 type pathHelperModule struct {
@@ -81,24 +83,17 @@ func (m *pathHelperModule) appendPaths(ctx pgsgo.Context, paths []string, prefix
 	}
 	return paths, nil
 }
-
-func (m *pathHelperModule) buildPaths(buf *strings.Builder, msg pgs.Message) error {
+func (m *pathHelperModule) buildPaths(msg pgs.Message) ([]string, []string, error) {
 	m.Push(msg.FullyQualifiedName())
 	defer m.Pop()
 
-	mType := m.ctx.Name(msg)
 	if len(msg.Fields()) == 0 {
-		fmt.Fprintf(buf, `var %sFieldPathsNested []string
-var %sFieldPathsTopLevel []string`,
-			mType,
-			mType,
-		)
-		return nil
+		return nil, nil, nil
 	}
 
 	nestedPaths, err := m.appendPaths(m.ctx, make([]string, 0, len(msg.Fields())), "", msg, nil)
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 	sort.Strings(nestedPaths)
 
@@ -110,6 +105,20 @@ var %sFieldPathsTopLevel []string`,
 		topLevelPaths = append(topLevelPaths, p)
 	}
 	sort.Strings(topLevelPaths)
+
+	return nestedPaths, topLevelPaths, nil
+}
+
+func (m *pathHelperModule) writePaths(buf *strings.Builder, msg pgs.Message, nestedPaths, topLevelPaths []string) {
+	mType := m.ctx.Name(msg)
+	if len(nestedPaths) == 0 && len(topLevelPaths) == 0 {
+		fmt.Fprintf(buf, `var %sFieldPathsNested []string
+var %sFieldPathsTopLevel []string`,
+			mType,
+			mType,
+		)
+		return
+	}
 
 	fmt.Fprintf(buf, `var %sFieldPathsNested = []string{
 	%s
@@ -123,7 +132,29 @@ var %sFieldPathsTopLevel = []string{
 		mType, `"`+strings.Join(topLevelPaths, `",
 	"`)+`",`,
 	)
-	return nil
+}
+
+func (m *pathHelperModule) writeRPCFieldMaskPaths(buf *strings.Builder, rpcFieldMaskPaths map[string]RPCFieldMaskPathValue) {
+	fmt.Fprintln(buf, "type RPCFieldMaskPathValue struct {")
+	fmt.Fprintln(buf, "\tAll     []string")
+	fmt.Fprintln(buf, "\tAllowed []string")
+	fmt.Fprintln(buf, "\tSet     bool")
+	fmt.Fprintln(buf, "}")
+
+	fmt.Fprintln(buf, "// RPCFieldMaskPaths lists the field mask paths for each RPC in this API.")
+	fmt.Fprintln(buf, "var RPCFieldMaskPaths = map[string]RPCFieldMaskPathValue{")
+	for rpc, paths := range rpcFieldMaskPaths {
+		fmt.Fprintf(buf, "\t\"%s\": {\n", rpc)
+		fmt.Fprintf(buf, "\t\tAll:     %s,\n", paths.All)
+		fmt.Fprintf(buf, "\t\tAllowed: []string{\n")
+		for _, path := range paths.Allowed {
+			fmt.Fprintf(buf, "\t\t\t\"%s\",\n", path)
+		}
+		fmt.Fprintln(buf, "\t\t},")
+		fmt.Fprintf(buf, "\t\tSet:     %t,\n", paths.Set)
+		fmt.Fprintln(buf, "\t},")
+	}
+	fmt.Fprintln(buf, "}")
 }
 
 func (m *pathHelperModule) Name() string { return "paths" }
@@ -135,6 +166,8 @@ func (m *pathHelperModule) InitContext(ctx pgs.BuildContext) {
 
 func (m *pathHelperModule) Execute(files map[string]pgs.File, pkgs map[string]pgs.Package) []pgs.Artifact {
 	dirs := map[pgs.FilePath]pgs.Name{}
+	rpcFieldMaskPaths := map[string]RPCFieldMaskPathValue{}
+
 	for _, f := range files {
 		m.Push(f.Name().String())
 
@@ -147,17 +180,41 @@ func (m *pathHelperModule) Execute(files map[string]pgs.File, pkgs map[string]pg
 		for _, msg := range f.AllMessages() {
 			var mBufs []*strings.Builder
 
-			mBuf := &strings.Builder{}
-			if err := m.buildPaths(mBuf, msg); err != nil {
+			nestedPaths, topLevelPaths, err := m.buildPaths(msg)
+			if err != nil {
 				m.AddError(fmt.Errorf("failed to build paths for %s: %s", msg.Name(), err).Error())
 				return m.Artifacts()
 			}
+
+			mBuf := &strings.Builder{}
+			m.writePaths(buf, msg, nestedPaths, topLevelPaths)
 			mBufs = append(mBufs, mBuf)
 
 			for _, mBuf := range mBufs {
 				fmt.Fprintf(buf, `
 %s`,
 					mBuf.String())
+			}
+
+			// Check if the message has the RPCFieldMasks extension
+			options := msg.Descriptor().GetOptions()
+			if proto.HasExtension(options, annotations.E_Message) {
+				ext, ok := proto.GetExtension(options, annotations.E_Message).(*annotations.MessageOptions)
+				if !ok {
+					m.AddError("failed to get extension")
+					return m.Artifacts()
+				}
+
+				for _, rpcmask := range ext.GetRpcmasks() {
+					if rpcmask == nil {
+						continue
+					}
+					rpcFieldMaskPaths[rpcmask.GetMethodName()] = RPCFieldMaskPathValue{
+						All:     fmt.Sprintf("%sFieldPathsNested", m.ctx.Name(msg)),
+						Allowed: rpcmask.FieldMask.GetPaths(),
+						Set:     rpcmask.GetSet(),
+					}
+				}
 			}
 		}
 
@@ -213,6 +270,24 @@ func _processPaths(paths []string) map[string][]string {
 			Package: pkg,
 		})
 	}
+
+	// Generate the RPCFieldMaskPaths for every directory and pkg
+	for dir, pkg := range dirs {
+		m.AddGeneratorTemplateFile(dir.Push("field_mask_validation").SetExt(".go").String(), template.Must(template.New("field_mask_validation").Parse(`package {{ .Package }}
+
+{{ .Content }}`)), struct {
+			Package pgs.Name
+			Content string
+		}{
+			Package: pkg,
+			Content: func() string {
+				buf := &strings.Builder{}
+				m.writeRPCFieldMaskPaths(buf, rpcFieldMaskPaths)
+				return buf.String()
+			}(),
+		})
+	}
+
 	return m.Artifacts()
 }
 

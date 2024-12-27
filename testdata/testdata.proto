@@ -20,6 +20,7 @@ import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/wrappers.proto";
 import "otherpackage/otherpackage.proto";
+import "thethings/rpcmask/annotations.proto";
 import "validate/validate.proto";
 
 option go_package = "github.com/TheThingsIndustries/protoc-gen-fieldmask/testdata";
@@ -27,6 +28,43 @@ option go_package = "github.com/TheThingsIndustries/protoc-gen-fieldmask/testdat
 message Empty {}
 
 message Test {
+  option (thethings.rpcmask.message) = {
+    rpcmasks: [
+      {
+        method_name: "/ttn.lorawan.v3.AsEndDeviceRegistry/Set"
+        field_mask: {
+          paths: [
+            "a",
+            "a.a",
+            "b",
+            "c",
+            "testOneof",
+            "g",
+            "h",
+            "i",
+            "j",
+            "l",
+            "m"
+          ]
+        }
+        set: true
+      },
+      {
+        method_name: "/ttn.lorawan.v3.AsEndDeviceRegistry/Get"
+        field_mask: {
+          paths: [
+            "a",
+            "a.a",
+            "i",
+            "j",
+            "l",
+            "m"
+          ]
+        }
+      }
+    ]
+  };
+
   message TestNested {
     message TestNestedNested {
       int32 a = 1 [(validate.rules).int32 = {

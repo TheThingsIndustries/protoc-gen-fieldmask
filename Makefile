@@ -23,7 +23,10 @@ all: build
 .tools/protoc-gen-go: go.mod go.sum
 	GOBIN=$(PWD)/.tools go install google.golang.org/protobuf/cmd/protoc-gen-go
 
-dist/protoc-gen-fieldmask: .tools/protoc-gen-go
+annotations/annotations.pb.go: api/thethings/rpcmask/annotations.proto
+	buf generate --template buf.api.gen.yaml
+
+dist/protoc-gen-fieldmask: .tools/protoc-gen-go annotations/annotations.pb.go
 	CGO_ENABLED=0 go build -ldflags "-w -s" -o dist/protoc-gen-fieldmask .
 
 build: dist/protoc-gen-fieldmask
@@ -32,7 +35,8 @@ build: dist/protoc-gen-fieldmask
 
 clean:
 	rm -rf dist .tools vendor
-	rm -rf testdata/*.pb.go testdata/*.pb.*.go testdata/*/*.pb.go testdata/*/*.pb.*.go
+	rm -rf annotations/*.pb.go
+	rm -rf testdata/*.go testdata/*/*.go
 
 .PHONY: testgen
 

@@ -19,6 +19,12 @@ import (
 	"strings"
 )
 
+type RPCFieldMaskPathValue struct {
+	All     string
+	Allowed []string
+	Set     bool
+}
+
 func buildIndented(buf *strings.Builder, tabCount uint, s string) {
 	for _, l := range strings.Split(s, "\n") {
 		fmt.Fprintln(buf, fmt.Sprintf("%s%s", strings.Repeat("	", int(tabCount)), l))
