@@ -1,0 +1,8 @@
+version: v2
+plugins:
+  - local: .tools/protoc-gen-go
+    out: .
+    opt:
+      - module=github.com/TheThingsIndustries/protoc-gen-fieldmask
+inputs:
+  - directory: api

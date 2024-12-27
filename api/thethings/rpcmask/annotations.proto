@@ -1,0 +1,35 @@
+// Copyright © 2024 The Things Industries
+// SPDX-License-Identifier: Apache-2.0
+
+syntax = "proto3";
+
+package thethings.rpcmask;
+
+import "google/protobuf/descriptor.proto";
+import "google/protobuf/field_mask.proto";
+
+option go_package = "github.com/TheThingsIndustries/protoc-gen-fieldmask/annotations";
+
+// NOTE: protoc-gen-go-rpcmask is primarily intended for internal use by
+// The Things Industries. We have therefore chosen to use option number 52803,
+// which is in the 50000-99999 range reserved for internal use within individual
+// organizations. For this reason, the option number is not registered on
+// https://github.com/protocolbuffers/protobuf/blob/master/docs/options.md.
+
+message RPCMask {
+  // Generate field mask for the following RPC method.
+  string method_name = 1;
+  // The generated field mask.
+  google.protobuf.FieldMask field_mask = 2;
+  // Generate the set field for the RPC method.
+  bool set = 3;
+}
+
+message MessageOptions {
+  // RPCMask options for this message.
+  repeated RPCMask rpcmasks = 1;
+}
+
+extend google.protobuf.MessageOptions {
+  MessageOptions message = 52803;
+}

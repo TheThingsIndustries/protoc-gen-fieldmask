@@ -7,6 +7,7 @@ breaking:
   use:
     - FILE
 modules:
+  - path: ./api
   - path: ./testdata
 deps:
   - buf.build/envoyproxy/protoc-gen-validate
