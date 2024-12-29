@@ -141,9 +141,15 @@ func (m *pathHelperModule) writeRPCFieldMaskPaths(buf *strings.Builder, rpcField
 	fmt.Fprintln(buf, "\tSet     bool")
 	fmt.Fprintln(buf, "}")
 
+	keys := make([]string, 0, len(rpcFieldMaskPaths))
+	for k := range rpcFieldMaskPaths {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
 	fmt.Fprintln(buf, "// RPCFieldMaskPaths lists the field mask paths for each RPC in this API.")
 	fmt.Fprintln(buf, "var RPCFieldMaskPaths = map[string]RPCFieldMaskPathValue{")
-	for rpc, paths := range rpcFieldMaskPaths {
+	for _, rpc := range keys {
+		paths := rpcFieldMaskPaths[rpc]
 		fmt.Fprintf(buf, "\t\"%s\": {\n", rpc)
 		fmt.Fprintf(buf, "\t\tAll:     %s,\n", paths.All)
 		fmt.Fprintf(buf, "\t\tAllowed: []string{\n")
