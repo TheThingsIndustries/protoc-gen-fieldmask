@@ -1012,3 +1012,42 @@ func BenchmarkValidateFields(t *testing.B) {
 		})
 	}
 }
+
+func TestAllowedFieldMaskPaths(t *testing.T) {
+	t.Parallel()
+	a := assertions.New(t)
+
+	m1MethodName := "/testdata.TestService/Set"
+	m2MethodName := "/testdata.TestService2/Get"
+
+	m1 := testdata.RPCFieldMaskPaths[m1MethodName]
+	m2 := testdata.RPCFieldMaskPaths[m2MethodName]
+
+	a.So(m1.All, should.Equal, testdata.TestFieldPathsNested)
+	a.So(m2.All, should.Equal, testdata.TestFieldPathsNested)
+
+	a.So(m1.Allowed, should.Resemble, []string{
+		"a",
+		"a.a",
+		"b",
+		"c",
+		"testOneof",
+		"g",
+		"h",
+		"i",
+		"j",
+		"l",
+		"m",
+	})
+	a.So(m2.Allowed, should.Resemble, []string{
+		"a",
+		"a.a",
+		"i",
+		"j",
+		"l",
+		"m",
+	})
+
+	a.So(m1.Set, should.BeTrue)
+	a.So(m2.Set, should.BeFalse)
+}
