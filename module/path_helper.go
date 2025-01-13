@@ -182,6 +182,17 @@ func (m *pathHelperModule) Execute(files map[string]pgs.File, pkgs map[string]pg
 			continue
 		}
 
+		rpcMethodIdentifiers := make(map[string]struct{})
+		for _, svc := range f.Services() {
+			for _, method := range svc.Methods() {
+				packageName := svc.Package().ProtoName().String()
+				serviceName := svc.Name().String()
+				methodName := method.Name().String()
+				rpcMethodIdentifier := fmt.Sprintf("/%s.%s/%s", packageName, serviceName, methodName)
+				rpcMethodIdentifiers[rpcMethodIdentifier] = struct{}{}
+			}
+		}
+
 		buf := &strings.Builder{}
 		for _, msg := range f.AllMessages() {
 			var mBufs []*strings.Builder
@@ -214,6 +225,10 @@ func (m *pathHelperModule) Execute(files map[string]pgs.File, pkgs map[string]pg
 				for _, rpcmask := range ext.GetRpcmasks() {
 					if rpcmask == nil {
 						continue
+					}
+					if _, ok := rpcMethodIdentifiers[rpcmask.GetMethodName()]; !ok {
+						m.AddError(fmt.Errorf("method %s is not defined in any service", rpcmask.GetMethodName()).Error())
+						return m.Artifacts()
 					}
 					rpcFieldMaskPaths[rpcmask.GetMethodName()] = RPCFieldMaskPathValue{
 						All:     fmt.Sprintf("%sFieldPathsNested", m.ctx.Name(msg)),

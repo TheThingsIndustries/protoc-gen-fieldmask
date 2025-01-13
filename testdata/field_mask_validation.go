@@ -10,19 +10,7 @@ type RPCFieldMaskPathValue struct {
 
 // RPCFieldMaskPaths lists the field mask paths for each RPC in this API.
 var RPCFieldMaskPaths = map[string]RPCFieldMaskPathValue{
-	"/ttn.lorawan.v3.AsEndDeviceRegistry/Get": {
-		All: TestFieldPathsNested,
-		Allowed: []string{
-			"a",
-			"a.a",
-			"i",
-			"j",
-			"l",
-			"m",
-		},
-		Set: false,
-	},
-	"/ttn.lorawan.v3.AsEndDeviceRegistry/Set": {
+	"/testdata.TestService/Set": {
 		All: TestFieldPathsNested,
 		Allowed: []string{
 			"a",
@@ -38,5 +26,17 @@ var RPCFieldMaskPaths = map[string]RPCFieldMaskPathValue{
 			"m",
 		},
 		Set: true,
+	},
+	"/testdata.TestService2/Get": {
+		All: TestFieldPathsNested,
+		Allowed: []string{
+			"a",
+			"a.a",
+			"i",
+			"j",
+			"l",
+			"m",
+		},
+		Set: false,
 	},
 }

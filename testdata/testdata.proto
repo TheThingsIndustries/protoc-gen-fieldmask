@@ -31,7 +31,7 @@ message Test {
   option (thethings.rpcmask.message) = {
     rpcmasks: [
       {
-        method_name: "/ttn.lorawan.v3.AsEndDeviceRegistry/Set"
+        method_name: "/testdata.TestService/Set"
         field_mask: {
           paths: [
             "a",
@@ -50,7 +50,7 @@ message Test {
         set: true
       },
       {
-        method_name: "/ttn.lorawan.v3.AsEndDeviceRegistry/Get"
+        method_name: "/testdata.TestService2/Get"
         field_mask: {
           paths: [
             "a",
@@ -120,4 +120,14 @@ message Test {
     ignore_empty: true
   }];
   otherpackage.Enum m = 13;
+}
+
+service TestService {
+  rpc Set(Test) returns (Test) {}
+  rpc Get(Test) returns (Test) {}
+}
+
+service TestService2 {
+  rpc Set(Test) returns (Test) {}
+  rpc Get(Test) returns (Test) {}
 }
