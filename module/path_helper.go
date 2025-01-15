@@ -172,7 +172,6 @@ func (m *pathHelperModule) InitContext(ctx pgs.BuildContext) {
 
 func (m *pathHelperModule) Execute(files map[string]pgs.File, pkgs map[string]pgs.Package) []pgs.Artifact {
 	dirs := map[pgs.FilePath]pgs.Name{}
-	rpcFieldMaskPaths := map[string]RPCFieldMaskPathValue{}
 
 	for _, f := range files {
 		m.Push(f.Name().String())
@@ -180,17 +179,6 @@ func (m *pathHelperModule) Execute(files map[string]pgs.File, pkgs map[string]pg
 		if len(f.Messages()) == 0 {
 			m.Pop()
 			continue
-		}
-
-		rpcMethodIdentifiers := make(map[string]struct{})
-		for _, svc := range f.Services() {
-			for _, method := range svc.Methods() {
-				packageName := svc.Package().ProtoName().String()
-				serviceName := svc.Name().String()
-				methodName := method.Name().String()
-				rpcMethodIdentifier := fmt.Sprintf("/%s.%s/%s", packageName, serviceName, methodName)
-				rpcMethodIdentifiers[rpcMethodIdentifier] = struct{}{}
-			}
 		}
 
 		buf := &strings.Builder{}
@@ -211,31 +199,6 @@ func (m *pathHelperModule) Execute(files map[string]pgs.File, pkgs map[string]pg
 				fmt.Fprintf(buf, `
 %s`,
 					mBuf.String())
-			}
-
-			// Check if the message has the RPCFieldMasks extension
-			options := msg.Descriptor().GetOptions()
-			if proto.HasExtension(options, annotations.E_Message) {
-				ext, ok := proto.GetExtension(options, annotations.E_Message).(*annotations.MessageOptions)
-				if !ok {
-					m.AddError("failed to get extension")
-					return m.Artifacts()
-				}
-
-				for _, rpcmask := range ext.GetRpcmasks() {
-					if rpcmask == nil {
-						continue
-					}
-					if _, ok := rpcMethodIdentifiers[rpcmask.GetMethodName()]; !ok {
-						m.AddError(fmt.Errorf("method %s is not defined in any service", rpcmask.GetMethodName()).Error())
-						return m.Artifacts()
-					}
-					rpcFieldMaskPaths[rpcmask.GetMethodName()] = RPCFieldMaskPathValue{
-						All:     fmt.Sprintf("%sFieldPathsNested", m.ctx.Name(msg)),
-						Allowed: rpcmask.FieldMask.GetPaths(),
-						Set:     rpcmask.GetSet(),
-					}
-				}
 			}
 		}
 
@@ -290,6 +253,38 @@ func _processPaths(paths []string) map[string][]string {
 		}{
 			Package: pkg,
 		})
+	}
+
+	// Iterate over all services and their methods to generate RPCFieldMaskPaths
+	rpcFieldMaskPaths := map[string]RPCFieldMaskPathValue{}
+	for _, f := range files {
+		for _, svc := range f.Services() {
+			for _, method := range svc.Methods() {
+				packageName := svc.Package().ProtoName().String()
+				serviceName := svc.Name().String()
+				methodName := method.Name().String()
+				rpcMethodIdentifier := fmt.Sprintf("/%s.%s/%s", packageName, serviceName, methodName)
+
+				options := method.Descriptor().GetOptions()
+				if proto.HasExtension(options, annotations.E_Method) {
+					ext, ok := proto.GetExtension(options, annotations.E_Method).(*annotations.MethodOptions)
+					if !ok {
+						m.AddError("failed to get service extension")
+						return m.Artifacts()
+					}
+
+					rpcmask := ext.GetRpcmask()
+					if rpcmask == nil {
+						continue
+					}
+					rpcFieldMaskPaths[rpcMethodIdentifier] = RPCFieldMaskPathValue{
+						All:     fmt.Sprintf("%sFieldPathsNested", rpcmask.GetMessageName()),
+						Allowed: rpcmask.FieldMask.GetPaths(),
+						Set:     rpcmask.GetSet(),
+					}
+				}
+			}
+		}
 	}
 
 	// Generate the RPCFieldMaskPaths for every directory and pkg

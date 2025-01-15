@@ -17,19 +17,19 @@ option go_package = "github.com/TheThingsIndustries/protoc-gen-fieldmask/annotat
 // https://github.com/protocolbuffers/protobuf/blob/master/docs/options.md.
 
 message RPCMask {
-  // Generate field mask for the following RPC method.
-  string method_name = 1;
+  // Generate field mask for the following RPC message.
+  string message_name = 1;
   // The generated field mask.
   google.protobuf.FieldMask field_mask = 2;
   // Generate the set field for the RPC method.
   bool set = 3;
 }
 
-message MessageOptions {
+message MethodOptions {
   // RPCMask options for this message.
-  repeated RPCMask rpcmasks = 1;
+  RPCMask rpcmask = 1;
 }
 
-extend google.protobuf.MessageOptions {
-  MessageOptions message = 52803;
+extend google.protobuf.MethodOptions {
+  optional MethodOptions method = 52803;
 }

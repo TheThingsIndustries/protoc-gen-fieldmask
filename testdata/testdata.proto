@@ -28,43 +28,6 @@ option go_package = "github.com/TheThingsIndustries/protoc-gen-fieldmask/testdat
 message Empty {}
 
 message Test {
-  option (thethings.rpcmask.message) = {
-    rpcmasks: [
-      {
-        method_name: "/testdata.TestService/Set"
-        field_mask: {
-          paths: [
-            "a",
-            "a.a",
-            "b",
-            "c",
-            "testOneof",
-            "g",
-            "h",
-            "i",
-            "j",
-            "l",
-            "m"
-          ]
-        }
-        set: true
-      },
-      {
-        method_name: "/testdata.TestService2/Get"
-        field_mask: {
-          paths: [
-            "a",
-            "a.a",
-            "i",
-            "j",
-            "l",
-            "m"
-          ]
-        }
-      }
-    ]
-  };
-
   message TestNested {
     message TestNestedNested {
       int32 a = 1 [(validate.rules).int32 = {
@@ -123,11 +86,49 @@ message Test {
 }
 
 service TestService {
-  rpc Set(Test) returns (Test) {}
+  rpc Set(Test) returns (Test) {
+    option (thethings.rpcmask.method) = {
+      rpcmask: {
+        message_name: "Test"
+        field_mask: {
+          paths: [
+            "a",
+            "a.a",
+            "b",
+            "c",
+            "testOneof",
+            "g",
+            "h",
+            "i",
+            "j",
+            "l",
+            "m"
+          ]
+        }
+        set: true
+      }
+    };
+  }
   rpc Get(Test) returns (Test) {}
 }
 
 service TestService2 {
   rpc Set(Test) returns (Test) {}
-  rpc Get(Test) returns (Test) {}
+  rpc Get(Test) returns (Test) {
+    option (thethings.rpcmask.method) = {
+      rpcmask: {
+        message_name: "Test"
+        field_mask: {
+          paths: [
+            "a",
+            "a.a",
+            "i",
+            "j",
+            "l",
+            "m"
+          ]
+        }
+      }
+    };
+  }
 }
