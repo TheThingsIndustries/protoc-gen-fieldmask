@@ -208,54 +208,10 @@ var RPCFieldMaskPaths = map[string]RPCFieldMaskPathValue{
 	}
 }
 
-func (m *pathHelperModule) Name() string { return "paths" }
-
-func (m *pathHelperModule) InitContext(ctx pgs.BuildContext) {
-	m.ModuleBase.InitContext(ctx)
-	m.ctx = m.initGoContext(ctx.Parameters())
-}
-
-func (m *pathHelperModule) Execute(files map[string]pgs.File, pkgs map[string]pgs.Package) []pgs.Artifact {
-	dirs := map[pgs.FilePath]pgs.Name{}
-
-	for _, f := range files {
-		m.Push(f.Name().String())
-
-		if len(f.Messages()) == 0 {
-			m.Pop()
-			continue
-		}
-
-		buf := &strings.Builder{}
-		for _, msg := range f.AllMessages() {
-			nestedPaths, topLevelPaths, err := m.buildPaths(msg)
-			if err != nil {
-				m.AddError(fmt.Errorf("failed to build paths for %s: %s", msg.Name(), err).Error())
-				return m.Artifacts()
-			}
-
-			m.writePaths(buf, msg, nestedPaths, topLevelPaths)
-		}
-
-		dirs[m.ctx.OutputPath(f).Dir()] = m.ctx.PackageName(f)
-
-		m.AddGeneratorTemplateFile(m.ctx.OutputPath(f).SetExt(".paths.fm.go").String(),
-			template.Must(template.New("paths").Parse(`package {{ .Package }}
-
-{{ .Content }}`)), struct {
-				Package pgs.Name
-				Content string
-			}{
-				Package: m.ctx.PackageName(f),
-				Content: buf.String(),
-			})
-		m.Pop()
-	}
-
-	for dir, pkg := range dirs {
-		baseName := pkg.LowerCamelCase().String()
-		m.AddGeneratorTemplateFile(dir.Push(baseName).SetExt(".pb.util.fm.go").String(),
-			template.Must(template.New("util").Parse(`package {{ .Package }}
+func (m *pathHelperModule) writeMessagePathUtils(dir pgs.FilePath, pkg pgs.Name) {
+	baseName := pkg.LowerCamelCase().String()
+	m.AddGeneratorTemplateFile(dir.Push(baseName).SetExt(".pb.util.fm.go").String(),
+		template.Must(template.New("util").Parse(`package {{ .Package }}
 
 import (
 	"strings"
@@ -286,11 +242,63 @@ func _processPaths(paths []string) map[string][]string {
 
 	return pathMap
 }`)), struct {
-				Package pgs.Name
-			}{
-				Package: pkg,
-			})
+			Package pgs.Name
+		}{
+			Package: pkg,
+		})
+}
+
+func (m *pathHelperModule) generateMessagePaths(files map[string]pgs.File) error {
+	dirs := map[pgs.FilePath]pgs.Name{}
+
+	for _, f := range files {
+		m.Push(f.Name().String())
+
+		if len(f.Messages()) == 0 {
+			m.Pop()
+			continue
+		}
+
+		buf := &strings.Builder{}
+		for _, msg := range f.AllMessages() {
+			nestedPaths, topLevelPaths, err := m.buildPaths(msg)
+			if err != nil {
+				return fmt.Errorf("failed to build paths for %s: %s", msg.Name(), err)
+			}
+
+			m.writePaths(buf, msg, nestedPaths, topLevelPaths)
+		}
+
+		tmpl := `
+package {{ .Package }}
+
+{{ .Content }}
+	`
+
+		data := struct {
+			Package pgs.Name
+			Content string
+		}{
+			Package: m.ctx.PackageName(f),
+			Content: buf.String(),
+		}
+
+		m.AddGeneratorTemplateFile(m.ctx.OutputPath(f).SetExt(".paths.fm.go").String(),
+			template.Must(template.New("paths").Parse(tmpl)), data)
+
+		dirs[m.ctx.OutputPath(f).Dir()] = m.ctx.PackageName(f)
+		m.Pop()
 	}
+
+	for dir, pkg := range dirs {
+		m.writeMessagePathUtils(dir, pkg)
+	}
+
+	return nil
+}
+
+func (m *pathHelperModule) generateRPCFieldMaskPaths(files map[string]pgs.File) error {
+	dirs := map[pgs.FilePath]pgs.Name{}
 
 	// Iterate over all services and their methods to generate RPCFieldMaskPaths
 	rpcFieldMaskPaths := map[string]RPCFieldMaskPathValue{}
@@ -306,14 +314,15 @@ func _processPaths(paths []string) map[string][]string {
 				if proto.HasExtension(options, annotations.E_Method) {
 					ext, ok := proto.GetExtension(options, annotations.E_Method).(*annotations.MethodOptions)
 					if !ok {
-						m.AddError("failed to get service extension")
-						return m.Artifacts()
+						return fmt.Errorf("failed to get method extension")
 					}
 
 					rpcmask := ext.GetRpcmask()
 					if rpcmask == nil {
 						continue
 					}
+
+					dirs[m.ctx.OutputPath(f).Dir()] = m.ctx.PackageName(f)
 					rpcFieldMaskPaths[rpcMethodIdentifier] = RPCFieldMaskPathValue{
 						All:     fmt.Sprintf("%sFieldPathsNested", rpcmask.GetMessageName()),
 						Allowed: rpcmask.FieldMask.GetPaths(),
@@ -324,7 +333,7 @@ func _processPaths(paths []string) map[string][]string {
 		}
 	}
 
-	// Generate the RPCFieldMaskPaths for every directory and pkg
+	// Generate the RPCFieldMaskPaths for every directory and package.
 	for dir, pkg := range dirs {
 		m.AddGeneratorTemplateFile(dir.Push("field_mask_validation").SetExt(".go").String(),
 			template.Must(template.New("field_mask_validation").Parse(`package {{ .Package }}
@@ -340,6 +349,27 @@ func _processPaths(paths []string) map[string][]string {
 					return buf.String()
 				}(),
 			})
+	}
+
+	return nil
+}
+
+func (m *pathHelperModule) Name() string { return "paths" }
+
+func (m *pathHelperModule) InitContext(ctx pgs.BuildContext) {
+	m.ModuleBase.InitContext(ctx)
+	m.ctx = m.initGoContext(ctx.Parameters())
+}
+
+func (m *pathHelperModule) Execute(files map[string]pgs.File, pkgs map[string]pgs.Package) []pgs.Artifact {
+	if err := m.generateMessagePaths(files); err != nil {
+		m.AddError(err.Error())
+		return m.Artifacts()
+	}
+
+	if err := m.generateRPCFieldMaskPaths(files); err != nil {
+		m.AddError(err.Error())
+		return m.Artifacts()
 	}
 
 	return m.Artifacts()
