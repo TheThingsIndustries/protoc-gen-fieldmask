@@ -228,23 +228,13 @@ func (m *pathHelperModule) Execute(files map[string]pgs.File, pkgs map[string]pg
 
 		buf := &strings.Builder{}
 		for _, msg := range f.AllMessages() {
-			var mBufs []*strings.Builder
-
 			nestedPaths, topLevelPaths, err := m.buildPaths(msg)
 			if err != nil {
 				m.AddError(fmt.Errorf("failed to build paths for %s: %s", msg.Name(), err).Error())
 				return m.Artifacts()
 			}
 
-			mBuf := &strings.Builder{}
 			m.writePaths(buf, msg, nestedPaths, topLevelPaths)
-			mBufs = append(mBufs, mBuf)
-
-			for _, mBuf := range mBufs {
-				fmt.Fprintf(buf, `
-%s`,
-					mBuf.String())
-			}
 		}
 
 		dirs[m.ctx.OutputPath(f).Dir()] = m.ctx.PackageName(f)
