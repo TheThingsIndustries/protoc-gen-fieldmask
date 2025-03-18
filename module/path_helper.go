@@ -83,6 +83,7 @@ func (m *pathHelperModule) appendPaths(ctx pgsgo.Context, paths []string, prefix
 	}
 	return paths, nil
 }
+
 func (m *pathHelperModule) buildPaths(msg pgs.Message) ([]string, []string, error) {
 	m.Push(msg.FullyQualifiedName())
 	defer m.Pop()
@@ -111,56 +112,100 @@ func (m *pathHelperModule) buildPaths(msg pgs.Message) ([]string, []string, erro
 
 func (m *pathHelperModule) writePaths(buf *strings.Builder, msg pgs.Message, nestedPaths, topLevelPaths []string) {
 	mType := m.ctx.Name(msg)
+
+	data := struct {
+		Type          pgs.Name
+		NestedPaths   []string
+		TopLevelPaths []string
+	}{
+		Type:          mType,
+		NestedPaths:   nestedPaths,
+		TopLevelPaths: topLevelPaths,
+	}
+
 	if len(nestedPaths) == 0 && len(topLevelPaths) == 0 {
-		fmt.Fprintf(buf, `var %sFieldPathsNested []string
-var %sFieldPathsTopLevel []string`,
-			mType,
-			mType,
-		)
+		emptyPathsTemplate := `
+var {{ .Type }}FieldPathsNested []string
+var {{ .Type }}FieldPathsTopLevel []string
+		`
+
+		err := template.Must(template.New("paths").Parse(emptyPathsTemplate)).Execute(buf, data)
+		if err != nil {
+			m.AddError(fmt.Errorf("failed to execute paths template: %w", err).Error())
+			return
+		}
+
 		return
 	}
 
-	fmt.Fprintf(buf, `var %sFieldPathsNested = []string{
-	%s
+	pathsTemplate := `
+var {{ .Type }}FieldPathsNested = []string{
+	{{- range $path := .NestedPaths }}
+	"{{ $path }}",
+	{{- end }}
 }
 
-var %sFieldPathsTopLevel = []string{
-	%s
-}`,
-		mType, `"`+strings.Join(nestedPaths, `",
-	"`)+`",`,
-		mType, `"`+strings.Join(topLevelPaths, `",
-	"`)+`",`,
-	)
+var {{ .Type }}FieldPathsTopLevel = []string{
+	{{- range $path := .TopLevelPaths }}
+	"{{ $path }}",
+	{{- end }}
+}
+`
+
+	err := template.Must(template.New("paths").Parse(pathsTemplate)).Execute(buf, data)
+	if err != nil {
+		m.AddError(fmt.Errorf("failed to execute paths template: %w", err).Error())
+		return
+	}
 }
 
 func (m *pathHelperModule) writeRPCFieldMaskPaths(buf *strings.Builder, rpcFieldMaskPaths map[string]RPCFieldMaskPathValue) {
-	fmt.Fprintln(buf, "type RPCFieldMaskPathValue struct {")
-	fmt.Fprintln(buf, "\tAll     []string")
-	fmt.Fprintln(buf, "\tAllowed []string")
-	fmt.Fprintln(buf, "\tSet     bool")
-	fmt.Fprintln(buf, "}")
+	const structTemplate = `
+type RPCFieldMaskPathValue struct {
+    All     []string
+    Allowed []string
+    Set     bool
+}`
+	fmt.Fprintf(buf, structTemplate)
+
+	// Empty RPCFieldMaskPaths.
+	if len(rpcFieldMaskPaths) == 0 {
+		fmt.Fprintf(buf, `
+// RPCFieldMaskPaths lists the field mask paths for each RPC in this API.
+var RPCFieldMaskPaths = map[string]RPCFieldMaskPathValue{}
+`)
+		return
+	}
+
+	const mapTemplate = `
+
+// RPCFieldMaskPaths lists the field mask paths for each RPC in this API.
+var RPCFieldMaskPaths = map[string]RPCFieldMaskPathValue{
+{{- range $key, $value := . }}
+    "{{ $key }}": {
+        All:     {{ $value.All }},
+        Allowed: []string{
+            {{- range $path := $value.Allowed }}
+            "{{ $path }}",
+            {{- end }}
+        },
+        Set:     {{ $value.Set }},
+    },
+{{- end }}
+}
+`
 
 	keys := make([]string, 0, len(rpcFieldMaskPaths))
 	for k := range rpcFieldMaskPaths {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
-	fmt.Fprintln(buf, "// RPCFieldMaskPaths lists the field mask paths for each RPC in this API.")
-	fmt.Fprintln(buf, "var RPCFieldMaskPaths = map[string]RPCFieldMaskPathValue{")
-	for _, rpc := range keys {
-		paths := rpcFieldMaskPaths[rpc]
-		fmt.Fprintf(buf, "\t\"%s\": {\n", rpc)
-		fmt.Fprintf(buf, "\t\tAll:     %s,\n", paths.All)
-		fmt.Fprintf(buf, "\t\tAllowed: []string{\n")
-		for _, path := range paths.Allowed {
-			fmt.Fprintf(buf, "\t\t\t\"%s\",\n", path)
-		}
-		fmt.Fprintln(buf, "\t\t},")
-		fmt.Fprintf(buf, "\t\tSet:     %t,\n", paths.Set)
-		fmt.Fprintln(buf, "\t},")
+
+	err := template.Must(template.New("RPCFieldMaskPathsMap").Parse(mapTemplate)).Execute(buf, rpcFieldMaskPaths)
+	if err != nil {
+		m.AddError(fmt.Errorf("failed to execute RPCFieldMaskPathsMap template: %w", err).Error())
+		return
 	}
-	fmt.Fprintln(buf, "}")
 }
 
 func (m *pathHelperModule) Name() string { return "paths" }
@@ -204,21 +249,23 @@ func (m *pathHelperModule) Execute(files map[string]pgs.File, pkgs map[string]pg
 
 		dirs[m.ctx.OutputPath(f).Dir()] = m.ctx.PackageName(f)
 
-		m.AddGeneratorTemplateFile(m.ctx.OutputPath(f).SetExt(".paths.fm.go").String(), template.Must(template.New("paths").Parse(`package {{ .Package }}
+		m.AddGeneratorTemplateFile(m.ctx.OutputPath(f).SetExt(".paths.fm.go").String(),
+			template.Must(template.New("paths").Parse(`package {{ .Package }}
 
 {{ .Content }}`)), struct {
-			Package pgs.Name
-			Content string
-		}{
-			Package: m.ctx.PackageName(f),
-			Content: buf.String(),
-		})
+				Package pgs.Name
+				Content string
+			}{
+				Package: m.ctx.PackageName(f),
+				Content: buf.String(),
+			})
 		m.Pop()
 	}
 
 	for dir, pkg := range dirs {
 		baseName := pkg.LowerCamelCase().String()
-		m.AddGeneratorTemplateFile(dir.Push(baseName).SetExt(".pb.util.fm.go").String(), template.Must(template.New("util").Parse(`package {{ .Package }}
+		m.AddGeneratorTemplateFile(dir.Push(baseName).SetExt(".pb.util.fm.go").String(),
+			template.Must(template.New("util").Parse(`package {{ .Package }}
 
 import (
 	"strings"
@@ -249,10 +296,10 @@ func _processPaths(paths []string) map[string][]string {
 
 	return pathMap
 }`)), struct {
-			Package pgs.Name
-		}{
-			Package: pkg,
-		})
+				Package pgs.Name
+			}{
+				Package: pkg,
+			})
 	}
 
 	// Iterate over all services and their methods to generate RPCFieldMaskPaths
@@ -289,19 +336,20 @@ func _processPaths(paths []string) map[string][]string {
 
 	// Generate the RPCFieldMaskPaths for every directory and pkg
 	for dir, pkg := range dirs {
-		m.AddGeneratorTemplateFile(dir.Push("field_mask_validation").SetExt(".go").String(), template.Must(template.New("field_mask_validation").Parse(`package {{ .Package }}
+		m.AddGeneratorTemplateFile(dir.Push("field_mask_validation").SetExt(".go").String(),
+			template.Must(template.New("field_mask_validation").Parse(`package {{ .Package }}
 
 {{ .Content }}`)), struct {
-			Package pgs.Name
-			Content string
-		}{
-			Package: pkg,
-			Content: func() string {
-				buf := &strings.Builder{}
-				m.writeRPCFieldMaskPaths(buf, rpcFieldMaskPaths)
-				return buf.String()
-			}(),
-		})
+				Package pgs.Name
+				Content string
+			}{
+				Package: pkg,
+				Content: func() string {
+					buf := &strings.Builder{}
+					m.writeRPCFieldMaskPaths(buf, rpcFieldMaskPaths)
+					return buf.String()
+				}(),
+			})
 	}
 
 	return m.Artifacts()
