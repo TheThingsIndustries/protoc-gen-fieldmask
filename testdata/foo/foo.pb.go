@@ -242,53 +242,6 @@ func (x *Bar) GetCreatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
-type ListFooResponse struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Foos []*Foo `protobuf:"bytes,1,rep,name=foos,proto3" json:"foos,omitempty"`
-}
-
-func (x *ListFooResponse) Reset() {
-	*x = ListFooResponse{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_foo_foo_proto_msgTypes[2]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *ListFooResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ListFooResponse) ProtoMessage() {}
-
-func (x *ListFooResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_foo_foo_proto_msgTypes[2]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ListFooResponse.ProtoReflect.Descriptor instead.
-func (*ListFooResponse) Descriptor() ([]byte, []int) {
-	return file_foo_foo_proto_rawDescGZIP(), []int{2}
-}
-
-func (x *ListFooResponse) GetFoos() []*Foo {
-	if x != nil {
-		return x.Foos
-	}
-	return nil
-}
-
 type Foo_FooNested struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -303,7 +256,7 @@ type Foo_FooNested struct {
 func (x *Foo_FooNested) Reset() {
 	*x = Foo_FooNested{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_foo_foo_proto_msgTypes[3]
+		mi := &file_foo_foo_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -316,7 +269,7 @@ func (x *Foo_FooNested) String() string {
 func (*Foo_FooNested) ProtoMessage() {}
 
 func (x *Foo_FooNested) ProtoReflect() protoreflect.Message {
-	mi := &file_foo_foo_proto_msgTypes[3]
+	mi := &file_foo_foo_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -373,7 +326,7 @@ type Foo_FooNested_FooNestedNested struct {
 func (x *Foo_FooNested_FooNestedNested) Reset() {
 	*x = Foo_FooNested_FooNestedNested{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_foo_foo_proto_msgTypes[5]
+		mi := &file_foo_foo_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -386,7 +339,7 @@ func (x *Foo_FooNested_FooNestedNested) String() string {
 func (*Foo_FooNested_FooNestedNested) ProtoMessage() {}
 
 func (x *Foo_FooNested_FooNestedNested) ProtoReflect() protoreflect.Message {
-	mi := &file_foo_foo_proto_msgTypes[5]
+	mi := &file_foo_foo_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -476,15 +429,12 @@ var file_foo_foo_proto_rawDesc = []byte{
 	0x01, 0x67, 0x12, 0x39, 0x0a, 0x0a, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0x5f, 0x61, 0x74,
 	0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e,
 	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61,
-	0x6d, 0x70, 0x52, 0x09, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0x41, 0x74, 0x22, 0x2f, 0x0a,
-	0x0f, 0x4c, 0x69, 0x73, 0x74, 0x46, 0x6f, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x12, 0x1c, 0x0a, 0x04, 0x66, 0x6f, 0x6f, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x08,
-	0x2e, 0x66, 0x6f, 0x6f, 0x2e, 0x46, 0x6f, 0x6f, 0x52, 0x04, 0x66, 0x6f, 0x6f, 0x73, 0x42, 0x42,
-	0x5a, 0x40, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x54, 0x68, 0x65,
-	0x54, 0x68, 0x69, 0x6e, 0x67, 0x73, 0x49, 0x6e, 0x64, 0x75, 0x73, 0x74, 0x72, 0x69, 0x65, 0x73,
-	0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x2d, 0x67, 0x65, 0x6e, 0x2d, 0x66, 0x69, 0x65, 0x6c,
-	0x64, 0x6d, 0x61, 0x73, 0x6b, 0x2f, 0x74, 0x65, 0x73, 0x74, 0x64, 0x61, 0x74, 0x61, 0x2f, 0x66,
-	0x6f, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x6d, 0x70, 0x52, 0x09, 0x63, 0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0x41, 0x74, 0x42, 0x42, 0x5a,
+	0x40, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x54, 0x68, 0x65, 0x54,
+	0x68, 0x69, 0x6e, 0x67, 0x73, 0x49, 0x6e, 0x64, 0x75, 0x73, 0x74, 0x72, 0x69, 0x65, 0x73, 0x2f,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x63, 0x2d, 0x67, 0x65, 0x6e, 0x2d, 0x66, 0x69, 0x65, 0x6c, 0x64,
+	0x6d, 0x61, 0x73, 0x6b, 0x2f, 0x74, 0x65, 0x73, 0x74, 0x64, 0x61, 0x74, 0x61, 0x2f, 0x66, 0x6f,
+	0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -499,32 +449,30 @@ func file_foo_foo_proto_rawDescGZIP() []byte {
 	return file_foo_foo_proto_rawDescData
 }
 
-var file_foo_foo_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_foo_foo_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_foo_foo_proto_goTypes = []interface{}{
 	(*Foo)(nil),                           // 0: foo.Foo
 	(*Bar)(nil),                           // 1: foo.Bar
-	(*ListFooResponse)(nil),               // 2: foo.ListFooResponse
-	(*Foo_FooNested)(nil),                 // 3: foo.Foo.FooNested
-	nil,                                   // 4: foo.Foo.FooNested.MappingsEntry
-	(*Foo_FooNested_FooNestedNested)(nil), // 5: foo.Foo.FooNested.FooNestedNested
-	(*durationpb.Duration)(nil),           // 6: google.protobuf.Duration
-	(*timestamppb.Timestamp)(nil),         // 7: google.protobuf.Timestamp
+	(*Foo_FooNested)(nil),                 // 2: foo.Foo.FooNested
+	nil,                                   // 3: foo.Foo.FooNested.MappingsEntry
+	(*Foo_FooNested_FooNestedNested)(nil), // 4: foo.Foo.FooNested.FooNestedNested
+	(*durationpb.Duration)(nil),           // 5: google.protobuf.Duration
+	(*timestamppb.Timestamp)(nil),         // 6: google.protobuf.Timestamp
 }
 var file_foo_foo_proto_depIdxs = []int32{
-	3, // 0: foo.Foo.nested:type_name -> foo.Foo.FooNested
-	6, // 1: foo.Foo.duration:type_name -> google.protobuf.Duration
-	7, // 2: foo.Foo.created_at:type_name -> google.protobuf.Timestamp
+	2, // 0: foo.Foo.nested:type_name -> foo.Foo.FooNested
+	5, // 1: foo.Foo.duration:type_name -> google.protobuf.Duration
+	6, // 2: foo.Foo.created_at:type_name -> google.protobuf.Timestamp
 	1, // 3: foo.Foo.bars:type_name -> foo.Bar
-	7, // 4: foo.Bar.created_at:type_name -> google.protobuf.Timestamp
-	0, // 5: foo.ListFooResponse.foos:type_name -> foo.Foo
-	4, // 6: foo.Foo.FooNested.mappings:type_name -> foo.Foo.FooNested.MappingsEntry
-	5, // 7: foo.Foo.FooNested.nested_nested:type_name -> foo.Foo.FooNested.FooNestedNested
-	5, // 8: foo.Foo.FooNested.MappingsEntry.value:type_name -> foo.Foo.FooNested.FooNestedNested
-	9, // [9:9] is the sub-list for method output_type
-	9, // [9:9] is the sub-list for method input_type
-	9, // [9:9] is the sub-list for extension type_name
-	9, // [9:9] is the sub-list for extension extendee
-	0, // [0:9] is the sub-list for field type_name
+	6, // 4: foo.Bar.created_at:type_name -> google.protobuf.Timestamp
+	3, // 5: foo.Foo.FooNested.mappings:type_name -> foo.Foo.FooNested.MappingsEntry
+	4, // 6: foo.Foo.FooNested.nested_nested:type_name -> foo.Foo.FooNested.FooNestedNested
+	4, // 7: foo.Foo.FooNested.MappingsEntry.value:type_name -> foo.Foo.FooNested.FooNestedNested
+	8, // [8:8] is the sub-list for method output_type
+	8, // [8:8] is the sub-list for method input_type
+	8, // [8:8] is the sub-list for extension type_name
+	8, // [8:8] is the sub-list for extension extendee
+	0, // [0:8] is the sub-list for field type_name
 }
 
 func init() { file_foo_foo_proto_init() }
@@ -558,18 +506,6 @@ func file_foo_foo_proto_init() {
 			}
 		}
 		file_foo_foo_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ListFooResponse); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_foo_foo_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Foo_FooNested); i {
 			case 0:
 				return &v.state
@@ -581,7 +517,7 @@ func file_foo_foo_proto_init() {
 				return nil
 			}
 		}
-		file_foo_foo_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+		file_foo_foo_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Foo_FooNested_FooNestedNested); i {
 			case 0:
 				return &v.state
@@ -605,7 +541,7 @@ func file_foo_foo_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_foo_foo_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   6,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

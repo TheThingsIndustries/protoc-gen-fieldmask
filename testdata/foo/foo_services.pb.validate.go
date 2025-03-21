@@ -307,6 +307,102 @@ var _ interface {
 	ErrorName() string
 } = ListFooRequestValidationError{}
 
+// ValidateFields checks the field values on ListFooResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ListFooResponse) ValidateFields(paths ...string) error {
+	if m == nil {
+		return nil
+	}
+
+	if len(paths) == 0 {
+		paths = ListFooResponseFieldPathsNested
+	}
+
+	for name, subs := range _processPaths(append(paths[:0:0], paths...)) {
+		_ = subs
+		switch name {
+		case "foos":
+
+			for idx, item := range m.GetFoos() {
+				_, _ = idx, item
+
+				if v, ok := interface{}(item).(interface{ ValidateFields(...string) error }); ok {
+					if err := v.ValidateFields(subs...); err != nil {
+						return ListFooResponseValidationError{
+							field:  fmt.Sprintf("foos[%v]", idx),
+							reason: "embedded message failed validation",
+							cause:  err,
+						}
+					}
+				}
+
+			}
+
+		default:
+			return ListFooResponseValidationError{
+				field:  name,
+				reason: "invalid field path",
+			}
+		}
+	}
+	return nil
+}
+
+// ListFooResponseValidationError is the validation error returned by
+// ListFooResponse.ValidateFields if the designated constraints aren't met.
+type ListFooResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListFooResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListFooResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListFooResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListFooResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListFooResponseValidationError) ErrorName() string { return "ListFooResponseValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ListFooResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListFooResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListFooResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListFooResponseValidationError{}
+
 // ValidateFields checks the field values on SetFooRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, an error is returned.

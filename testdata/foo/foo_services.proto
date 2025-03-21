@@ -36,6 +36,10 @@ message ListFooRequest {
   google.protobuf.FieldMask field_mask = 1;
 }
 
+message ListFooResponse {
+  repeated Foo foos = 1;
+}
+
 message SetFooRequest {
   Foo foo = 1;
   google.protobuf.FieldMask field_mask = 2;

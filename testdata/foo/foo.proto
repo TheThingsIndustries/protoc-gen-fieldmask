@@ -59,7 +59,3 @@ message Bar {
   int32 g = 2;
   google.protobuf.Timestamp created_at = 3;
 }
-
-message ListFooResponse {
-  repeated Foo foos = 1;
-}

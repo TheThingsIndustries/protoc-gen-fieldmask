@@ -45,6 +45,14 @@ var ListFooRequestFieldPathsTopLevel = []string{
 	"field_mask",
 }
 
+var ListFooResponseFieldPathsNested = []string{
+	"foos",
+}
+
+var ListFooResponseFieldPathsTopLevel = []string{
+	"foos",
+}
+
 var SetFooRequestFieldPathsNested = []string{
 	"field_mask",
 	"foo",

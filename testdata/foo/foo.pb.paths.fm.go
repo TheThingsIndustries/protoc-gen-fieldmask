@@ -72,11 +72,3 @@ var Foo_FooNested_FooNestedNestedFieldPathsTopLevel = []string{
 	"data",
 	"id",
 }
-
-var ListFooResponseFieldPathsNested = []string{
-	"foos",
-}
-
-var ListFooResponseFieldPathsTopLevel = []string{
-	"foos",
-}

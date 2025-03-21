@@ -208,26 +208,6 @@ func (dst *Bar) SetFields(src *Bar, paths ...string) error {
 	return nil
 }
 
-func (dst *ListFooResponse) SetFields(src *ListFooResponse, paths ...string) error {
-	for name, subs := range _processPaths(paths) {
-		switch name {
-		case "foos":
-			if len(subs) > 0 {
-				return fmt.Errorf("'foos' has no subfields, but %s were specified", subs)
-			}
-			if src != nil {
-				dst.Foos = src.Foos
-			} else {
-				dst.Foos = nil
-			}
-
-		default:
-			return fmt.Errorf("invalid field: '%s'", name)
-		}
-	}
-	return nil
-}
-
 func (dst *Foo_FooNested) SetFields(src *Foo_FooNested, paths ...string) error {
 	for name, subs := range _processPaths(paths) {
 		switch name {
