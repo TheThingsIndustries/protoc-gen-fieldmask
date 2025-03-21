@@ -1,0 +1,115 @@
+// Copyright © 2025 The Things Network Foundation, The Things Industries B.V.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package foo;
+
+import "google/protobuf/field_mask.proto";
+import "thethings/rpcmask/annotations.proto";
+
+import "foo/foo.proto";
+
+option go_package = "github.com/TheThingsIndustries/protoc-gen-fieldmask/testdata/foo";
+
+message CreateFooRequest {
+  Foo foo = 1;
+}
+
+message GetFooRequest {
+  string foo_id = 1;
+  google.protobuf.FieldMask field_mask = 2;
+}
+
+message ListFooRequest {
+  google.protobuf.FieldMask field_mask = 1;
+}
+
+message SetFooRequest {
+  Foo foo = 1;
+  google.protobuf.FieldMask field_mask = 2;
+}
+
+service FooService {
+  rpc Create(CreateFooRequest) returns (Foo) {}
+
+  // Get allows retrieving all the fields, without specifying the allowed field mask.
+  rpc Get(GetFooRequest) returns (Foo) {}
+
+  // List allows retrieving all the fields, explicitly specifying the allowed field mask.
+  rpc List(ListFooRequest) returns (ListFooResponse) {
+    option (thethings.rpcmask.allow) = {
+      field_mask: {
+        paths: [
+          "id",
+          "a",
+          "nested",
+          "nested.id",
+          "nested.b",
+          "nested.mappings",
+          "nested.mappings.key",
+          "nested.mappings.value",
+          "nested.mappings.value.id",
+          "nested.mappings.value.c",
+          "nested.mappings.value.data",
+          "nested.nested",
+          "nested.nested.id",
+          "nested.nested.c",
+          "nested.nested.data",
+          "foo_oneof",
+          "foo_oneof.d",
+          "foo_oneof.e",
+          "foo_oneof.f",
+          "duration",
+          "created_at",
+          "bars",
+          "bars.id",
+          "bars.g",
+          "bars.created_at"
+        ]
+      }
+    };
+  }
+
+  rpc Set(SetFooRequest) returns (Foo) {
+    // Do not allow setting the IDs.
+    option (thethings.rpcmask.allow) = {
+      field_mask: {
+        paths: [
+          "a",
+          "nested",
+          "nested.b",
+          "nested.mappings",
+          "nested.mappings.key",
+          "nested.mappings.value",
+          "nested.mappings.value.id",
+          "nested.mappings.value.c",
+          "nested.mappings.value.data",
+          "nested.nested",
+          "nested.nested.c",
+          "nested.nested.data",
+          "foo_oneof",
+          "foo_oneof.d",
+          "foo_oneof.e",
+          "foo_oneof.f",
+          "duration",
+          "created_at",
+          "bars",
+          "bars.g",
+          "bars.created_at"
+        ]
+      }
+    };
+  }
+}

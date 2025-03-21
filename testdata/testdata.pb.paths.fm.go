@@ -2,8 +2,9 @@
 
 package testdata
 
-var EmptyFieldPathsNested []string
-var EmptyFieldPathsTopLevel []string
+var EmptyFieldPathsNested = []string{}
+
+var EmptyFieldPathsTopLevel = []string{}
 
 var TestFieldPathsNested = []string{
 	"a",

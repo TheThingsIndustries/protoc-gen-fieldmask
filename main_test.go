@@ -18,6 +18,7 @@ import (
 	"testing"
 
 	"github.com/TheThingsIndustries/protoc-gen-fieldmask/testdata"
+	"github.com/TheThingsIndustries/protoc-gen-fieldmask/testdata/foo"
 	"github.com/smarty/assertions"
 	"github.com/smarty/assertions/should"
 	"golang.org/x/exp/slices"
@@ -1017,37 +1018,54 @@ func TestAllowedFieldMaskPaths(t *testing.T) {
 	t.Parallel()
 	a := assertions.New(t)
 
-	m1MethodName := "/testdata.TestService/Set"
-	m2MethodName := "/testdata.TestService2/Get"
-
-	m1 := testdata.RPCFieldMaskPaths[m1MethodName]
-	m2 := testdata.RPCFieldMaskPaths[m2MethodName]
-
-	a.So(m1.All, should.Equal, testdata.TestFieldPathsNested)
-	a.So(m2.All, should.Equal, testdata.TestFieldPathsNested)
-
-	a.So(m1.Allowed, should.Resemble, []string{
+	a.So(foo.FooServiceListAllowedFieldMaskPaths, should.Resemble, []string{
 		"a",
-		"a.a",
-		"b",
-		"c",
-		"testOneof",
-		"g",
-		"h",
-		"i",
-		"j",
-		"l",
-		"m",
+		"bars",
+		"bars.created_at",
+		"bars.g",
+		"bars.id",
+		"created_at",
+		"duration",
+		"foo_oneof",
+		"foo_oneof.d",
+		"foo_oneof.e",
+		"foo_oneof.f",
+		"id",
+		"nested",
+		"nested.b",
+		"nested.id",
+		"nested.mappings",
+		"nested.mappings.key",
+		"nested.mappings.value",
+		"nested.mappings.value.c",
+		"nested.mappings.value.data",
+		"nested.mappings.value.id",
+		"nested.nested",
+		"nested.nested.c",
+		"nested.nested.data",
+		"nested.nested.id",
 	})
-	a.So(m2.Allowed, should.Resemble, []string{
+	a.So(foo.FooServiceSetAllowedFieldMaskPaths, should.Resemble, []string{
 		"a",
-		"a.a",
-		"i",
-		"j",
-		"l",
-		"m",
+		"bars",
+		"bars.created_at",
+		"bars.g",
+		"created_at",
+		"duration",
+		"foo_oneof",
+		"foo_oneof.d",
+		"foo_oneof.e",
+		"foo_oneof.f",
+		"nested",
+		"nested.b",
+		"nested.mappings",
+		"nested.mappings.key",
+		"nested.mappings.value",
+		"nested.mappings.value.c",
+		"nested.mappings.value.data",
+		"nested.mappings.value.id",
+		"nested.nested",
+		"nested.nested.c",
+		"nested.nested.data",
 	})
-
-	a.So(m1.Set, should.BeTrue)
-	a.So(m2.Set, should.BeFalse)
 }

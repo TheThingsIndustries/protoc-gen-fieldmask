@@ -2,5 +2,6 @@
 
 package otherpackage
 
-var EmbedFieldPathsNested []string
-var EmbedFieldPathsTopLevel []string
+var EmbedFieldPathsNested = []string{}
+
+var EmbedFieldPathsTopLevel = []string{}

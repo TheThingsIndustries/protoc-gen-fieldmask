@@ -7,6 +7,7 @@ package thethings.rpcmask;
 
 import "google/protobuf/descriptor.proto";
 import "google/protobuf/field_mask.proto";
+import "validate/validate.proto";
 
 option go_package = "github.com/TheThingsIndustries/protoc-gen-fieldmask/annotations";
 
@@ -16,20 +17,10 @@ option go_package = "github.com/TheThingsIndustries/protoc-gen-fieldmask/annotat
 // organizations. For this reason, the option number is not registered on
 // https://github.com/protocolbuffers/protobuf/blob/master/docs/options.md.
 
-message RPCMask {
-  // Generate field mask for the following RPC message.
-  string message_name = 1;
-  // The generated field mask.
-  google.protobuf.FieldMask field_mask = 2;
-  // Generate the set field for the RPC method.
-  bool set = 3;
-}
-
-message MethodOptions {
-  // RPCMask options for this message.
-  RPCMask rpcmask = 1;
+message RPCMaskAllowOption {
+  google.protobuf.FieldMask field_mask = 1 [(validate.rules).message.required = true];
 }
 
 extend google.protobuf.MethodOptions {
-  optional MethodOptions method = 52803;
+  optional RPCMaskAllowOption allow = 52803;
 }

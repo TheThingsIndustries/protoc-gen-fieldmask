@@ -32,6 +32,11 @@ type pathHelperModule struct {
 	ctx           pgsgo.Context
 }
 
+type messagePaths struct {
+	NestedPaths   []string
+	TopLevelPaths []string
+}
+
 func (m *pathHelperModule) appendPaths(ctx pgsgo.Context, paths []string, prefix string, msg pgs.Message, seen map[string]struct{}) ([]string, error) {
 	if seen == nil {
 		seen = map[string]struct{}{}
@@ -110,109 +115,49 @@ func (m *pathHelperModule) buildPaths(msg pgs.Message) ([]string, []string, erro
 	return nestedPaths, topLevelPaths, nil
 }
 
-func (m *pathHelperModule) writePaths(buf *strings.Builder, msg pgs.Message, nestedPaths, topLevelPaths []string) {
-	mType := m.ctx.Name(msg)
-
-	data := struct {
-		Type          pgs.Name
-		NestedPaths   []string
-		TopLevelPaths []string
-	}{
-		Type:          mType,
-		NestedPaths:   nestedPaths,
-		TopLevelPaths: topLevelPaths,
-	}
-
-	if len(nestedPaths) == 0 && len(topLevelPaths) == 0 {
-		emptyPathsTemplate := `
-var {{ .Type }}FieldPathsNested []string
-var {{ .Type }}FieldPathsTopLevel []string
-		`
-
-		err := template.Must(template.New("paths").Parse(emptyPathsTemplate)).Execute(buf, data)
-		if err != nil {
-			m.AddError(fmt.Errorf("failed to execute paths template: %w", err).Error())
-			return
-		}
-
-		return
-	}
-
-	pathsTemplate := `
-var {{ .Type }}FieldPathsNested = []string{
-	{{- range $path := .NestedPaths }}
+func (m *pathHelperModule) renderMessageFieldPaths(buf *strings.Builder, paths map[string]messagePaths) {
+	tmpl := `
+var {{ .MessageType }}FieldPathsNested = []string{
+	{{- range $path := .MessagePaths.NestedPaths }}
 	"{{ $path }}",
 	{{- end }}
 }
-
-var {{ .Type }}FieldPathsTopLevel = []string{
-	{{- range $path := .TopLevelPaths }}
+{{printf "\n"}}
+var {{ .MessageType }}FieldPathsTopLevel = []string{
+	{{- range $path := .MessagePaths.TopLevelPaths }}
 	"{{ $path }}",
 	{{- end }}
 }
+{{printf "\n"}}
 `
-
-	err := template.Must(template.New("paths").Parse(pathsTemplate)).Execute(buf, data)
-	if err != nil {
-		m.AddError(fmt.Errorf("failed to execute paths template: %w", err).Error())
-		return
-	}
-}
-
-func (m *pathHelperModule) writeRPCFieldMaskPaths(buf *strings.Builder, rpcFieldMaskPaths map[string]RPCFieldMaskPathValue) {
-	const structTemplate = `
-type RPCFieldMaskPathValue struct {
-    All     []string
-    Allowed []string
-    Set     bool
-}`
-	fmt.Fprintf(buf, structTemplate)
-
-	// Empty RPCFieldMaskPaths.
-	if len(rpcFieldMaskPaths) == 0 {
-		fmt.Fprintf(buf, `
-// RPCFieldMaskPaths lists the field mask paths for each RPC in this API.
-var RPCFieldMaskPaths = map[string]RPCFieldMaskPathValue{}
-`)
-		return
-	}
-
-	const mapTemplate = `
-
-// RPCFieldMaskPaths lists the field mask paths for each RPC in this API.
-var RPCFieldMaskPaths = map[string]RPCFieldMaskPathValue{
-{{- range $key, $value := . }}
-    "{{ $key }}": {
-        All:     {{ $value.All }},
-        Allowed: []string{
-            {{- range $path := $value.Allowed }}
-            "{{ $path }}",
-            {{- end }}
-        },
-        Set:     {{ $value.Set }},
-    },
-{{- end }}
-}
-`
-
-	keys := make([]string, 0, len(rpcFieldMaskPaths))
-	for k := range rpcFieldMaskPaths {
+	// Sort the message types to ensure deterministic output.
+	keys := make([]string, 0, len(paths))
+	for k := range paths {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
 
-	err := template.Must(template.New("RPCFieldMaskPathsMap").Parse(mapTemplate)).Execute(buf, rpcFieldMaskPaths)
-	if err != nil {
-		m.AddError(fmt.Errorf("failed to execute RPCFieldMaskPathsMap template: %w", err).Error())
-		return
+	for _, t := range keys {
+		p := paths[t]
+
+		data := struct {
+			MessageType  string
+			MessagePaths messagePaths
+		}{
+			MessageType:  t,
+			MessagePaths: p,
+		}
+
+		err := template.Must(template.New("paths").Parse(tmpl)).Execute(buf, data)
+		if err != nil {
+			m.AddError(fmt.Errorf("failed to execute paths template: %w", err).Error())
+			return
+		}
 	}
 }
 
-func (m *pathHelperModule) writeMessagePathUtils(dir pgs.FilePath, pkg pgs.Name) {
-	baseName := pkg.LowerCamelCase().String()
-	m.AddGeneratorTemplateFile(dir.Push(baseName).SetExt(".pb.util.fm.go").String(),
-		template.Must(template.New("util").Parse(`package {{ .Package }}
-
+func (m *pathHelperModule) renderPathUtil() string {
+	content := `
 import (
 	"strings"
 )
@@ -241,14 +186,12 @@ func _processPaths(paths []string) map[string][]string {
 	}
 
 	return pathMap
-}`)), struct {
-			Package pgs.Name
-		}{
-			Package: pkg,
-		})
+}`
+
+	return content
 }
 
-func (m *pathHelperModule) generateMessagePaths(files map[string]pgs.File) error {
+func (m *pathHelperModule) generatePaths(files map[string]pgs.File) error {
 	dirs := map[pgs.FilePath]pgs.Name{}
 
 	for _, f := range files {
@@ -259,99 +202,147 @@ func (m *pathHelperModule) generateMessagePaths(files map[string]pgs.File) error
 			continue
 		}
 
-		buf := &strings.Builder{}
+		paths := map[string]messagePaths{}
 		for _, msg := range f.AllMessages() {
+			messageType := m.ctx.Name(msg).String()
+
 			nestedPaths, topLevelPaths, err := m.buildPaths(msg)
 			if err != nil {
 				return fmt.Errorf("failed to build paths for %s: %s", msg.Name(), err)
 			}
 
-			m.writePaths(buf, msg, nestedPaths, topLevelPaths)
+			paths[messageType] = messagePaths{
+				NestedPaths:   nestedPaths,
+				TopLevelPaths: topLevelPaths,
+			}
 		}
 
-		tmpl := `
-package {{ .Package }}
-
-{{ .Content }}
-	`
-
-		data := struct {
-			Package pgs.Name
-			Content string
-		}{
-			Package: m.ctx.PackageName(f),
-			Content: buf.String(),
-		}
-
-		m.AddGeneratorTemplateFile(m.ctx.OutputPath(f).SetExt(".paths.fm.go").String(),
-			template.Must(template.New("paths").Parse(tmpl)), data)
+		content := &strings.Builder{}
+		m.renderMessageFieldPaths(content, paths)
+		m.writeFile(
+			m.ctx.OutputPath(f).SetExt(".paths.fm.go").String(),
+			m.ctx.PackageName(f).String(),
+			content.String(),
+		)
 
 		dirs[m.ctx.OutputPath(f).Dir()] = m.ctx.PackageName(f)
 		m.Pop()
 	}
 
 	for dir, pkg := range dirs {
-		m.writeMessagePathUtils(dir, pkg)
+		content := m.renderPathUtil()
+		m.writeFile(
+			dir.Push(pkg.LowerCamelCase().String()).SetExt(".pb.util.fm.go").String(),
+			pkg.String(),
+			content,
+		)
 	}
 
 	return nil
 }
 
-func (m *pathHelperModule) generateRPCFieldMaskPaths(files map[string]pgs.File) error {
-	dirs := map[pgs.FilePath]pgs.Name{}
+func (m *pathHelperModule) renderRPCFieldMaskDefinitions(buf *strings.Builder, rpcFieldMaskPaths map[string][]string) {
+	const t = `
+	var {{ .ID }}AllowedFieldMaskPaths = []string{
+		{{- range $path := .Paths }}
+		"{{ $path }}",
+		{{- end }}
+	}
+	{{printf "\n"}}
+`
 
-	// Iterate over all services and their methods to generate RPCFieldMaskPaths
-	rpcFieldMaskPaths := map[string]RPCFieldMaskPathValue{}
+	// Sort the methodIDs and paths to ensure deterministic output.
+	methodIDs := make([]string, 0, len(rpcFieldMaskPaths))
+	for id := range rpcFieldMaskPaths {
+		methodIDs = append(methodIDs, id)
+	}
+	sort.Strings(methodIDs)
+
+	for methodID, paths := range rpcFieldMaskPaths {
+		sort.Strings(paths)
+		rpcFieldMaskPaths[methodID] = paths
+	}
+
+	for _, id := range methodIDs {
+		rpcFieldMaskPaths[id] = rpcFieldMaskPaths[id]
+		data := struct {
+			ID    string
+			Paths []string
+		}{
+			ID:    id,
+			Paths: rpcFieldMaskPaths[id],
+		}
+
+		err := template.Must(template.New("AllowedRPCFieldMaskPaths").Parse(t)).Execute(buf, data)
+		if err != nil {
+			m.AddError(fmt.Errorf("failed to execute RPCFieldMaskPaths template: %w", err).Error())
+			return
+		}
+	}
+}
+
+func (m *pathHelperModule) generateRPCFieldMaskPaths(files map[string]pgs.File) error {
+	rpcFieldMaskPaths := map[string][]string{}
 	for _, f := range files {
 		for _, svc := range f.Services() {
 			for _, method := range svc.Methods() {
-				packageName := svc.Package().ProtoName().String()
-				serviceName := svc.Name().String()
-				methodName := method.Name().String()
-				rpcMethodIdentifier := fmt.Sprintf("/%s.%s/%s", packageName, serviceName, methodName)
-
 				options := method.Descriptor().GetOptions()
-				if proto.HasExtension(options, annotations.E_Method) {
-					ext, ok := proto.GetExtension(options, annotations.E_Method).(*annotations.MethodOptions)
-					if !ok {
-						return fmt.Errorf("failed to get method extension")
-					}
-
-					rpcmask := ext.GetRpcmask()
-					if rpcmask == nil {
-						continue
-					}
-
-					dirs[m.ctx.OutputPath(f).Dir()] = m.ctx.PackageName(f)
-					rpcFieldMaskPaths[rpcMethodIdentifier] = RPCFieldMaskPathValue{
-						All:     fmt.Sprintf("%sFieldPathsNested", rpcmask.GetMessageName()),
-						Allowed: rpcmask.FieldMask.GetPaths(),
-						Set:     rpcmask.GetSet(),
-					}
+				if !proto.HasExtension(options, annotations.E_Allow) {
+					continue
 				}
+
+				methodID := fmt.Sprintf("%s%s", svc.Name().String(), method.Name().String())
+				ext, ok := proto.GetExtension(options, annotations.E_Allow).(*annotations.RPCMaskAllowOption)
+				if !ok {
+					return fmt.Errorf("failed to get method extension")
+				}
+
+				if ext.GetFieldMask() == nil {
+					// This should never happen as the extension is set.
+					return fmt.Errorf("the extension is set, but the field mask is nil")
+				}
+
+				if ext.GetFieldMask().GetPaths() == nil {
+					// This should never happen as the field_mask is required.
+					return fmt.Errorf("field mask paths are nil")
+				}
+
+				rpcFieldMaskPaths[methodID] = ext.GetFieldMask().GetPaths()
 			}
 		}
-	}
 
-	// Generate the RPCFieldMaskPaths for every directory and package.
-	for dir, pkg := range dirs {
-		m.AddGeneratorTemplateFile(dir.Push("field_mask_validation").SetExt(".go").String(),
-			template.Must(template.New("field_mask_validation").Parse(`package {{ .Package }}
+		if len(rpcFieldMaskPaths) == 0 {
+			continue
+		}
 
-{{ .Content }}`)), struct {
-				Package pgs.Name
-				Content string
-			}{
-				Package: pkg,
-				Content: func() string {
-					buf := &strings.Builder{}
-					m.writeRPCFieldMaskPaths(buf, rpcFieldMaskPaths)
-					return buf.String()
-				}(),
-			})
+		content := &strings.Builder{}
+		m.renderRPCFieldMaskDefinitions(content, rpcFieldMaskPaths)
+		m.writeFile(
+			m.ctx.OutputPath(f).SetExt(".allowed.fm.go").String(),
+			m.ctx.PackageName(f).String(),
+			content.String(),
+		)
 	}
 
 	return nil
+}
+
+func (m *pathHelperModule) writeFile(filepath, pkg, content string) {
+	tmpl := `
+package {{ .Package }}
+{{ printf "\n" }}
+{{ .Content }}
+	`
+
+	data := struct {
+		Package string
+		Content string
+	}{
+		Package: pkg,
+		Content: content,
+	}
+
+	m.AddGeneratorTemplateFile(filepath, template.Must(template.New("file_template").Parse(tmpl)), data)
 }
 
 func (m *pathHelperModule) Name() string { return "paths" }
@@ -362,7 +353,7 @@ func (m *pathHelperModule) InitContext(ctx pgs.BuildContext) {
 }
 
 func (m *pathHelperModule) Execute(files map[string]pgs.File, pkgs map[string]pgs.Package) []pgs.Artifact {
-	if err := m.generateMessagePaths(files); err != nil {
+	if err := m.generatePaths(files); err != nil {
 		m.AddError(err.Error())
 		return m.Artifacts()
 	}
